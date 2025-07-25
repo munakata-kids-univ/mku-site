@@ -1,0 +1,188 @@
+---
+interface Button {
+  label: string;
+  url: string;
+  type?: 'primary' | 'secondary' | 'outline' | 'danger';
+}
+
+interface Props {
+  buttons?: Button[];
+}
+
+const { buttons = [] } = Astro.props;
+
+// 空配列なら非表示
+const shouldRender = buttons.length > 0;
+---
+
+{shouldRender && (
+  <div class="button-list">
+    <div class="button-list__container">
+      {buttons.map((button) => (
+        <a 
+          href={button.url} 
+          class={`button-list__button button-list__button--${button.type || 'primary'}`}
+        >
+          {button.label}
+        </a>
+      ))}
+    </div>
+  </div>
+)}
+
+<style lang="scss">
+@import '@/styles/vars';
+
+.button-list {
+  margin: $spacing-lg 0;
+  
+  &__container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-md;
+    justify-content: center;
+    
+    @include media-sm {
+      gap: $spacing-lg;
+    }
+  }
+  
+  &__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 160px;
+    padding: $spacing-md $spacing-lg;
+    font-size: $font-size-base;
+    font-weight: 500;
+    text-decoration: none;
+    border-radius: $border-radius-lg;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 2px solid transparent;
+    
+    &:focus {
+      outline: 2px solid $color-primary;
+      outline-offset: 2px;
+    }
+    
+    // プライマリボタン
+    &--primary {
+      background-color: $color-primary;
+      color: $color-white;
+      
+      &:hover {
+        background-color: darken($color-primary, 10%);
+        transform: translateY(-1px);
+        box-shadow: $shadow-md;
+      }
+      
+      &:active {
+        transform: translateY(0);
+        box-shadow: $shadow-sm;
+      }
+    }
+    
+    // セカンダリボタン
+    &--secondary {
+      background-color: $color-secondary;
+      color: $color-white;
+      
+      &:hover {
+        background-color: darken($color-secondary, 10%);
+        transform: translateY(-1px);
+        box-shadow: $shadow-md;
+      }
+      
+      &:active {
+        transform: translateY(0);
+        box-shadow: $shadow-sm;
+      }
+    }
+    
+    // アウトラインボタン
+    &--outline {
+      background-color: transparent;
+      color: $color-primary;
+      border-color: $color-primary;
+      
+      &:hover {
+        background-color: $color-primary;
+        color: $color-white;
+        transform: translateY(-1px);
+        box-shadow: $shadow-md;
+      }
+      
+      &:active {
+        transform: translateY(0);
+        box-shadow: $shadow-sm;
+      }
+    }
+    
+    // 危険ボタン
+    &--danger {
+      background-color: $color-error;
+      color: $color-white;
+      
+      &:hover {
+        background-color: darken($color-error, 10%);
+        transform: translateY(-1px);
+        box-shadow: $shadow-md;
+      }
+      
+      &:active {
+        transform: translateY(0);
+        box-shadow: $shadow-sm;
+      }
+    }
+  }
+}
+
+// レスポンシブ対応
+@include media-sm {
+  .button-list {
+    &__button {
+      min-width: 200px;
+      padding: $spacing-lg $spacing-xl;
+      font-size: $font-size-lg;
+    }
+  }
+}
+
+// 1つだけの場合の調整
+.button-list__container:has(:only-child) {
+  .button-list__button {
+    min-width: 240px;
+    
+    @include media-sm {
+      min-width: 280px;
+    }
+  }
+}
+
+// 3つ以上の場合の調整
+.button-list__container:has(:nth-child(3)) {
+  .button-list__button {
+    min-width: 140px;
+    
+    @include media-sm {
+      min-width: 180px;
+    }
+  }
+}
+
+// アクセシビリティ向上
+@media (prefers-reduced-motion: reduce) {
+  .button-list__button {
+    transition: none;
+    
+    &:hover {
+      transform: none;
+    }
+    
+    &:active {
+      transform: none;
+    }
+  }
+}
+</style>

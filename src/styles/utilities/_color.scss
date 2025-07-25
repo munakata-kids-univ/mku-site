@@ -1,0 +1,54 @@
+// カラーユーティリティ
+@import '../tokens/variables';
+
+// テキストカラー
+.text-primary { color: $text-primary !important; }
+.text-secondary { color: $text-secondary !important; }
+.text-tertiary { color: $text-tertiary !important; }
+.text-white { color: $text-white !important; }
+.text-link { color: $text-link !important; }
+.text-success { color: $text-success !important; }
+.text-error { color: $text-error !important; }
+.text-disabled { color: $text-disabled !important; }
+
+// ブランドテキストカラー
+.text-brand-primary { color: $brand-primary !important; }
+.text-brand-secondary { color: $brand-secondary !important; }
+.text-brand-pink { color: $brand-pink !important; }
+.text-brand-turquoise { color: $brand-turquoise !important; }
+.text-brand-purple { color: $brand-purple !important; }
+.text-brand-black { color: $brand-black !important; }
+
+// 背景カラー
+.bg-primary { background-color: $background-primary !important; }
+.bg-secondary { background-color: $background-secondary !important; }
+.bg-tertiary { background-color: $background-tertiary !important; }
+.bg-accent { background-color: $background-accent !important; }
+
+// ブランド背景カラー
+.bg-brand-primary { background-color: $brand-primary !important; }
+.bg-brand-secondary { background-color: $brand-secondary !important; }
+.bg-brand-pink { background-color: $brand-pink !important; }
+.bg-brand-turquoise { background-color: $brand-turquoise !important; }
+.bg-brand-purple { background-color: $brand-purple !important; }
+.bg-brand-black { background-color: $brand-black !important; }
+
+// サブ背景カラー
+.bg-sub-yellow-low { background-color: $brand-sub-yellow-low !important; }
+.bg-sub-turquoise-low { background-color: $brand-sub-turquoise-low !important; }
+.bg-sub-purple-low { background-color: $brand-sub-purple-low !important; }
+.bg-sub-pink-low { background-color: $brand-sub-pink-low !important; }
+
+.bg-sub-yellow { background-color: $brand-sub-yellow !important; }
+.bg-sub-turquoise { background-color: $brand-sub-turquoise !important; }
+.bg-sub-purple { background-color: $brand-sub-purple !important; }
+.bg-sub-pink { background-color: $brand-sub-pink !important; }
+
+// 超低明度背景
+.bg-sub-yellow-very-low { background-color: $brand-sub-yellow-very-low !important; }
+.bg-sub-purple-very-low { background-color: $brand-sub-purple-very-low !important; }
+
+// ボーダーカラー
+.border-primary { border-color: $border-primary !important; }
+.border-secondary { border-color: $border-secondary !important; }
+.border-hover { border-color: $border-hover !important; }

@@ -1,0 +1,97 @@
+// ベースタイポグラフィ
+@import '../mixins/typography';
+@import '../mixins/color';
+
+// CSS Custom Properties でレスポンシブフォントサイズを定義
+// clamp() 関数を使用したfluid typographyで滑らかなスケーリング
+:root {
+  // 日本語フォントサイズ（clamp：最小値, 推奨値, 最大値）
+  // lg境界（64rem = 1024px）を基準に計算
+  
+  --font-size-ja-5l: clamp(7.5rem, 6.5rem + 4vw, 8rem);           // 120px → 128px
+  --font-size-ja-4l: clamp(5.25rem, 4.75rem + 2.5vw, 5.625rem);  // 84px → 90px
+  --font-size-ja-3l: clamp(3.75rem, 3.25rem + 2vw, 4rem);        // 60px → 64px
+  --font-size-ja-2l: clamp(2.625rem, 2.375rem + 1.25vw, 2.8125rem); // 42px → 45px
+  --font-size-ja-l: clamp(1.875rem, 1.75rem + 0.625vw, 2rem);    // 30px → 32px
+  --font-size-ja-m: clamp(1.125rem, 1rem + 0.625vw, 1.25rem);     // 18px → 20px
+  --font-size-ja-s: clamp(0.875rem, 0.75rem + 0.625vw, 1rem);     // 14px → 16px
+  --font-size-ja-2s: clamp(0.75rem, 0.625rem + 0.625vw, 0.875rem); // 12px → 14px
+  --font-size-ja-3s: clamp(0.625rem, 0.5rem + 0.625vw, 0.75rem);  // 10px → 12px
+  --font-size-ja-4s: clamp(0.4375rem, 0.3125rem + 0.625vw, 0.5625rem); // 7px → 9px
+  
+  // 英語フォントサイズ
+  --font-size-en-5l: clamp(8rem, 7.875rem + 0.625vw, 8.125rem);  // 128px → 130px
+  --font-size-en-4l: clamp(5.625rem, 5.375rem + 1.25vw, 5.75rem); // 90px → 92px
+  --font-size-en-3l: clamp(4rem, 3.75rem + 1.25vw, 4.125rem);    // 64px → 66px
+  --font-size-en-2l: clamp(2.8125rem, 2.6875rem + 0.625vw, 2.9375rem); // 45px → 47px
+  --font-size-en-l: clamp(2rem, 1.875rem + 0.625vw, 2.125rem);   // 32px → 34px
+  --font-size-en-s: clamp(1rem, 0.875rem + 0.625vw, 1.125rem);    // 16px → 18px
+  --font-size-en-2s: clamp(0.875rem, 0.75rem + 0.625vw, 1rem);    // 14px → 16px
+  --font-size-en-3s: clamp(0.75rem, 0.625rem + 0.625vw, 0.875rem); // 12px → 14px
+  --font-size-en-4s: clamp(0.5625rem, 0.4375rem + 0.625vw, 0.6875rem); // 9px → 11px
+}
+
+body {
+  @include font-family-ja;
+  @include body-m('ja');
+  @include text-primary;
+}
+
+h1 {
+  @include heading-xl('ja');
+  @include text-primary;
+}
+
+h2 {
+  @include heading-l('ja');
+  @include text-primary;
+}
+
+h3 {
+  @include heading-m('ja');
+  @include text-primary;
+}
+
+h4 {
+  @include heading-s('ja');
+  @include text-primary;
+}
+
+h5 {
+  @include heading-xs('ja');
+  @include text-primary;
+}
+
+h6 {
+  @include heading-xs('ja');
+  @include text-primary;
+}
+
+p {
+  @include body-m('ja');
+  @include text-primary;
+}
+
+a {
+  @include text-link;
+  text-decoration: none;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// 英語フォント用クラス
+.en {
+  @include font-family-en;
+  
+  &.heading-xl { @include heading-xl('en'); }
+  &.heading-l { @include heading-l('en'); }
+  &.heading-m { @include heading-m('en'); }
+  &.heading-s { @include heading-s('en'); }
+  &.heading-xs { @include heading-xs('en'); }
+  &.body-l { @include body-l('en'); }
+  &.body-m { @include body-m('en'); }
+  &.body-s { @include body-s('en'); }
+  &.body-xs { @include body-xs('en'); }
+}

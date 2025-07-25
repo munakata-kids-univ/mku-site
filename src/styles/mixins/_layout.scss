@@ -1,0 +1,161 @@
+// レイアウト用ミックスイン
+@use 'sass:math';
+@use '../tokens/variables' as vars;
+@use '../functions/units' as units;
+@use '../tokens/breakpoints' as bp;
+
+// ボーダーラディウス
+@mixin radius-xs {
+  border-radius: vars.$radius-xs;
+}
+
+@mixin radius-s {
+  border-radius: vars.$radius-s;
+}
+
+@mixin radius-m {
+  border-radius: vars.$radius-m;
+}
+
+@mixin radius-l {
+  border-radius: vars.$radius-l;
+}
+
+@mixin radius-xl {
+  border-radius: vars.$radius-2l;
+}
+
+@mixin radius-xxl {
+  border-radius: vars.$radius-3l;
+}
+
+@mixin radius-4l {
+  border-radius: vars.$radius-4l;
+}
+
+@mixin radius-5l {
+  border-radius: vars.$radius-5l;
+}
+
+@mixin radius-2l {
+  border-radius: vars.$radius-2l;
+}
+
+@mixin radius-full {
+  border-radius: vars.$radius-full;
+}
+
+// コンテナ用ミックスイン
+@mixin container {
+  width: 100%;
+  padding: 0 5%; // xl未満は画面幅の5%ずつ（合計90%）
+  
+  @include bp.breakpoint-up(xl) {
+    padding: 0 units.rem(50); // xl以降は両サイドに50pxずつ
+  }
+}
+
+@mixin container-narrow {
+  width: 100%;
+  max-width: 50rem; // 800px
+  margin: 0 auto;
+  padding: 0 units.rem(16);
+  
+  @include bp.breakpoint-up(md) {
+    padding: 0 units.rem(24);
+  }
+}
+
+// フレックスボックス用ミックスイン
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+@mixin flex-column-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+// グリッド用ミックスイン
+@mixin grid-auto-fit($min-width: 280px) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax($min-width, 1fr));
+  gap: 24px;
+}
+
+@mixin grid-responsive {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: units.rem(16);
+  
+  @include bp.breakpoint-up(md) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: units.rem(24);
+  }
+  
+  @include bp.breakpoint-up(lg) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: units.rem(32);
+  }
+}
+
+// アスペクト比用ミックスイン（現代的な書き方）
+@mixin aspect-ratio($width: 16, $height: 9) {
+  aspect-ratio: math.div($width, $height);
+  
+  // フォールバック（古いブラウザ対応）
+  @supports not (aspect-ratio: 1) {
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      display: block;
+      width: 100%;
+      padding-top: calc(100% * #{math.div($height, $width)});
+    }
+    
+    > * {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+}
+
+// 切り抜き用ミックスイン
+@mixin visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}

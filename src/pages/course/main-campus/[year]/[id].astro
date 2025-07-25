@@ -1,0 +1,42 @@
+---
+// メインキャンパス講座詳細ページ
+import { getMainCampusCourseById } from '../../../../lib/microcms';
+
+export async function getStaticPaths() {
+  // 実際の実装では、全ての年度×講座IDの組み合わせを生成
+  // ここでは簡易実装
+  return [];
+}
+
+const { year, id } = Astro.params;
+
+try {
+  const course = await getMainCampusCourseById(id);
+  
+  if (!course) {
+    return new Response(null, {
+      status: 404,
+      statusText: 'Not found'
+    });
+  }
+} catch (error) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not found'
+  });
+}
+
+const course = await getMainCampusCourseById(id);
+---
+
+<html>
+<head>
+  <title>{course.title} | メインキャンパス | むなかた子ども大学</title>
+</head>
+<body>
+  <h1>{course.title}</h1>
+  <p>開催予定: {course.scheduleDate}</p>
+  
+  <a href={`/course/main-campus/${year}`}>← 年度一覧に戻る</a>
+</body>
+</html>

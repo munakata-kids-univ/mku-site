@@ -1,0 +1,93 @@
+// 自動生成されたトークンファイル
+// tokens.jsonから生成されています。直接編集しないでください。
+// 更新するには: npm run generate:tokens
+
+// カラートークン
+$background-select: #14005c;
+$background-hover: #160069;
+$background-accent: #1c0083;
+$background-quaternary: #feecc5;
+$background-tertiary: #e8e6f3;
+$background-secondary: #f2f2f2;
+$background-primary: #ffffff;
+$text-disabled: #b3b3b3;
+$text-link-hover: #71b5b9;
+$text-secondary: #1c0083;
+$text-link: #459397;
+$text-primary: #212121;
+$text-tertiary: #8c7a6f;
+$text-white: #ffffff;
+$text-success: #25c7b2;
+$text-error: #cf3d4f;
+$text-select: #367276;
+$border-hover: #459397;
+$border-tetiery: #bbb3da;
+$border-secondary: #cccccc;
+$border-primary: #1c0083;
+$feedback-success: #25c7b2;
+$feedback-error: #cf3d4f;
+$brand-secondary: #fbbe3d;
+$brand-primary: #1c0083;
+$brand-pink: #ff66b2;
+$brand-turquoise: #4da3a8;
+$brand-purple: #a685e2;
+$brand-black: #212121;
+$brand-sub-yellow-low: #feecc5;
+$brand-sub-yellow: #fddf9e;
+$brand-sub-turquoise-low: #a6d1d4;
+$brand-sub-turquoise: #94c8cb;
+$brand-sub-purple-low: #e4daf6;
+$brand-sub-purple: #d3c2f1;
+$brand-sub-pink-low: #ffd1e8;
+$brand-sub-pink: #ffb3d9;
+$background-dark-gray: #666666;
+$text-dark-gray: #666666;
+$brand-sub-yellow-very-low: #fff9ec;
+$brand-sub-purple-very-low: #f6f3fc;
+
+// タイポグラフィ - フォントファミリー
+$font-family-ja: "M PLUS 1";
+$font-family-en: "M PLUS 1";
+
+// タイポグラフィ - フォントウェイト
+$font-weight-en-semibold: SemiBold;
+$font-weight-ja-semibold: SemiBold;
+$font-weight-en-regular: Regular;
+$font-weight-ja-regular: Regular;
+
+// CSS Custom Properties でレスポンシブフォントサイズを定義（fluid typography）
+// lg境界（1024px）を基準に clamp() 関数でスムーズにスケール
+
+// 日本語フォント用 CSS Custom Properties
+$font-size-ja-5l: var(--font-size-ja-5l);     // 120px → 128px
+$font-size-ja-4l: var(--font-size-ja-4l);     // 84px → 90px
+$font-size-ja-3l: var(--font-size-ja-3l);     // 60px → 64px
+$font-size-ja-2l: var(--font-size-ja-2l);     // 42px → 45px
+$font-size-ja-l: var(--font-size-ja-l);       // 30px → 32px
+$font-size-ja-m: var(--font-size-ja-m);       // 20px → 22px
+$font-size-ja-s: var(--font-size-ja-s);       // 14px → 16px
+$font-size-ja-2s: var(--font-size-ja-2s);     // 12px → 14px
+$font-size-ja-3s: var(--font-size-ja-3s);     // 10px → 12px
+$font-size-ja-4s: var(--font-size-ja-4s);     // 7px → 9px
+
+// 英語フォント用 CSS Custom Properties
+$font-size-en-5l: var(--font-size-en-5l);     // 128px → 130px
+$font-size-en-4l: var(--font-size-en-4l);     // 90px → 92px
+$font-size-en-3l: var(--font-size-en-3l);     // 64px → 66px
+$font-size-en-2l: var(--font-size-en-2l);     // 45px → 47px
+$font-size-en-l: var(--font-size-en-l);       // 32px → 34px
+$font-size-en-s: var(--font-size-en-s);       // 16px → 18px
+$font-size-en-2s: var(--font-size-en-2s);     // 14px → 16px
+$font-size-en-3s: var(--font-size-en-3s);     // 12px → 14px
+$font-size-en-4s: var(--font-size-en-4s);     // 9px → 11px
+
+// ボーダーラディウス
+$radius-full: 9999px;
+$radius-3l: 48px;
+$radius-2l: 32px;
+$radius-m: 16px;
+$radius-s: 8px;
+$radius-xs: 4px;
+$radius-l: 24px;
+$radius-4l: 60px;
+$radius-5l: 72px;

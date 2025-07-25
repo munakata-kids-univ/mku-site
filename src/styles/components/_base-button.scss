@@ -1,0 +1,101 @@
+// BaseButton コンポーネントのスタイル
+@use '../tokens/variables' as vars;
+@use '../functions/units' as units;
+@use '../functions/font-helpers' as font-helpers;
+@use '../mixins/layout' as layout;
+
+:global(.base-button) {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: units.rem(320);
+  height: units.rem(78);
+  padding: units.rem(10) units.rem(10) units.rem(10) units.rem(30);
+  box-sizing: border-box;
+  text-decoration: none;
+  @include font-helpers.font-ja-s(semibold);
+  @include layout.radius-full;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+:global(.base-button--blue) {
+  background-color: vars.$brand-primary;
+  color: vars.$text-white;
+}
+
+:global(.base-button--blue:hover) {
+  background-color: vars.$brand-secondary;
+  color: vars.$text-primary;
+}
+
+:global(.base-button--white) {
+  background-color: vars.$background-primary !important;
+  color: vars.$text-secondary !important;
+}
+
+:global(.base-button--white:hover) {
+  background-color: vars.$brand-secondary !important;
+  color: vars.$text-primary !important;
+  text-decoration: none !important;
+}
+
+:global(.base-button--white .base-button__icon) {
+  background-color: vars.$brand-primary !important;
+}
+
+:global(.base-button--white:hover .base-button__icon) {
+  background-color: vars.$brand-primary !important;
+  transform: rotate(360deg) !important;
+}
+
+:global(.base-button--white .base-button__icon-arrow) {
+  border-color: vars.$background-primary !important;
+}
+
+:global(.base-button--white:hover .base-button__icon-arrow) {
+  border-color: vars.$brand-secondary !important;
+  transform: rotate(-45deg) rotate(360deg) !important;
+}
+
+:global(.base-button__text) {
+  flex: 1;
+  padding-right: units.rem(10);
+  text-align: left;
+}
+
+:global(.base-button__icon) {
+  position: absolute;
+  right: units.rem(10);
+  width: units.rem(58);
+  height: units.rem(58);
+  background-color: vars.$background-primary;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.5s ease;
+}
+
+:global(.base-button--blue .base-button__icon) {
+  background-color: vars.$background-primary;
+}
+
+:global(.base-button--blue:hover .base-button__icon) {
+  background-color: vars.$brand-primary;
+  transform: rotate(360deg);
+}
+
+:global(.base-button__icon-arrow) {
+  width: units.rem(8);
+  height: units.rem(8);
+  border-right: 2px solid vars.$brand-primary;
+  border-bottom: 2px solid vars.$brand-primary;
+  transform: rotate(-45deg);
+  transition: all 0.5s ease;
+}
+
+:global(.base-button--blue:hover .base-button__icon-arrow) {
+  border-color: vars.$brand-secondary;
+  transform: rotate(-45deg) rotate(360deg);
+}

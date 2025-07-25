@@ -1,0 +1,1060 @@
+---
+import DefaultHead from './DefaultHead.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  ogImage?: string;
+}
+
+const { title, description, ogImage } = Astro.props;
+
+// ナビゲーションメニュー
+const navigation = [
+  { name: 'むなかた子ども大学について', href: '/about' },
+  { name: '年間スケジュール', href: '/schedule' },
+  { 
+    name: '講座内容', 
+    href: '/course',
+    hasSubmenu: true,
+    submenu: [
+      { name: 'メインキャンパス', href: '/course/main-campus' },
+      { name: '特設講座', href: '/course/special-course' },
+      { name: 'むなかた子ども大学の日', href: '/course/mku-day' },
+      { name: '夏の課外授業', href: '/course/summer-course' }
+    ]
+  },
+  { name: 'お知らせ', href: '/news' },
+  { name: '過去の実績', href: '/report' },
+  { name: 'お問い合わせ', href: '/contact' },
+];
+
+// 現在のパスを取得
+const currentPath = Astro.url.pathname;
+---
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <DefaultHead 
+    title={title} 
+    description={description} 
+    ogImage={ogImage} 
+  />
+</head>
+<body>
+  <!-- ヘッダー -->
+  <header class="header">
+    <div class="u-container">
+      <div class="header__inner">
+        <!-- ロゴ -->
+        <div class="header__logo">
+          <a href="/" class="header__logo-link">
+            <img src="/logos/logo-del_mku_aside-color1.svg" alt="むなかた子ども大学" class="header__logo-image" />
+          </a>
+        </div>
+
+        <!-- ナビゲーション -->
+        <nav class="header__nav">
+          <ul class="header__nav-list">
+            {navigation.map((item) => (
+              <li class={`header__nav-item ${item.hasSubmenu ? 'header__nav-item--dropdown' : ''}`}>
+                <a 
+                  href={item.href} 
+                  class={`header__nav-link ${currentPath === item.href ? 'header__nav-link--active' : ''}`}
+                >
+                  {item.name}
+                  {item.hasSubmenu && (
+                    <svg class="header__nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M6 9L12 15L18 9"/>
+                    </svg>
+                  )}
+                </a>
+                {item.hasSubmenu && (
+                  <ul class="header__nav-submenu">
+                    {item.submenu?.map((subitem) => (
+                      <li class="header__nav-submenu-item">
+                        <a 
+                          href={subitem.href} 
+                          class={`header__nav-submenu-link ${currentPath === subitem.href ? 'header__nav-submenu-link--active' : ''}`}
+                        >
+                          {subitem.name}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <!-- モバイルメニューボタン -->
+        <button class="header__menu-button" id="menu-button" aria-label="メニューを開く">
+          <span class="header__menu-bar"></span>
+          <span class="header__menu-bar"></span>
+          <span class="header__menu-bar"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- モバイルメニュー -->
+    <nav class="header__mobile-nav" id="mobile-nav">
+      <!-- 閉じるボタン -->
+      <button class="header__mobile-close" id="mobile-close" aria-label="メニューを閉じる">
+        <svg class="header__mobile-close-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18"/>
+          <path d="M6 6l12 12"/>
+        </svg>
+      </button>
+      
+      <ul class="header__mobile-nav-list">
+        {navigation.map((item) => (
+          <li class={`header__mobile-nav-item ${item.hasSubmenu ? 'header__mobile-nav-item--dropdown' : ''}`}>
+            <div class="header__mobile-nav-wrapper">
+              <a 
+                href={item.href} 
+                class={`header__mobile-nav-link ${currentPath === item.href ? 'header__mobile-nav-link--active' : ''}`}
+              >
+                {item.name}
+              </a>
+              {item.hasSubmenu && (
+                <button class="header__mobile-nav-toggle" data-submenu={item.name}>
+                  <svg class="header__mobile-nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 9L12 15L18 9"/>
+                  </svg>
+                </button>
+              )}
+            </div>
+            {item.hasSubmenu && (
+              <ul class="header__mobile-nav-submenu" data-submenu-content={item.name}>
+                {item.submenu?.map((subitem) => (
+                  <li class="header__mobile-nav-submenu-item">
+                    <a 
+                      href={subitem.href} 
+                      class={`header__mobile-nav-submenu-link ${currentPath === subitem.href ? 'header__mobile-nav-submenu-link--active' : ''}`}
+                    >
+                      {subitem.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <main class="main">
+    <slot />
+  </main>
+
+  <!-- フッター -->
+  <footer class="footer">
+    <div class="u-container">
+      <div class="footer__main">
+        <!-- 左側：ロゴ・運営情報・お問い合わせ -->
+        <div class="footer__left">
+          <!-- フッターロゴ -->
+          <div class="footer__logo">
+            <img src="/logos/logo-del_mku_vertical-color2.svg" alt="むなかた子ども大学" class="footer__logo-image" />
+          </div>
+
+          <!-- 運営情報 -->
+          <div class="footer__org">
+            <p class="footer__org-title">運営：</p>
+            <div class="footer__org-details">
+              <p>宗像市 教育委員会</p>
+              <p>（教育部 教育総務課 地域教育連携室 グローバル人材育成係）</p>
+              <p>宗像市役所　本館３階</p>
+              <p class="footer__phone">0940-36-1169</p>
+            </div>
+          </div>
+
+          <!-- お問い合わせボタン -->
+          <div class="footer__contact">
+            <a href="/contact" class="footer__contact-button">お問い合わせ</a>
+          </div>
+        </div>
+
+        <!-- 右側：メニュー -->
+        <div class="footer__right">
+          <nav class="footer__nav">
+            <div class="footer__nav-title">メニュー：</div>
+            <ul class="footer__nav-list">
+              <li class="footer__nav-item"><a href="/" class="footer__nav-link">ホーム</a></li>
+              <li class="footer__nav-item"><a href="/about" class="footer__nav-link">むなかた子ども大学について</a></li>
+              <li class="footer__nav-item"><a href="/schedule" class="footer__nav-link">年間スケジュール</a></li>
+              <li class="footer__nav-item"><a href="/course" class="footer__nav-link">講座内容</a></li>
+              <li class="footer__nav-item"><a href="/news" class="footer__nav-link">お知らせ</a></li>
+              <li class="footer__nav-item"><a href="/media" class="footer__nav-link">メディア掲載</a></li>
+              <li class="footer__nav-item"><a href="/report" class="footer__nav-link">過去の実績</a></li>
+              <li class="footer__nav-item"><a href="/contact" class="footer__nav-link">お問い合わせ</a></li>
+              <li class="footer__nav-item"><a href="/privacy-policy" class="footer__nav-link">プライバシーポリシー</a></li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+      <!-- バナーゾーン -->
+      <div class="footer__banners">
+        <div class="footer__banner-list">
+          <div class="footer__banner-item">
+            <img src="/images/banners/banner_munakata-hp-01.webp" alt="宗像市ホームページ" class="footer__banner-image" />
+          </div>
+          <div class="footer__banner-item">
+            <img src="/images/banners/banner_mku-ch-01.webp" alt="むなかた子ども大学チャンネル" class="footer__banner-image" />
+          </div>
+        </div>
+      </div>
+
+      <!-- コピーライト -->
+      <div class="footer__copyright">
+        <p>© 2025 Munakata Kids University</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ヘッダーナビゲーションの JavaScript -->
+  <script>
+    // モバイルメニューの開閉
+    const menuButton = document.getElementById('menu-button');
+    const mobileNav = document.getElementById('mobile-nav');
+    const mobileClose = document.getElementById('mobile-close');
+    
+    function closeMenu() {
+      mobileNav.classList.remove('header__mobile-nav--open');
+      menuButton.classList.remove('header__menu-button--open');
+      menuButton.setAttribute('aria-label', 'メニューを開く');
+      document.body.style.overflow = '';
+    }
+    
+    function openMenu() {
+      mobileNav.classList.add('header__mobile-nav--open');
+      menuButton.classList.add('header__menu-button--open');
+      menuButton.setAttribute('aria-label', 'メニューを閉じる');
+      document.body.style.overflow = 'hidden';
+    }
+    
+    if (menuButton && mobileNav) {
+      menuButton.addEventListener('click', () => {
+        const isOpen = mobileNav.classList.contains('header__mobile-nav--open');
+        
+        if (isOpen) {
+          closeMenu();
+        } else {
+          openMenu();
+        }
+      });
+    }
+    
+    // 閉じるボタンのイベント
+    if (mobileClose) {
+      mobileClose.addEventListener('click', closeMenu);
+    }
+
+    // モバイルサブメニューの開閉
+    const mobileSubmenuToggles = document.querySelectorAll('.header__mobile-nav-toggle');
+    
+    mobileSubmenuToggles.forEach(toggle => {
+      toggle.addEventListener('click', () => {
+        const submenuName = toggle.getAttribute('data-submenu');
+        const submenu = document.querySelector(`[data-submenu-content="${submenuName}"]`);
+        const arrow = toggle.querySelector('.header__mobile-nav-arrow');
+        
+        if (submenu && arrow) {
+          const isOpen = submenu.classList.contains('header__mobile-nav-submenu--open');
+          
+          // 他のサブメニューを閉じる
+          document.querySelectorAll('.header__mobile-nav-submenu--open').forEach(openSubmenu => {
+            if (openSubmenu !== submenu) {
+              openSubmenu.classList.remove('header__mobile-nav-submenu--open');
+              const otherArrow = document.querySelector(`[data-submenu="${openSubmenu.getAttribute('data-submenu-content')}"] .header__mobile-nav-arrow`);
+              if (otherArrow) {
+                otherArrow.style.transform = 'rotate(0deg)';
+              }
+            }
+          });
+          
+          if (isOpen) {
+            submenu.classList.remove('header__mobile-nav-submenu--open');
+            arrow.style.transform = 'rotate(0deg)';
+          } else {
+            submenu.classList.add('header__mobile-nav-submenu--open');
+            arrow.style.transform = 'rotate(180deg)';
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+
+<style lang="scss">
+@import '../styles/_index';
+
+/* ヘッダー */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: transparent;
+  box-shadow: none;
+  
+  // 2xl未満のパディング
+  @include breakpoint-down(2xl) {
+    padding: rem(16) rem(16) 0;
+  }
+  
+  // 2xl以降のパディング
+  @include breakpoint-up(2xl) {
+    padding: rem(20) rem(50) 0;
+  }
+  
+  .header__inner {
+    background-color: $background-primary;
+    backdrop-filter: blur(10px);
+    border-radius: rem(32);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    height: rem(64);
+    
+    @include breakpoint-up(xl) {
+      height: rem(86);
+      border-radius: rem(43);
+    }
+  }
+  
+  &__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: none;
+    margin: 0;
+    padding: 0 0 0 rem(20);
+    height: rem(64);
+    
+    @include breakpoint-up(xl) {
+      padding: 0 0 0 rem(32);
+      height: rem(80);
+    }
+    @include breakpoint-up(2xl) {
+      padding: 0 rem(32);
+    }
+  }
+  
+  &__logo {
+    flex-shrink: 0;
+    
+    &-link {
+      display: block;
+    }
+    
+    &-image {
+      height: rem(32);
+      width: auto;
+      
+      @include breakpoint-up(xl) {
+        height: rem(50);
+      }
+    }
+  }
+  
+  &__nav {
+    display: none;
+    
+    @include breakpoint-up(2xl) {
+      display: block;
+    }
+    
+    &-list {
+      display: flex;
+      gap: rem(32);
+      list-style: none;
+    }
+    
+    &-item {
+      position: relative;
+      
+      &--dropdown:hover {
+        .header__nav-submenu {
+          opacity: 1;
+          visibility: visible;
+          transform: translateX(-50%) translateY(0);
+        }
+        
+        .header__nav-arrow {
+          transform: rotate(180deg);
+        }
+      }
+    }
+    
+    &-link {
+      display: flex;
+      align-items: center;
+      gap: rem(4);
+      font-weight: 500;
+      color: $text-primary;
+      @include font-ja-s(semibold);
+      padding: rem(12) rem(8);
+      transition: all 0.3s ease;
+      text-decoration: none !important;
+      white-space: nowrap;
+      
+      &:hover,
+      &--active {
+        color: $brand-secondary;
+        text-decoration: none !important;
+      }
+    }
+    
+    &-arrow {
+      width: rem(16);
+      height: rem(16);
+      transition: transform 0.3s ease;
+      color: $border-primary;
+    }
+    
+    &-submenu {
+      position: absolute;
+      top: rem(88);
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      background: $background-secondary;
+      @include radius-m;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      width: rem(620);
+      padding: rem(20);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 1000;
+      list-style: none;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: rem(16);
+      
+      // 吹き出し風三角
+      &::before {
+        content: '';
+        position: absolute;
+        top: rem(-15);
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: rem(9) solid transparent;
+        border-right: rem(9) solid transparent;
+        border-bottom: rem(15) solid $background-secondary;
+      }
+      
+      &-item {
+        // グリッドアイテムなのでborder不要
+      }
+      
+      &-link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: rem(12) rem(16);
+        width: 100%;
+        height: rem(78);
+        @include font-ja-s(semibold);
+        color: $text-white;
+        text-decoration: none !important;
+        border-radius: rem(12);
+        transition: all 0.3s ease;
+        
+        // デフォルトカラー設定
+        &[href="/course/main-campus"] {
+          background-color: $brand-secondary;
+          &:hover {
+            background-color: $brand-sub-yellow;
+            color: $text-primary;
+            text-decoration: none !important;
+          }
+        }
+        
+        &[href="/course/special-course"] {
+          background-color: $brand-turquoise;
+          &:hover {
+            background-color: $brand-sub-turquoise;
+            color: $text-primary;
+            text-decoration: none !important;
+          }
+        }
+        
+        &[href="/course/mku-day"] {
+          background-color: $brand-purple;
+          &:hover {
+            background-color: $brand-sub-purple;
+            color: $text-primary;
+            text-decoration: none !important;
+          }
+        }
+        
+        &[href="/course/summer-course"] {
+          background-color: $brand-pink;
+          &:hover {
+            background-color: $brand-sub-pink;
+            color: $text-primary;
+            text-decoration: none !important;
+          }
+        }
+        
+        // 右側の矢印アイコン
+        &::after {
+          content: '';
+          width: rem(16);
+          height: rem(16);
+          background-repeat: no-repeat;
+          background-position: center;
+          background-size: contain;
+          transform: rotate(-90deg);
+        }
+        
+        // デフォルト状態の>アイコン（白色）
+        &::after {
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L12 15L18 9'/%3E%3C/svg%3E");
+        }
+        
+        // ホバー状態の>アイコン（text-primary色）
+        &:hover::after {
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' stroke='%23212121' stroke-width='2' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L12 15L18 9'/%3E%3C/svg%3E");
+        }
+      }
+    }
+  }
+  
+  &__menu-button {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: rem(4);
+    width: rem(64);
+    height: rem(64);
+    background: $background-secondary;
+    border: none;
+    cursor: pointer;
+    border-radius: rem(32);
+    padding: rem(6);
+    
+    // xl以降でサイズを調整（既存のヘッダー高さに合わせる）
+    @include breakpoint-up(xl) {
+      width: rem(86);
+      height: rem(86);
+      border-radius: rem(43);
+      gap: rem(6);
+      padding: rem(8);
+    }
+    
+    @include breakpoint-up(2xl) {
+      display: none;
+    }
+    
+    &:hover .header__menu-bar {
+      background-color: $brand-primary;
+    }
+  }
+  
+  &__menu-bar {
+    width: rem(20);
+    height: 2px;
+    background-color: $border-primary;
+    transition: all 0.3s ease;
+    border-radius: 0.5px;
+    
+    // xl以降でバーサイズを調整
+    @include breakpoint-up(xl) {
+      width: rem(24);
+      height: 3px;
+    }
+    
+    &:first-child {
+      transform-origin: center;
+    }
+    
+    &:nth-child(2) {
+      transform-origin: center;
+    }
+    
+    &:last-child {
+      transform-origin: center;
+    }
+  }
+  
+  &__menu-button.header__menu-button--open {
+    .header__menu-bar:first-child {
+      transform: translateY(6px) rotate(45deg);
+      
+      @include breakpoint-up(xl) {
+        transform: translateY(8px) rotate(45deg);
+      }
+    }
+    
+    .header__menu-bar:nth-child(2) {
+      opacity: 0;
+    }
+    
+    .header__menu-bar:last-child {
+      transform: translateY(-6px) rotate(-45deg);
+      
+      @include breakpoint-up(xl) {
+        transform: translateY(-8px) rotate(-45deg);
+      }
+    }
+  }
+  
+  &__mobile-nav {
+    position: fixed;
+    top: 0;
+    right: -100vw;
+    width: 100vw;
+    height: 100vh;
+    background-color: $background-primary;
+    backdrop-filter: blur(20px);
+    z-index: 9999;
+    overflow-y: auto;
+    transition: right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    color: $text-primary;
+    
+    @include breakpoint-up(2xl) {
+      display: none !important;
+    }
+    
+    &--open {
+      right: 0;
+    }
+    
+    &-list {
+      padding: rem(140) rem(40) rem(40);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      min-height: 100vh;
+      list-style: none;
+    }
+    
+    &-item {
+      margin-bottom: rem(18);
+      border-bottom: 2px dotted $border-secondary;
+      padding-bottom: rem(18);
+      
+      &:nth-child(3) {
+        padding-bottom: 0;
+      }
+      
+      &:last-child {
+        margin-bottom: 0;
+        border-bottom: none;
+      }
+      
+      &--dropdown {
+        .header__mobile-nav-wrapper {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          
+          .header__mobile-nav-link {
+            flex: 1;
+            margin-right: rem(16);
+          }
+        }
+      }
+    }
+    
+    &-wrapper {
+      // wrapperのpaddingは削除
+    }
+    
+    &-link {
+      display: block;
+      color: $text-primary;
+      @include font-ja-m(semibold);
+      line-height: 1.2;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      padding: rem(12) 0;
+      list-style-type: none;
+      
+      .header__mobile-nav-item:nth-child(3) & {
+        padding-bottom: rem(30);
+      }
+      
+      &:hover,
+      &--active {
+        color: $brand-secondary;
+        transform: translateX(rem(8));
+        text-decoration: none;
+      }
+    }
+    
+    &-toggle {
+      background: none;
+      border: none;
+      padding: rem(12) rem(8) rem(8);
+      cursor: pointer;
+      color: $text-white;
+      transition: color 0.3s ease;
+      
+      &:hover {
+        color: $brand-secondary;
+      }
+    }
+    
+    &-arrow {
+      width: rem(20);
+      height: rem(20);
+      transition: transform 0.3s ease;
+      color: $border-primary;
+    }
+    
+    &-submenu {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      list-style: none;
+      padding-left: 0;
+      background-color: rgba($background-secondary, 0.3);
+      
+      // xl-2xl区間で横並びレイアウト
+      @media (min-width: $breakpoint-xl) and (max-width: calc($breakpoint-2xl - 0.0625rem)) {
+        display: flex;
+        flex-direction: row;
+        gap: 0;
+        
+        &--open {
+          max-height: rem(100);
+        }
+      }
+      
+      &--open {
+        max-height: rem(400);
+      }
+      
+      &-item {
+        margin-bottom: rem(16);
+        border-bottom: 2px dotted $border-tertiary;
+        padding-bottom: rem(16);
+        
+        // xl-2xl区間で横並び時のスタイル
+        @media (min-width: $breakpoint-xl) and (max-width: calc($breakpoint-2xl - 0.0625rem)) {
+          flex: 1;
+          margin-bottom: 0;
+          padding-bottom: rem(8);
+          padding-top: rem(8);
+          border-bottom: none;
+          
+          &:first-child {
+            margin-top: 0;
+          }
+        }
+        
+        &:first-child {
+          margin-top: rem(16);
+          
+          @media (min-width: $breakpoint-xl) and (max-width: calc($breakpoint-2xl - 0.0625rem)) {
+            margin-top: 0;
+          }
+        }
+        
+        &:last-child {
+          margin-bottom: 0;
+          border-bottom: none;
+        }
+      }
+      
+      &-link {
+        display: block;
+        padding: rem(8) rem(16);
+        color: $text-primary;
+        @include font-ja-m(semibold);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        
+        // xl-2xl区間で横並び時のスタイル調整
+        @media (min-width: $breakpoint-xl) and (max-width: calc($breakpoint-2xl - 0.0625rem)) {
+          padding: rem(8) rem(8);
+          text-align: center;
+          font-size: rem(14);
+          border-right: 1px solid rgba($border-secondary, 0.5);
+          
+          // 最後の要素には縦線を表示しない
+          .header__mobile-nav-submenu-item:last-child & {
+            border-right: none;
+          }
+        }
+        
+        &:hover,
+        &--active {
+          color: $brand-secondary;
+          transform: translateX(rem(8));
+          text-decoration: none;
+          
+          @media (min-width: $breakpoint-xl) and (max-width: calc($breakpoint-2xl - 0.0625rem)) {
+            transform: translateX(0);
+          }
+        }
+      }
+    }
+  }
+  
+  &__mobile-close {
+    position: absolute;
+    top: rem(16);
+    right: rem(16);
+    width: rem(64);
+    height: rem(64);
+    background: $brand-primary;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: rem(32);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    // xl以降でサイズを調整
+    @include breakpoint-up(xl) {
+      width: rem(80);
+      height: rem(80);
+      border-radius: rem(40);
+    }
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: $brand-secondary;
+      transform: rotate(90deg);
+    }
+    
+    &-icon {
+      width: rem(24);
+      height: rem(24);
+      color: $text-white;
+      transition: color 0.3s ease;
+      
+      // xl以降でアイコンサイズを調整
+      @include breakpoint-up(xl) {
+        width: rem(30);
+        height: rem(30);
+      }
+    }
+    
+    &:hover &-icon {
+      color: $brand-secondary;
+    }
+  }
+}
+
+/* メインコンテンツ */
+.main {
+  min-height: calc(100vh - 80px - 200px); // ヘッダーとフッターを除いた高さ
+}
+
+/* フッター */
+.footer {
+  background: linear-gradient(135deg, $brand-primary 0%, lighten($brand-primary, 8%) 100%);
+  color: $text-white;
+  padding: rem(80) 0 rem(32);
+  margin-top: rem(96);
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: rem(48);
+    margin-bottom: rem(64);
+    
+    @include breakpoint-up(sm) {
+      flex-direction: row;
+      gap: rem(64);
+      align-items: flex-start;
+    }
+    
+    @include breakpoint-up(lg) {
+      gap: rem(96);
+    }
+  }
+
+  &__left {
+    flex: 1;
+    
+    @include breakpoint-up(sm) {
+      max-width: 50%;
+    }
+  }
+
+  &__right {
+    flex: 1;
+    
+    @include breakpoint-up(sm) {
+      max-width: 50%;
+    }
+  }
+
+  &__logo {
+    margin-bottom: rem(32);
+    
+    &-image {
+      height: rem(80);
+      width: auto;
+      
+      @include breakpoint-up(md) {
+        height: rem(100);
+      }
+    }
+  }
+
+  &__org {
+    margin-bottom: rem(32);
+    
+    &-title {
+      font-weight: 600;
+      margin-bottom: rem(16);
+      color: $text-white;
+      
+      @include breakpoint-up(md) {
+        font-size: rem(16);
+      }
+    }
+    
+    &-details {
+      p {
+        font-size: rem(14);
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: rem(4);
+        
+        @include breakpoint-up(md) {
+          font-size: rem(15);
+        }
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
+
+  &__phone {
+    font-weight: 600;
+    margin-top: rem(8);
+  }
+
+  &__contact {
+    margin-bottom: rem(32);
+    
+    &-button {
+      display: inline-block;
+      padding: rem(12) rem(24);
+      background: $brand-secondary;
+      color: $brand-black;
+      text-decoration: none;
+      @include radius-m;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      
+      @include breakpoint-up(md) {
+        padding: rem(14) rem(28);
+        font-size: rem(16);
+      }
+      
+      &:hover {
+        background: lighten($brand-secondary, 10%);
+        transform: translateY(-2px);
+      }
+    }
+  }
+
+  &__nav {
+    &-title {
+      font-weight: 600;
+      margin-bottom: rem(20);
+      color: $text-white;
+      
+      @include breakpoint-up(md) {
+        font-size: rem(16);
+      }
+    }
+    
+    &-list {
+      display: flex;
+      flex-direction: column;
+      gap: rem(12);
+      
+      @include breakpoint-up(md) {
+        gap: rem(14);
+      }
+    }
+    
+    &-link {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: rem(14);
+      transition: color 0.3s ease;
+      text-decoration: none;
+      
+      @include breakpoint-up(md) {
+        font-size: rem(15);
+      }
+      
+      &:hover {
+        color: $text-white;
+      }
+    }
+  }
+
+  &__banners {
+    margin-bottom: rem(48);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: rem(48);
+  }
+
+  &__banner-list {
+    display: flex;
+    flex-direction: column;
+    gap: rem(24);
+    align-items: center;
+    
+    @include breakpoint-up(sm) {
+      flex-direction: row;
+      justify-content: center;
+      gap: rem(40);
+    }
+  }
+
+  &__banner-item {
+    flex: 0 0 auto;
+  }
+
+  &__banner-image {
+    height: rem(60);
+    width: auto;
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+    
+    @include breakpoint-up(md) {
+      height: rem(80);
+    }
+    
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  &__copyright {
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: rem(32);
+    
+    p {
+      font-size: rem(14);
+      color: rgba(255, 255, 255, 0.8);
+      margin: 0;
+    }
+  }
+}
+</style>

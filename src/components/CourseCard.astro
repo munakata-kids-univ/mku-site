@@ -1,0 +1,224 @@
+---
+interface Props {
+  title: string;
+  subtitle?: string;
+  thumbnail?: string;
+  href: string;
+  date?: string;
+  venue?: string;
+}
+
+const { title, subtitle, thumbnail, href, date, venue } = Astro.props;
+
+// デフォルト画像
+const defaultThumbnail = '/images/course-default.png';
+const imageSrc = thumbnail || defaultThumbnail;
+---
+
+<article class="course-card">
+  <a href={href} class="course-card__link">
+    {/* サムネイル */}
+    <div class="course-card__thumbnail">
+      <img 
+        src={imageSrc} 
+        alt={title} 
+        class="course-card__image"
+        loading="lazy"
+      />
+    </div>
+    
+    {/* コンテンツ */}
+    <div class="course-card__content">
+      {/* タイトル */}
+      <h3 class="course-card__title">{title}</h3>
+      
+      {/* サブタイトル */}
+      {subtitle && (
+        <p class="course-card__subtitle">{subtitle}</p>
+      )}
+      
+      {/* メタ情報 */}
+      {(date || venue) && (
+        <div class="course-card__meta">
+          {date && (
+            <div class="course-card__meta-item">
+              <svg class="course-card__meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span class="course-card__meta-text">{date}</span>
+            </div>
+          )}
+          
+          {venue && (
+            <div class="course-card__meta-item">
+              <svg class="course-card__meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10C21 17L12 21L3 10C3 6.5 7.5 3 12 3S21 6.5 21 10Z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              <span class="course-card__meta-text">{venue}</span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+    
+    {/* ホバー効果用オーバーレイ */}
+    <div class="course-card__overlay"></div>
+  </a>
+</article>
+
+<style lang="scss">
+@import '@/styles/vars';
+
+.course-card {
+  background-color: $color-white;
+  border-radius: $border-radius-lg;
+  overflow: hidden;
+  box-shadow: $shadow-sm;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+  
+  &__link {
+    position: relative;
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    
+    &:focus {
+      outline: 2px solid $color-primary;
+      outline-offset: 2px;
+    }
+  }
+  
+  &__thumbnail {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background-color: $color-gray-100;
+  }
+  
+  &__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  
+  &__content {
+    padding: $spacing-lg;
+  }
+  
+  &__title {
+    font-size: $font-size-lg;
+    font-weight: 600;
+    color: $color-text;
+    margin-bottom: $spacing-sm;
+    line-height: $line-height-tight;
+    
+    // 2行で省略
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  &__subtitle {
+    font-size: $font-size-sm;
+    color: $color-gray-600;
+    margin-bottom: $spacing-md;
+    line-height: $line-height-normal;
+    
+    // 3行で省略
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  &__meta {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+    
+    @include media-sm {
+      flex-direction: row;
+      gap: $spacing-md;
+    }
+  }
+  
+  &__meta-item {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    font-size: $font-size-sm;
+    color: $color-gray-500;
+  }
+  
+  &__meta-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+  
+  &__meta-text {
+    flex: 1;
+    min-width: 0;
+    
+    // 1行で省略
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  &__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      135deg,
+      rgba($color-primary, 0.05) 0%,
+      transparent 100%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  
+  // ホバー効果
+  &:hover {
+    .course-card__image {
+      transform: scale(1.05);
+    }
+    
+    .course-card__overlay {
+      opacity: 1;
+    }
+    
+    .course-card__title {
+      color: $color-primary;
+    }
+  }
+}
+
+// レスポンシブ対応
+@include media-sm {
+  .course-card {
+    &__title {
+      font-size: $font-size-xl;
+    }
+    
+    &__subtitle {
+      font-size: $font-size-base;
+    }
+  }
+}
+</style>

@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm install:*)",
+      "Bash(npm search:*)",
+      "Bash(npm update:*)",
+      "Bash(node:*)",
+      "Bash(pkill:*)",
+      "Bash(true)",
+      "Bash(npm run type-check:*)",
+      "Bash(npm run generate:types:*)",
+      "Bash(npm run generate:tokens:*)",
+      "Bash(curl:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run build:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npm run dev -- --port 4321)",
+      "Bash(timeout 10s npm run dev)",
+      "Bash(rm:*)",
+      "Bash(rg:*)",
+      "Bash(lsof:*)",
+      "Bash(ls:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": []
+  }
+}

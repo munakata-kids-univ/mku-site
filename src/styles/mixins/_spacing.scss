@@ -1,0 +1,102 @@
+// スペーシング用ミックスイン
+@use 'sass:list';
+@use '../functions/units' as units;
+
+// 複数値をrem()に変換するヘルパー関数
+@function convert-spacing-values($values...) {
+  $result: ();
+  
+  @each $value in $values {
+    $result: list.append($result, units.rem($value));
+  }
+  
+  @return $result;
+}
+
+// マージン用ミックスイン
+@mixin margin($values...) {
+  margin: convert-spacing-values($values...);
+}
+
+@mixin margin-top($value) {
+  margin-top: units.rem($value);
+}
+
+@mixin margin-bottom($value) {
+  margin-bottom: units.rem($value);
+}
+
+@mixin margin-left($value) {
+  margin-left: units.rem($value);
+}
+
+@mixin margin-right($value) {
+  margin-right: units.rem($value);
+}
+
+@mixin margin-x($value) {
+  margin-left: units.rem($value);
+  margin-right: units.rem($value);
+}
+
+@mixin margin-y($value) {
+  margin-top: units.rem($value);
+  margin-bottom: units.rem($value);
+}
+
+// パディング用ミックスイン（CSS shorthand対応）
+@mixin padding($values...) {
+  padding: convert-spacing-values($values...);
+}
+
+@mixin padding-top($value) {
+  padding-top: units.rem($value);
+}
+
+@mixin padding-bottom($value) {
+  padding-bottom: units.rem($value);
+}
+
+@mixin padding-left($value) {
+  padding-left: units.rem($value);
+}
+
+@mixin padding-right($value) {
+  padding-right: units.rem($value);
+}
+
+@mixin padding-x($value) {
+  padding-left: units.rem($value);
+  padding-right: units.rem($value);
+}
+
+@mixin padding-y($value) {
+  padding-top: units.rem($value);
+  padding-bottom: units.rem($value);
+}
+
+// ギャップ用ミックスイン
+@mixin gap($value) {
+  gap: units.rem($value);
+}
+
+@mixin gap-x($value) {
+  column-gap: units.rem($value);
+}
+
+@mixin gap-y($value) {
+  row-gap: units.rem($value);
+}
+
+// レスポンシブスペーシング用ミックスイン
+@mixin responsive-padding($min-value, $max-value) {
+  padding: responsive-size($min-value, $max-value);
+}
+
+@mixin responsive-margin($min-value, $max-value) {
+  margin: responsive-size($min-value, $max-value);
+}
+
+@mixin responsive-gap($min-value, $max-value) {
+  gap: responsive-size($min-value, $max-value);
+}

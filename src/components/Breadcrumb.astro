@@ -1,0 +1,112 @@
+---
+interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
+
+interface Props {
+  items: BreadcrumbItem[];
+}
+
+const { items } = Astro.props;
+
+// 最後のアイテムは現在のページなのでリンクにしない
+const breadcrumbItems = items.map((item, index) => ({
+  ...item,
+  href: index === items.length - 1 ? undefined : item.href
+}));
+---
+
+{items.length > 0 && (
+  <nav class="breadcrumb" aria-label="パンくずリスト">
+    <ol class="breadcrumb__list">
+      {breadcrumbItems.map((item, index) => (
+        <li class="breadcrumb__item">
+          {item.href ? (
+            <a href={item.href} class="breadcrumb__link">
+              {item.label}
+            </a>
+          ) : (
+            <span class="breadcrumb__current" aria-current="page">
+              {item.label}
+            </span>
+          )}
+          {index < breadcrumbItems.length - 1 && (
+            <span class="breadcrumb__separator" aria-hidden="true">
+              <svg class="breadcrumb__separator-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18L15 12L9 6" />
+              </svg>
+            </span>
+          )}
+        </li>
+      ))}
+    </ol>
+  </nav>
+)}
+
+<style lang="scss">
+@import '@/styles/vars';
+
+.breadcrumb {
+  margin-bottom: $spacing-lg;
+  
+  &__list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $spacing-xs;
+    font-size: $font-size-sm;
+    color: $color-gray-600;
+  }
+  
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+  }
+  
+  &__link {
+    color: $color-gray-600;
+    text-decoration: none;
+    padding: $spacing-xs $spacing-sm;
+    border-radius: $border-radius-md;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      color: $color-primary;
+      background-color: $color-gray-50;
+    }
+    
+    &:focus {
+      outline: 2px solid $color-primary;
+      outline-offset: 2px;
+    }
+  }
+  
+  &__current {
+    color: $color-text;
+    font-weight: 500;
+    padding: $spacing-xs $spacing-sm;
+  }
+  
+  &__separator {
+    display: flex;
+    align-items: center;
+    color: $color-gray-400;
+    
+    &-icon {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+// レスポンシブ対応
+@include media-sm {
+  .breadcrumb {
+    &__list {
+      font-size: $font-size-base;
+    }
+  }
+}
+</style>

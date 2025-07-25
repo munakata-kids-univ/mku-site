@@ -1,0 +1,371 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import CourseCard from '@/components/CourseCard.astro';
+import ButtonList from '@/components/ButtonList.astro';
+import { 
+  getGlobalSettings, 
+  getMainCampusSettings, 
+  getMainCampusCourses 
+} from '../../../lib/microcms';
+
+// データ取得
+const globalSettings = await getGlobalSettings();
+const mainCampusSettings = await getMainCampusSettings();
+const currentYear = globalSettings.currentYear;
+
+// 現行年度の講座一覧を取得
+const courses = await getMainCampusCourses(currentYear);
+
+// ページ情報
+const pageTitle = `メインキャンパス（${currentYear}年度）`;
+const pageDescription = `${currentYear}年度のメインキャンパス講座一覧。年間を通じて開催される基幹講座で、様々な分野の専門家による講義や体験活動を通じて、子どもたちの学習意欲を高めます。`;
+
+// パンくずリスト
+const breadcrumbItems = [
+  { label: 'ホーム', href: '/' },
+  { label: '講座', href: '/course' },
+  { label: 'メインキャンパス' }
+];
+
+// ボタンリスト（メインキャンパス設定から取得）
+const buttons = mainCampusSettings.buttons
+  .filter(button => button.enabled)
+  .map(button => ({
+    label: button.text,
+    url: button.url,
+    type: 'primary' as const
+  }));
+
+// 講座カード用のデータ変換
+const courseCards = courses.map(course => ({
+  title: course.title,
+  subtitle: '', // 必要に応じて追加
+  thumbnail: '', // 必要に応じて追加
+  href: `/course/main-campus/${currentYear}/${course.id}`,
+  date: course.scheduleDate,
+  venue: '' // 必要に応じて追加
+}));
+
+// フェーズに応じたメッセージ
+const getPhaseMessage = (phase: string) => {
+  switch (phase) {
+    case 'before':
+      return '講座の申し込み受付を開始しました。下記のボタンからお申し込みください。';
+    case 'during':
+      return '講座を開催中です。参加者の皆様は実施要項をご確認ください。';
+    case 'after':
+      return '今年度の講座は終了しました。来年度の開催をお楽しみに。';
+    default:
+      return '';
+  }
+};
+
+const phaseMessage = getPhaseMessage(mainCampusSettings.phase);
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <div class="u-container">
+    <!-- パンくずリスト -->
+    <Breadcrumb items={breadcrumbItems} />
+    
+    <!-- ページヘッダー -->
+    <div class="page-header">
+      <h1 class="page-header__title">メインキャンパス</h1>
+      <p class="page-header__year">{currentYear}年度</p>
+      <p class="page-header__description">
+        年間を通じて開催される基幹講座。様々な分野の専門家による講義や体験活動を通じて、子どもたちの学習意欲を高めます。
+      </p>
+    </div>
+
+    <!-- フェーズメッセージ -->
+    {phaseMessage && (
+      <div class="phase-message">
+        <p class="phase-message__text">{phaseMessage}</p>
+      </div>
+    )}
+
+    <!-- ボタンリスト -->
+    <ButtonList buttons={buttons} />
+
+    <!-- 講座一覧 -->
+    <section class="courses-section">
+      <div class="courses-section__header">
+        <h2 class="courses-section__title">講座一覧</h2>
+        <p class="courses-section__count">
+          {courses.length}件の講座があります
+        </p>
+      </div>
+
+      {courses.length > 0 ? (
+        <div class="courses-grid">
+          {courseCards.map(course => (
+            <CourseCard
+              title={course.title}
+              subtitle={course.subtitle}
+              thumbnail={course.thumbnail}
+              href={course.href}
+              date={course.date}
+              venue={course.venue}
+            />
+          ))}
+        </div>
+      ) : (
+        <div class="empty-state">
+          <div class="empty-state__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 14C19 18.4 15.4 22 11 22C6.6 22 3 18.4 3 14C3 9.6 6.6 6 11 6C15.4 6 19 9.6 19 14Z" />
+              <path d="M21 2L16 7" />
+              <path d="M15 8L21 2" />
+            </svg>
+          </div>
+          <h3 class="empty-state__title">講座がありません</h3>
+          <p class="empty-state__description">
+            現在、{currentYear}年度の講座は登録されていません。
+          </p>
+        </div>
+      )}
+    </section>
+
+    <!-- 年度別リンク -->
+    <section class="archive-section">
+      <div class="archive-section__header">
+        <h2 class="archive-section__title">過去の年度</h2>
+        <p class="archive-section__description">
+          過去の講座情報もご覧いただけます
+        </p>
+      </div>
+      
+      <div class="archive-links">
+        {Array.from({ length: 3 }, (_, i) => currentYear - 1 - i).map(year => (
+          <a href={`/course/main-campus/${year}`} class="archive-link">
+            {year}年度
+          </a>
+        ))}
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style lang="scss">
+@import '../../../styles/_index';
+
+/* ページヘッダー */
+.page-header {
+  text-align: center;
+  margin-bottom: rem(64);
+  
+  &__title {
+    @include heading-xl('ja');
+    font-weight: 700;
+    color: $text-primary;
+    margin-bottom: rem(16);
+    
+    @include breakpoint-up(sm) {
+      font-size: rem(56);
+    }
+  }
+  
+  &__year {
+    font-size: rem(32);
+    font-weight: 600;
+    color: $brand-primary;
+    margin-bottom: rem(32);
+    
+    @include breakpoint-up(sm) {
+      font-size: rem(40);
+    }
+  }
+  
+  &__description {
+    font-size: rem(16);
+    color: $text-secondary;
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 0 auto;
+    
+    @include breakpoint-up(sm) {
+      font-size: rem(18);
+    }
+  }
+}
+
+/* フェーズメッセージ */
+.phase-message {
+  background-color: $brand-primary;
+  color: $text-white;
+  padding: rem(32);
+  @include radius-l;
+  margin-bottom: rem(48);
+  text-align: center;
+  
+  &__text {
+    font-size: rem(16);
+    font-weight: 500;
+    line-height: 1.5;
+    
+    @include breakpoint-up(sm) {
+      font-size: rem(18);
+    }
+  }
+}
+
+/* 講座セクション */
+.courses-section {
+  margin-bottom: rem(96);
+  
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: rem(48);
+    
+    @include breakpoint-up(sm) {
+      margin-bottom: rem(64);
+    }
+  }
+  
+  &__title {
+    font-size: rem(40);
+    font-weight: 700;
+    color: $text-primary;
+    
+    @include breakpoint-up(sm) {
+      font-size: rem(48);
+    }
+  }
+  
+  &__count {
+    font-size: rem(14);
+    color: $text-secondary;
+    
+    @include breakpoint-up(sm) {
+      font-size: rem(16);
+    }
+  }
+}
+
+/* 講座グリッド */
+.courses-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: rem(48);
+  
+  @include breakpoint-up(sm) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  @include breakpoint-up(lg) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: rem(64);
+  }
+}
+
+/* 空状態 */
+.empty-state {
+  text-align: center;
+  padding: rem(96);
+  background-color: $background-secondary;
+  @include radius-l;
+  
+  &__icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto rem(32);
+    color: $text-tertiary;
+    
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+  
+  &__title {
+    font-size: rem(32);
+    font-weight: 600;
+    color: $text-primary;
+    margin-bottom: rem(24);
+    
+    @include breakpoint-up(sm) {
+      font-size: rem(40);
+    }
+  }
+  
+  &__description {
+    font-size: rem(16);
+    color: $text-secondary;
+    line-height: 1.5;
+    
+    @include breakpoint-up(sm) {
+      font-size: rem(18);
+    }
+  }
+}
+
+/* アーカイブセクション */
+.archive-section {
+  border-top: 1px solid $border-secondary;
+  padding-top: rem(64);
+  
+  &__header {
+    text-align: center;
+    margin-bottom: rem(48);
+  }
+  
+  &__title {
+    font-size: rem(40);
+    font-weight: 700;
+    color: $text-primary;
+    margin-bottom: rem(16);
+    
+    @include breakpoint-up(sm) {
+      font-size: rem(48);
+    }
+  }
+  
+  &__description {
+    font-size: rem(16);
+    color: $text-secondary;
+    
+    @include breakpoint-up(sm) {
+      font-size: rem(18);
+    }
+  }
+}
+
+/* アーカイブリンク */
+.archive-links {
+  display: flex;
+  justify-content: center;
+  gap: rem(24);
+  flex-wrap: wrap;
+  
+  @include breakpoint-up(sm) {
+    gap: rem(32);
+  }
+}
+
+.archive-link {
+  display: inline-block;
+  padding: rem(24) rem(32);
+  background-color: $text-white;
+  border: 2px solid $border-secondary;
+  @include radius-l;
+  color: $text-primary;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    border-color: $brand-primary;
+    color: $brand-primary;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  &:focus {
+    outline: 2px solid $brand-primary;
+    outline-offset: 2px;
+  }
+}
+</style>

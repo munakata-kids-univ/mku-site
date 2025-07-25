@@ -1,0 +1,284 @@
+@use '../tokens/variables' as vars;
+
+// フォントサイズ + ウェイト統合関数
+// 使用例: font-size: font-size-ja-s(semibold);
+
+@function font-size-ja-5l($weight: regular) {
+  @if $weight == semibold {
+    @return vars.$font-size-ja-5l;
+  }
+  @return vars.$font-size-ja-5l;
+}
+
+@function font-size-ja-4l($weight: regular) {
+  @if $weight == semibold {
+    @return vars.$font-size-ja-4l;
+  }
+  @return vars.$font-size-ja-4l;
+}
+
+@function font-size-ja-3l($weight: regular) {
+  @if $weight == semibold {
+    @return vars.$font-size-ja-3l;
+  }
+  @return vars.$font-size-ja-3l;
+}
+
+@function font-size-ja-2l($weight: regular) {
+  @if $weight == semibold {
+    @return vars.$font-size-ja-2l;
+  }
+  @return vars.$font-size-ja-2l;
+}
+
+@function font-size-ja-l($weight: regular) {
+  @if $weight == semibold {
+    @return vars.$font-size-ja-l;
+  }
+  @return vars.$font-size-ja-l;
+}
+
+@function font-size-ja-m($weight: regular) {
+  @if $weight == semibold {
+    @return vars.$font-size-ja-m;
+  }
+  @return vars.$font-size-ja-m;
+}
+
+@function font-size-ja-s($weight: regular) {
+  @if $weight == semibold {
+    @return vars.$font-size-ja-s;
+  }
+  @return vars.$font-size-ja-s;
+}
+
+@function font-size-ja-2s($weight: regular) {
+  @if $weight == semibold {
+    @return vars.$font-size-ja-2s;
+  }
+  @return vars.$font-size-ja-2s;
+}
+
+@function font-size-ja-3s($weight: regular) {
+  @if $weight == semibold {
+    @return vars.$font-size-ja-3s;
+  }
+  @return vars.$font-size-ja-3s;
+}
+
+@function font-size-ja-4s($weight: regular) {
+  @if $weight == semibold {
+    @return vars.$font-size-ja-4s;
+  }
+  @return vars.$font-size-ja-4s;
+}
+
+// フォントサイズとウェイトを同時に適用するミックスイン
+@mixin font-ja-5l($weight: regular) {
+  font-size: font-size-ja-5l($weight);
+  @if $weight == semibold {
+    font-weight: 600;
+  } @else {
+    font-weight: 400;
+  }
+}
+
+@mixin font-ja-4l($weight: regular) {
+  font-size: font-size-ja-4l($weight);
+  @if $weight == semibold {
+    font-weight: 600;
+  } @else {
+    font-weight: 400;
+  }
+}
+
+@mixin font-ja-3l($weight: regular) {
+  font-size: font-size-ja-3l($weight);
+  @if $weight == semibold {
+    font-weight: 600;
+  } @else {
+    font-weight: 400;
+  }
+}
+
+@mixin font-ja-2l($weight: regular) {
+  font-size: font-size-ja-2l($weight);
+  @if $weight == semibold {
+    font-weight: 600;
+  } @else {
+    font-weight: 400;
+  }
+}
+
+@mixin font-ja-l($weight: regular) {
+  font-size: font-size-ja-l($weight);
+  @if $weight == semibold {
+    font-weight: 600;
+  } @else {
+    font-weight: 400;
+  }
+}
+
+@mixin font-ja-m($weight: regular) {
+  font-size: font-size-ja-m($weight);
+  @if $weight == semibold {
+    font-weight: 600;
+  } @else {
+    font-weight: 400;
+  }
+}
+
+@mixin font-ja-s($weight: regular) {
+  font-size: font-size-ja-s($weight);
+  @if $weight == semibold {
+    font-weight: 600;
+  } @else {
+    font-weight: 400;
+  }
+}
+
+@mixin font-ja-2s($weight: regular) {
+  font-size: font-size-ja-2s($weight);
+  @if $weight == semibold {
+    font-weight: 600;
+  } @else {
+    font-weight: 400;
+  }
+}
+
+@mixin font-ja-3s($weight: regular) {
+  font-size: font-size-ja-3s($weight);
+  @if $weight == semibold {
+    font-weight: 600;
+  } @else {
+    font-weight: 400;
+  }
+}
+
+@mixin font-ja-4s($weight: regular) {
+  font-size: font-size-ja-4s($weight);
+  @if $weight == semibold {
+    font-weight: 600;
+  } @else {
+    font-weight: 400;
+  }
+}
+
+// 英語フォント用関数
+@function font-size-en-5l($weight: regular) {
+  @return vars.$font-size-en-5l;
+}
+
+@function font-size-en-4l($weight: regular) {
+  @return vars.$font-size-en-4l;
+}
+
+@function font-size-en-3l($weight: regular) {
+  @return vars.$font-size-en-3l;
+}
+
+@function font-size-en-2l($weight: regular) {
+  @return vars.$font-size-en-2l;
+}
+
+@function font-size-en-l($weight: regular) {
+  @return vars.$font-size-en-l;
+}
+
+@function font-size-en-s($weight: regular) {
+  @return vars.$font-size-en-s;
+}
+
+@function font-size-en-2s($weight: regular) {
+  @return vars.$font-size-en-2s;
+}
+
+@function font-size-en-3s($weight: regular) {
+  @return vars.$font-size-en-3s;
+}
+
+@function font-size-en-4s($weight: regular) {
+  @return vars.$font-size-en-4s;
+}
+
+// 英語フォント用ミックスイン
+@mixin font-en-5l($weight: regular) {
+  font-size: font-size-en-5l($weight);
+  @if $weight == semibold {
+    font-weight: 600;
+  } @else {
+    font-weight: 400;
+  }
+}
+
+@mixin font-en-4l($weight: regular) {
+  font-size: font-size-en-4l($weight);
+  @if $weight == semibold {
+    font-weight: 600;
+  } @else {
+    font-weight: 400;
+  }
+}
+
+@mixin font-en-3l($weight: regular) {
+  font-size: font-size-en-3l($weight);
+  @if $weight == semibold {
+    font-weight: 600;
+  } @else {
+    font-weight: 400;
+  }
+}
+
+@mixin font-en-2l($weight: regular) {
+  font-size: font-size-en-2l($weight);
+  @if $weight == semibold {
+    font-weight: 600;
+  } @else {
+    font-weight: 400;
+  }
+}
+
+@mixin font-en-l($weight: regular) {
+  font-size: font-size-en-l($weight);
+  @if $weight == semibold {
+    font-weight: 600;
+  } @else {
+    font-weight: 400;
+  }
+}
+
+@mixin font-en-s($weight: regular) {
+  font-size: font-size-en-s($weight);
+  @if $weight == semibold {
+    font-weight: 600;
+  } @else {
+    font-weight: 400;
+  }
+}
+
+@mixin font-en-2s($weight: regular) {
+  font-size: font-size-en-2s($weight);
+  @if $weight == semibold {
+    font-weight: 600;
+  } @else {
+    font-weight: 400;
+  }
+}
+
+@mixin font-en-3s($weight: regular) {
+  font-size: font-size-en-3s($weight);
+  @if $weight == semibold {
+    font-weight: 600;
+  } @else {
+    font-weight: 400;
+  }
+}
+
+@mixin font-en-4s($weight: regular) {
+  font-size: font-size-en-4s($weight);
+  @if $weight == semibold {
+    font-weight: 600;
+  } @else {
+    font-weight: 400;
+  }
+}

@@ -1,0 +1,129 @@
+// カラー用ミックスイン
+@use 'sass:color';
+@use '../tokens/variables' as vars;
+
+// ブランドカラー
+@mixin brand-primary {
+  color: vars.$brand-primary;
+}
+
+@mixin brand-secondary {
+  color: vars.$brand-secondary;
+}
+
+@mixin brand-pink {
+  color: vars.$brand-pink;
+}
+
+@mixin brand-turquoise {
+  color: vars.$brand-turquoise;
+}
+
+@mixin brand-purple {
+  color: vars.$brand-purple;
+}
+
+@mixin brand-black {
+  color: vars.$brand-black;
+}
+
+// 背景カラー
+@mixin bg-primary {
+  background-color: vars.$background-primary;
+}
+
+@mixin bg-secondary {
+  background-color: vars.$background-secondary;
+}
+
+@mixin bg-tertiary {
+  background-color: vars.$background-tertiary;
+}
+
+@mixin bg-accent {
+  background-color: vars.$background-accent;
+}
+
+@mixin bg-brand-primary {
+  background-color: vars.$brand-primary;
+}
+
+@mixin bg-brand-secondary {
+  background-color: vars.$brand-secondary;
+}
+
+// テキストカラー
+@mixin text-primary {
+  color: vars.$text-primary;
+}
+
+@mixin text-secondary {
+  color: vars.$text-secondary;
+}
+
+@mixin text-tertiary {
+  color: vars.$text-tertiary;
+}
+
+@mixin text-white {
+  color: vars.$text-white;
+}
+
+@mixin text-link {
+  color: vars.$text-link;
+  
+  &:hover {
+    color: vars.$text-link-hover;
+  }
+}
+
+@mixin text-success {
+  color: vars.$text-success;
+}
+
+@mixin text-error {
+  color: vars.$text-error;
+}
+
+@mixin text-disabled {
+  color: vars.$text-disabled;
+}
+
+// ボーダーカラー
+@mixin border-primary {
+  border-color: vars.$border-primary;
+}
+
+@mixin border-secondary {
+  border-color: vars.$border-secondary;
+}
+
+@mixin border-hover {
+  border-color: vars.$border-hover;
+}
+
+// サブカラー（低明度）
+@mixin bg-sub-yellow-low {
+  background-color: vars.$brand-sub-yellow-low;
+}
+
+@mixin bg-sub-turquoise-low {
+  background-color: vars.$brand-sub-turquoise-low;
+}
+
+@mixin bg-sub-purple-low {
+  background-color: vars.$brand-sub-purple-low;
+}
+
+@mixin bg-sub-pink-low {
+  background-color: vars.$brand-sub-pink-low;
+}
+
+// 超低明度背景
+@mixin bg-sub-yellow-very-low {
+  background-color: vars.$brand-sub-yellow-very-low;
+}
+
+@mixin bg-sub-purple-very-low {
+  background-color: vars.$brand-sub-purple-very-low;
+}

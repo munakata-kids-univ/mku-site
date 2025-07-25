@@ -1,0 +1,50 @@
+---
+// 年度別メインキャンパス一覧ページ
+import { getMainCampusCourses, getGlobalSettings } from '../../../lib/microcms';
+
+export async function getStaticPaths() {
+  // 年度一覧を生成（令和4年度〜令和9年度）
+  const years = ['令和4年度', '令和5年度', '令和6年度', '令和7年度', '令和8年度', '令和9年度'];
+  
+  return years.map(year => ({
+    params: { year: year.replace('令和', 'R').replace('年度', '') },
+    props: { yearLabel: year }
+  }));
+}
+
+const { year } = Astro.params;
+const { yearLabel } = Astro.props;
+
+// 当該年度チェック（リダイレクト用）
+const globalSettings = await getGlobalSettings();
+const currentYear = globalSettings.currentYear;
+
+// 当該年度の場合は /course/main-campus にリダイレクト
+if (yearLabel === currentYear) {
+  return Astro.redirect('/course/main-campus', 301);
+}
+
+const courses = await getMainCampusCourses();
+// 該当年度の講座をフィルタリング
+const yearCourses = courses.filter(course => 
+  course.year === parseInt(year?.replace('R', '')) + 2018
+);
+---
+
+<html>
+<head>
+  <title>メインキャンパス {yearLabel} | むなかた子ども大学</title>
+</head>
+<body>
+  <h1>メインキャンパス {yearLabel}</h1>
+  
+  <div class="course-list">
+    {yearCourses.map(course => (
+      <div key={course.id} class="course-item">
+        <h2>{course.title}</h2>
+        <a href={`/course/main-campus/${year}/${course.id}`}>詳細を見る</a>
+      </div>
+    ))}
+  </div>
+</body>
+</html>

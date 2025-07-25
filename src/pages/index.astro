@@ -1,0 +1,2737 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import NewsSection from '../components/NewsSection.tsx';
+import { getGlobalSettings, getNewsItems, getMediaItems, getCategoriesWithLabels } from '../lib/microcms';
+
+// job アイコンのインポート
+import iconPlane from '../assets/icons/jobs/icon_job-plane-01.svg';
+import iconPolice from '../assets/icons/jobs/icon_job-police-01.svg';
+import iconTrain from '../assets/icons/jobs/icon_job-train-01.svg';
+import iconStethoscope from '../assets/icons/jobs/icon_job-stethoscope-01.svg';
+import iconChefHat from '../assets/icons/jobs/icon_job-chef-hat-01.svg';
+import iconWrench from '../assets/icons/jobs/icon_job-wrench-01.svg';
+import iconFish from '../assets/icons/jobs/icon_job-fish-01.svg';
+import iconMicrophone from '../assets/icons/jobs/icon_job-microphone-01.svg';
+import iconInjection from '../assets/icons/jobs/icon_job-injection-01.svg';
+import iconHelmet from '../assets/icons/jobs/icon_job-helmet-01.svg';
+import iconPencil from '../assets/icons/jobs/icon_job-pencil-01.svg';
+import iconRocket from '../assets/icons/jobs/icon_job-rocket-01.svg';
+import iconGame from '../assets/icons/jobs/icon_job-game-01.svg';
+import iconPrograming from '../assets/icons/jobs/icon_job-programing-01.svg';
+import iconBaseball from '../assets/icons/jobs/icon_job-baseball-01.svg';
+
+// 統計カード アイコンのインポート
+import iconNumbers01 from '../assets/icons/numbers-mc/icon_numbers-main-campus-01.svg';
+import iconNumbers02 from '../assets/icons/numbers-mc/icon_numbers-main-campus-02.svg';
+import iconNumbers03 from '../assets/icons/numbers-mc/icon_numbers-main-campus-03.svg';
+import iconNumbers04 from '../assets/icons/numbers-mc/icon_numbers-main-campus-04.svg';
+import iconNumbers05 from '../assets/icons/numbers-mc/icon_numbers-main-campus-05.svg';
+import iconNumbers06 from '../assets/icons/numbers-mc/icon_numbers-main-campus-06.svg';
+import iconNumbersTitle from '../assets/icons/numbers-mc/icon_numbers-main-campus-title-01.svg';
+
+// データ取得
+const globalSettings = await getGlobalSettings();
+const currentYear = globalSettings.currentYear;
+
+// ニュースとメディア掲載を取得（多めに取得してカテゴリー別に分ける）
+const [newsData, mediaData, categoriesData] = await Promise.all([
+  getNewsItems(50), // カテゴリー別に十分なデータを確保
+  getMediaItems(50), // カテゴリー別に十分なデータを確保
+  getCategoriesWithLabels()
+]);
+
+// カテゴリー別にデータを準備
+const newsByCategory = {};
+const mediaByCat = {};
+
+// お知らせデータをカテゴリー別に分類
+newsData.contents.forEach(item => {
+  if (item.category) {
+    if (!newsByCategory[item.category.id]) {
+      newsByCategory[item.category.id] = [];
+    }
+    newsByCategory[item.category.id].push(item);
+  }
+});
+
+// メディア掲載データをカテゴリー別に分類
+mediaData.contents.forEach(item => {
+  if (item.category) {
+    if (!mediaByCat[item.category.id]) {
+      mediaByCat[item.category.id] = [];
+    }
+    mediaByCat[item.category.id].push(item);
+  }
+});
+
+
+// ページ情報
+const pageTitle = 'ホーム';
+const pageDescription = '本物から学び、本物を体験し 興味・関心から「志」へ。宗像市の子どもたちに学びの機会を提供する教育プログラム。';
+
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <!-- ヒーローセクション -->
+  <section class="hero">
+    <!-- 背景動画 -->
+    <div class="hero__video-bg">
+      <video autoplay muted loop playsinline class="hero__video">
+        <source src="/movie/movie_topview-01.mp4" type="video/mp4">
+      </video>
+    </div>
+
+    <div class="hero__container">
+      <div class="hero__content">
+        <h1 class="hero__title">
+          <span class="hero__title-line hero__title-line--sm">本物から学び、</span><br class="u-br-sm"><span class="hero__title-line hero__title-line--sm">本物を体験し</span><br class="u-br-sm"><span class="hero__title-line hero__title-line--sm">興味・関心から「<span class="hero__title-accent">志</span>」へ</span>
+          <span class="hero__title-line hero__title-line--md-up">本物から学び、本物を体験し</span><br class="hero__title-line-br--md-up"><span class="hero__title-line hero__title-line--md-up">興味・関心から「<span class="hero__title-accent">志</span>」へ</span>
+        </h1>
+      </div>
+      
+      <div class="hero__emblem">
+        <img src="/images/content/icon_emblem-01.webp" alt="むなかた子ども大学エンブレム" class="hero__emblem-image" />
+      </div>
+    </div>
+  </section>
+
+  <!-- jobsアイコンスライダーセクション -->
+  <section class="jobs-slider-section">
+    <div class="jobs-slider">
+      <div class="jobs-slider__track">
+        <!-- アイコン一覧（指定順序） -->
+        <div class="jobs-icon">
+          <img src={iconPlane.src} alt="パイロット" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconPolice.src} alt="警察官" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconTrain.src} alt="電車運転士" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconStethoscope.src} alt="医師" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconChefHat.src} alt="シェフ" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconWrench.src} alt="整備士" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconFish.src} alt="漁師" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconMicrophone.src} alt="アナウンサー" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconInjection.src} alt="看護師" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconHelmet.src} alt="建設作業員" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconPencil.src} alt="デザイナー" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconRocket.src} alt="宇宙飛行士" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconGame.src} alt="ゲームクリエイター" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconPrograming.src} alt="プログラマー" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconBaseball.src} alt="野球選手" class="jobs-icon__image" />
+        </div>
+        
+        <!-- 無限ループ用の複製（2セット目） -->
+        <div class="jobs-icon">
+          <img src={iconPlane.src} alt="パイロット" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconPolice.src} alt="警察官" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconTrain.src} alt="電車運転士" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconStethoscope.src} alt="医師" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconChefHat.src} alt="シェフ" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconWrench.src} alt="整備士" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconFish.src} alt="漁師" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconMicrophone.src} alt="アナウンサー" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconInjection.src} alt="看護師" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconHelmet.src} alt="建設作業員" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconPencil.src} alt="デザイナー" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconRocket.src} alt="宇宙飛行士" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconGame.src} alt="ゲームクリエイター" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconPrograming.src} alt="プログラマー" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconBaseball.src} alt="野球選手" class="jobs-icon__image" />
+        </div>
+        
+        <!-- 無限ループ用の複製（3セット目） -->
+        <div class="jobs-icon">
+          <img src={iconPlane.src} alt="パイロット" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconPolice.src} alt="警察官" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconTrain.src} alt="電車運転士" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconStethoscope.src} alt="医師" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconChefHat.src} alt="シェフ" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconWrench.src} alt="整備士" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconFish.src} alt="漁師" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconMicrophone.src} alt="アナウンサー" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconInjection.src} alt="看護師" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconHelmet.src} alt="建設作業員" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconPencil.src} alt="デザイナー" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconRocket.src} alt="宇宙飛行士" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconGame.src} alt="ゲームクリエイター" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconPrograming.src} alt="プログラマー" class="jobs-icon__image" />
+        </div>
+        <div class="jobs-icon">
+          <img src={iconBaseball.src} alt="野球選手" class="jobs-icon__image" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- お知らせ・メディア掲載セクション -->
+  <section class="news-media-section">
+    <div class="news-media-wrapper">
+    <!-- お知らせセクション -->
+    <NewsSection
+      newsItems={newsData.contents.slice(0, 3)}
+      allItems={newsData.contents}
+      categoryData={newsByCategory}
+      categories={categoriesData.newsCategories}
+      type="news"
+      title="お知らせ"
+      className="news-section--purple"
+      client:load
+    />
+
+    <!-- メディア掲載セクション -->
+    <NewsSection
+      newsItems={mediaData.contents.slice(0, 3)}
+      allItems={mediaData.contents}
+      categoryData={mediaByCat}
+      categories={categoriesData.mediaCategories}
+      type="media"
+      title="メディア掲載"
+      className="news-section--light"
+      client:load
+    />
+    </div>
+  </section>
+
+  <!-- むなかた子ども大学とは セクション -->
+  <section class="what-mku">
+    <div class="what-mku__container">
+      <!-- テキストコンテンツ -->
+      <div class="what-mku__content">
+        <div class="what-mku__text-wrapper">
+          <div class="what-mku__header">
+            <h2 class="what-mku__title">むなかた子ども大学とは</h2>
+            <p class="what-mku__subtitle">What is Munakata Kids University?</p>
+          </div>
+          
+          <div class="what-mku__description">
+            <p class="what-mku__paragraph">
+              むなかた子ども大学は、子どもたちが自身の可能性を広げたり新たな可能性を発見し、興味・関心を深掘りして「志」を育むための取組です。教育関係者・企業・団体・市民・行政が総がかりで連携し、「本物から学ぶ」「本物を体験する」職業体験・社会体験の機会を子どもたちに提供し、キャリアプランニング能力の育成に努めています。
+            </p>
+            
+            <p class="what-mku__paragraph">
+              "好きなことを見つけ" "適正を知り" "社会や職業を正しく理解し" "将来のイメージを具体化" できるような「本物」に触れる機会をとおして、子どもたちの発達段階に応じた主体的なキャリア形成の実現を目指しています。
+            </p>
+            
+            <p class="what-mku__paragraph">
+              社会全体が一丸となって協力する、宗像ならではの学びの場が、子どもたちの夢への一歩につながることを願っています。
+            </p>
+          </div>
+          
+          <!-- ボタン -->
+          <div class="what-mku__action">
+            <a href="/about" class="base-button base-button--white">
+              <span class="base-button__text">詳しくみる</span>
+              <div class="base-button__icon">
+                <div class="base-button__icon-arrow"></div>
+              </div>
+            </a>
+          </div>
+          
+          <!-- イラスト -->
+          <div class="what-mku__kids-image">
+            <img src="/images/content/img_muk-kids-01.webp" alt="むなかた子ども大学の子どもたち" class="what-mku__kids-img" />
+          </div>
+        </div>
+      </div>
+
+      <!-- 縦スライダー画像 -->
+      <div class="what-mku__image-slider">
+        <div class="what-mku__slider-track">
+          <img src="/images/content/img_top_what-mku-01.webp" alt="子どもたちの学習風景1" class="what-mku__slide-image" />
+          <img src="/images/content/img_top_what-mku-02.webp" alt="子どもたちの学習風景2" class="what-mku__slide-image" />
+          <img src="/images/content/img_top_what-mku-03.webp" alt="子どもたちの学習風景3" class="what-mku__slide-image" />
+          <img src="/images/content/img_top_what-mku-04.webp" alt="子どもたちの学習風景4" class="what-mku__slide-image" />
+          <img src="/images/content/img_top_what-mku-05.webp" alt="子どもたちの学習風景5" class="what-mku__slide-image" />
+          <!-- 無限ループ用の複製 -->
+          <img src="/images/content/img_top_what-mku-01.webp" alt="子どもたちの学習風景1" class="what-mku__slide-image" />
+          <img src="/images/content/img_top_what-mku-02.webp" alt="子どもたちの学習風景2" class="what-mku__slide-image" />
+          <img src="/images/content/img_top_what-mku-03.webp" alt="子どもたちの学習風景3" class="what-mku__slide-image" />
+          <img src="/images/content/img_top_what-mku-04.webp" alt="子どもたちの学習風景4" class="what-mku__slide-image" />
+          <img src="/images/content/img_top_what-mku-05.webp" alt="子どもたちの学習風景5" class="what-mku__slide-image" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- むなかた子ども大学 4つの柱 セクション -->
+  <section class="pillars">
+    <div class="pillars__decorations">
+      <div class="decoration-square decoration-square--01"></div>
+      <div class="decoration-square decoration-square--02"></div>
+      <div class="decoration-square decoration-square--03"></div>
+      <div class="decoration-square decoration-square--04"></div>
+      <div class="decoration-square decoration-square--05"></div>
+      <div class="decoration-square decoration-square--06"></div>
+      <div class="decoration-square decoration-square--07"></div>
+      <div class="decoration-square decoration-square--08"></div>
+      <div class="decoration-square decoration-square--09"></div>
+      <div class="decoration-square decoration-square--10"></div>
+      <div class="decoration-square decoration-square--11"></div>
+      <div class="decoration-square decoration-square--12"></div>
+      <div class="decoration-square decoration-square--13"></div>
+      <div class="decoration-square decoration-square--14"></div>
+      <div class="decoration-square decoration-square--15"></div>
+      <div class="decoration-square decoration-square--16"></div>
+      <div class="decoration-square decoration-square--17"></div>
+      <div class="decoration-square decoration-square--18"></div>
+      <div class="decoration-square decoration-square--19"></div>
+      <div class="decoration-square decoration-square--20"></div>
+    </div>
+    
+    <img src="/logos/mark-del_mku_color1.svg" alt="" class="pillars__mark" />
+    
+    <div class="u-container">
+      <div class="pillars__header">
+        <h2 class="pillars__title">
+          むなかた子ども大学<br class="u-br-sm">4つの柱
+        </h2>
+        <p class="pillars__subtitle">4 Pillars</p>
+      </div>
+
+      <div class="pillars__grid">
+        <!-- メインキャンパス -->
+        <a href="/course/main-campus" class="pillar-card pillar-card--main-campus">
+          <div class="pillar-card__english">Main Campus</div>
+          <div class="pillar-card__image">
+            <img src="/images/content/img_course-menu-01.webp" alt="メインキャンパス" class="pillar-card__img" />
+          </div>
+          <div class="pillar-card__content">
+            <h3 class="pillar-card__title">メインキャンパス</h3>
+            <p class="pillar-card__description">
+              興味のある職業を1つ選び、1日をとおしてじっくり学ぶ、年に1度の職業体験イベントです。<br>
+              宗像市内に住む小・中学生が主な対象です。
+            </p>
+            <div class="pillar-card__link">
+              <span>VIEW MORE</span>
+              <div class="pillar-card__arrow"></div>
+            </div>
+          </div>
+        </a>
+
+        <!-- 特設講座 -->
+        <a href="/course/special-course" class="pillar-card pillar-card--special-course">
+          <div class="pillar-card__english">Special Course</div>
+          <div class="pillar-card__image">
+            <img src="/images/content/img_course-menu-02.webp" alt="特設講座" class="pillar-card__img" />
+          </div>
+          <div class="pillar-card__content">
+            <h3 class="pillar-card__title">特設講座</h3>
+            <p class="pillar-card__description">
+              月に1〜2回、職業に関わる講座を中心に開催。企業の施設や大学の実習室など、よりリアルな環境で実施することも。
+            </p>
+            <div class="pillar-card__link">
+              <span>VIEW MORE</span>
+              <div class="pillar-card__arrow"></div>
+            </div>
+          </div>
+        </a>
+
+        <!-- 夏の課外授業 -->
+        <a href="/course/summer-course" class="pillar-card pillar-card--summer-course">
+          <div class="pillar-card__english">Summer Course</div>
+          <div class="pillar-card__image">
+            <img src="/images/content/img_course-menu-04.webp" alt="夏の課外授業" class="pillar-card__img" />
+          </div>
+          <div class="pillar-card__content">
+            <h3 class="pillar-card__title">夏の課外授業</h3>
+            <p class="pillar-card__description">
+              市外に住む子どもたちも参加可能な講座を夏休みに多数展開。<br>
+              本市の魅力にたくさん触れてください。
+            </p>
+            <div class="pillar-card__link">
+              <span>VIEW MORE</span>
+              <div class="pillar-card__arrow"></div>
+            </div>
+          </div>
+        </a>
+
+        <!-- むなかた子ども大学の日 -->
+        <a href="/course/mku-day" class="pillar-card pillar-card--mku-day">
+          <div class="pillar-card__english">MKU Day</div>
+          <div class="pillar-card__image">
+            <img src="/images/content/img_course-menu-03.webp" alt="むなかた子ども大学の日" class="pillar-card__img" />
+          </div>
+          <div class="pillar-card__content">
+            <h3 class="pillar-card__title">むなかた子ども大学の日</h3>
+            <p class="pillar-card__description">
+              市内全ての小学校で開催。各校が1年に1回、キャリア教育の視点で地域や企業等との繋がりを活かした学習活動を、各学年のねらいに合わせて実施します。
+            </p>
+            <div class="pillar-card__link">
+              <span>VIEW MORE</span>
+              <div class="pillar-card__arrow"></div>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 数字で見るメインキャンパス セクション -->
+  <section class="statistics">
+    <div class="statistics__title-bg">
+      <img src={iconNumbersTitle.src} alt="" class="statistics__title-bg-icon" />
+    </div>
+    <div class="u-container">
+      <div class="statistics__header">
+        <h2 class="statistics__title">数字で見る<span class="statistics__title-break">"メインキャンパス"</span></h2>
+        <p class="statistics__subtitle">By the Numbers — Main Campus</p>
+      </div>
+
+      <div class="statistics__grid">
+        <!-- キャンパス開催数 -->
+        <div class="stat-card stat-card--01">
+          <div class="stat-card__icon">
+            <img src={iconNumbers01.src} alt="" class="stat-card__icon-image" />
+          </div>
+          <div class="stat-card__content">
+            <div class="stat-card__number"><span class="count-up" data-target="5">0</span><span class="stat-card__unit">人に</span><span class="count-up" data-target="1">0</span><span class="stat-card__unit">人</span></div>
+            <div class="stat-card__label">の市内小学生が応募</div>
+            <div class="stat-card__sub-comment">多くの子どもたちがチャレンジ</div>
+          </div>
+        </div>
+
+        <!-- 延べ修了者数 -->
+        <div class="stat-card stat-card--02">
+          <div class="stat-card__icon">
+            <img src={iconNumbers02.src} alt="" class="stat-card__icon-image" />
+          </div>
+          <div class="stat-card__content">
+            <div class="stat-card__number"><span class="count-up" data-target="123">0</span><span class="stat-card__unit">%</span></div>
+            <div class="stat-card__label">の応募倍率</div>
+            <div class="stat-card__sub-comment">定員を上回る応募者</div>
+          </div>
+        </div>
+
+        <!-- 平均参加者数 -->
+        <div class="stat-card stat-card--03">
+          <div class="stat-card__icon">
+            <img src={iconNumbers03.src} alt="" class="stat-card__icon-image" />
+          </div>
+          <div class="stat-card__content">
+            <div class="stat-card__number"><span class="count-up" data-target="34">0</span><span class="stat-card__unit">講座</span></div>
+            <div class="stat-card__label">が令和6年度開講</div>
+            <div class="stat-card__sub-comment">多彩な業界・職種</div>
+          </div>
+        </div>
+
+        <!-- 平均満足度 -->
+        <div class="stat-card stat-card--04">
+          <div class="stat-card__icon">
+            <img src={iconNumbers04.src} alt="" class="stat-card__icon-image" />
+          </div>
+          <div class="stat-card__content">
+            <div class="stat-card__number"><span class="count-up" data-target="99.6">0.0</span><span class="stat-card__unit">%</span></div>
+            <div class="stat-card__label">のコース満足度</div>
+            <div class="stat-card__sub-comment">「とても楽しかった」「楽しかった」と回答</div>
+          </div>
+        </div>
+
+        <!-- 進路実現率 -->
+        <div class="stat-card stat-card--05">
+          <div class="stat-card__icon">
+            <img src={iconNumbers05.src} alt="" class="stat-card__icon-image" />
+          </div>
+          <div class="stat-card__content">
+            <div class="stat-card__number"><span class="count-up" data-target="93.3">0.0</span><span class="stat-card__unit">%</span></div>
+            <div class="stat-card__label">職業・生き方への理解</div>
+            <div class="stat-card__sub-comment"><span class="stat-card__sub-comment-line1">いろいろな職業や生き方があることが</span><span class="stat-card__sub-comment-line2">「よく分かった」「分かった」と回答</span></div>
+          </div>
+        </div>
+
+        <!-- 継続率 -->
+        <div class="stat-card stat-card--06">
+          <div class="stat-card__icon">
+            <img src={iconNumbers06.src} alt="" class="stat-card__icon-image" />
+          </div>
+          <div class="stat-card__content">
+            <div class="stat-card__number"><span class="count-up" data-target="92.0">0.0</span><span class="stat-card__unit">%</span></div>
+            <div class="stat-card__label">働くこと・人への理解</div>
+            <div class="stat-card__sub-comment"><span class="stat-card__sub-comment-line1">働く大切さ・楽しさ・苦労が</span><span class="stat-card__sub-comment-line2">「よく分かった」「分かった」と回答</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ご協力いただいている団体さま セクション -->
+  <section class="partners">
+      <div class="partners__header">
+        <h2 class="partners__title">ご協力いただいている<span class="partners__title-break">皆さま</span></h2>
+        <h3 class="partners__subtitle">Partners Supporting Our Mission</h3>
+      </div>
+      
+      <p class="partners__description">
+        むなかた子ども大学は、多くの大学・企業・団体等の皆さまのご協力によって支えられています。<br>子どもたちの未来のために、本物の学びと体験を提供してくださる皆さまに心より感謝申し上げます。
+      </p>
+
+    <div class="partners__slider">
+        <!-- 上段：左から右へスクロール -->
+        <div class="partners__track partners__track--top">
+          <!-- サンプルロゴ（実際のロゴは後から追加） -->
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ1</div>
+          </div>
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ2</div>
+          </div>
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ3</div>
+          </div>
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ4</div>
+          </div>
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ5</div>
+          </div>
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ6</div>
+          </div>
+          <!-- 無限ループ用の複製 -->
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ1</div>
+          </div>
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ2</div>
+          </div>
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ3</div>
+          </div>
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ4</div>
+          </div>
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ5</div>
+          </div>
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ6</div>
+          </div>
+        </div>
+
+        <!-- 下段：右から左へスクロール -->
+        <div class="partners__track partners__track--bottom">
+          <!-- サンプルロゴ（実際のロゴは後から追加） -->
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ7</div>
+          </div>
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ8</div>
+          </div>
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ9</div>
+          </div>
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ10</div>
+          </div>
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ11</div>
+          </div>
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ12</div>
+          </div>
+          <!-- 無限ループ用の複製 -->
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ7</div>
+          </div>
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ8</div>
+          </div>
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ9</div>
+          </div>
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ10</div>
+          </div>
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ11</div>
+          </div>
+          <div class="partner-logo">
+            <div class="partner-logo__placeholder">企業ロゴ12</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PICK UP MOVIE セクション -->
+  <section class="movie">
+    <div class="u-container">
+      <div class="movie__header">
+        <h2 class="movie__title">PICK UP MOVIE</h2>
+      </div>
+
+      <div class="movie__grid">
+        <!-- 動画1 -->
+        <div class="movie__item">
+          <div class="movie__video-wrapper">
+            <iframe
+              src="https://www.youtube.com/embed/Sdsqeye050k"
+              title="むなかた子ども大学 紹介動画1"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen>
+            </iframe>
+          </div>
+        </div>
+
+        <!-- 動画2 -->
+        <div class="movie__item">
+          <div class="movie__video-wrapper">
+            <iframe
+              src="https://www.youtube.com/embed/ToJWUGuK7Bg"
+              title="むなかた子ども大学 紹介動画2"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen>
+            </iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // カウントアップアニメーションの実装
+  function animateCountUp(element: HTMLElement, start: number, end: number, duration: number, isDecimal: boolean = false) {
+    const startTime = performance.now();
+    
+    function update(currentTime: number) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // イージング関数（ease-out）
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      
+      const current = start + (end - start) * easeOut;
+      
+      if (isDecimal) {
+        element.textContent = current.toFixed(1);
+      } else {
+        element.textContent = Math.floor(current).toString();
+      }
+      
+      if (progress < 1) {
+        requestAnimationFrame(update);
+      } else {
+        // アニメーション完了時に最終値を設定
+        if (isDecimal) {
+          element.textContent = end.toFixed(1);
+        } else {
+          element.textContent = end.toString();
+        }
+      }
+    }
+    
+    requestAnimationFrame(update);
+  }
+  
+  // Intersection Observerでスクロール検知
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const statisticsSection = entry.target;
+        const countUpElements = statisticsSection.querySelectorAll('.count-up');
+        
+        countUpElements.forEach(element => {
+          const targetAttr = element.getAttribute('data-target');
+          if (targetAttr) {
+            const target = parseFloat(targetAttr);
+            const isDecimal = target % 1 !== 0; // 小数点があるかチェック
+            
+            // アニメーション開始（1から開始、3秒間）
+            animateCountUp(element as HTMLElement, 1, target, 3000, isDecimal);
+          }
+        });
+        
+        // 一度実行したら監視を停止
+        observer.unobserve(statisticsSection);
+      }
+    });
+  }, {
+    threshold: 0.3, // セクションの30%が見えたら実行
+    rootMargin: '0px 0px -100px 0px' // 下から100px余裕を持たせる
+  });
+  
+  // statisticsセクションを監視対象に追加
+  const statisticsSection = document.querySelector('.statistics');
+  if (statisticsSection) {
+    observer.observe(statisticsSection);
+  }
+});
+</script>
+
+<style lang="scss">
+@import '../styles/_index';
+
+/* ヒーローセクション */
+.hero {
+  position: relative;
+  color: $text-white;
+  padding: 0;
+  overflow: visible;
+  height: rem(540);
+  display: flex;
+  align-items: center;
+  border-bottom-right-radius: rem(60);
+  
+  @include breakpoint-up(md) {
+    height: 100vh;
+    max-height: rem(940);
+  }
+  
+  // 切り欠け部分の背景色を設定
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: rem(60);
+    height: rem(60);
+    background-color: $background-tertiary;
+    z-index: -1;
+  }
+  
+
+  &__video-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+  }
+
+  &__video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-bottom-right-radius: rem(60);
+    @include breakpoint-up(lg) {
+      border-bottom-right-radius: rem(72);
+    }
+  }
+
+
+  &__container {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    height: 100%;
+  }
+  
+  &__content {
+    position: absolute;
+    bottom: rem(25);
+    left: rem(20);
+    max-width: rem(600);
+    
+    @include breakpoint-up(md) {
+      left: rem(40);
+      bottom: rem(30);
+    }
+    
+    @include breakpoint-up(lg) {
+      left: rem(60);
+      bottom: rem(45);
+    }
+  }
+
+  &__title {
+    @include font-ja-m(semibold);
+    margin-bottom: 0;
+    line-height: 1.4;
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-2l(semibold);
+    }
+  }
+
+  &__title-line {
+    display: inline;
+    background: linear-gradient(to bottom, transparent 15%, $background-primary 15%, $background-primary 93%, transparent 93%);
+    color: $text-primary;
+    line-height: 1.6;
+    padding: rem(2) rem(3);
+    
+    &--sm {
+      @include breakpoint-up(sm) {
+        display: none;
+      }
+    }
+    
+    &--md-up {
+      display: none;
+      
+      @include breakpoint-up(sm) {
+        display: inline;
+      }
+    }
+  }
+  
+  &__title-accent {
+    color: $brand-primary;
+  }
+  
+  &__emblem {
+    position: absolute;
+    bottom: rem(20);
+    right: rem(20);
+    
+    @include breakpoint-up(md) {
+      right: rem(40);
+      bottom: rem(20);
+    }
+    
+    @include breakpoint-up(lg) {
+      right: rem(60);
+      bottom: rem(35);
+    }
+  }
+  
+  &__emblem-image {
+    height: rem(120);
+    width: auto;
+    
+    @include breakpoint-up(lg) {
+      height: rem(192);
+    }
+  }
+
+}
+
+/* jobsアイコンスライダーセクション */
+.jobs-slider-section {
+  background-color: $background-tertiary;
+  
+  @include breakpoint-up(xl) {
+    padding-top: rem(20);
+  }
+}
+
+.jobs-slider {
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: visible;
+  position: relative;
+  
+  // フェードアウト効果（左右端）
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: rem(60);
+    z-index: 2;
+    pointer-events: none;
+  }
+  
+  &::before {
+    left: 0;
+    background: linear-gradient(to right, $background-tertiary, transparent);
+  }
+  
+  &::after {
+    right: 0;
+    background: linear-gradient(to left, $background-tertiary, transparent);
+  }
+  
+  &__track {
+    display: flex;
+    margin-top: rem(40);
+    margin-bottom: rem(40);
+    width: calc(300%); // 3倍の幅で無限ループ
+    animation: slideJobsRight 45s linear infinite; // 右から左へ
+  }
+}
+
+.jobs-icon {
+  flex: 0 0 rem(50);
+  height: rem(50);
+  margin-right: rem(20);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  @include breakpoint-up(lg) {
+    flex: 0 0 rem(60);
+    height: rem(60);
+    margin-right: rem(30);
+  }
+  
+  @include breakpoint-up(xl) {
+    flex: 0 0 rem(80);
+    height: rem(80);
+    margin-right: rem(40);
+  }
+  
+  // 個別のプカプカアニメーション（遅延を使って自然な動きに）
+  &:nth-child(odd) {
+    animation: floatUp 3s ease-in-out infinite;
+  }
+  
+  &:nth-child(even) {
+    animation: floatUp 3s ease-in-out infinite 1.5s;
+  }
+  
+  &:nth-child(3n) {
+    animation: floatUp 3.5s ease-in-out infinite 0.8s;
+  }
+  
+  &:nth-child(4n) {
+    animation: floatUp 2.8s ease-in-out infinite 2.2s;
+  }
+  
+  &:nth-child(5n) {
+    animation: floatUp 3.2s ease-in-out infinite 1.8s;
+  }
+  
+  &__image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+  }
+  
+  &:hover &__image {
+    transform: scale(1.1) rotate(30deg);
+  }
+}
+
+// 右から左へのスライダーアニメーション
+@keyframes slideJobsRight {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-33.333%); // 1/3移動すると元の位置に戻る（無限ループ効果）
+  }
+}
+
+// 上下プカプカアニメーション
+@keyframes floatUp {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(rem(-12));
+  }
+}
+
+
+/* ニュース・メディアセクション */
+.news-media-section {
+  background-color: $background-tertiary;
+  padding-bottom: rem(80);
+  border-bottom-right-radius: rem(30);
+  position: relative;
+  
+  @include breakpoint-up(sm) {
+    padding-bottom: rem(100);
+  }
+  @include breakpoint-up(md) {
+    border-bottom-right-radius: rem(60);
+  }
+  
+  @include breakpoint-up(lg) {
+    padding-top: rem(10);
+    padding-bottom: rem(120);
+    border-bottom-right-radius: rem(72);
+  }
+  
+  // 右下の切り欠け部分の背景色を設定
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: rem(60);
+    height: rem(60);
+    background-color: $brand-primary;
+    z-index: -1;
+  }
+}
+
+.news-media-wrapper {
+  @include container;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: rem(60);
+  
+  @include breakpoint-up(lg) {
+    grid-template-columns: 1fr 1fr;
+    gap: rem(40);
+    max-width: rem(1200);
+    margin: 0 auto;
+    align-items: stretch; // 両方のコンテナの高さを揃える
+  }
+  
+  @include breakpoint-up(lg) {
+    gap: rem(60);
+  }
+}
+
+:global(.news-section) {
+  border-radius: rem(16);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%; // 親のgridの高さいっぱいに伸ばす
+}
+
+:global(.news-section--purple) {
+  background: linear-gradient(135deg, $brand-primary 0%, lighten($brand-primary, 8%) 100%);
+  color: $text-white;
+}
+
+:global(.news-section--light) {
+  background: $background-tertiary;
+  color: $text-primary;
+}
+
+:global(.news-section--light .news-section__container) {
+  background-color: #ffffff !important;
+  background-image: radial-gradient(circle, #fce3f0 1.5px, transparent 1.5px) !important;
+  background-position: 0 0 !important;
+  background-size: 13px 13px !important;
+}
+
+:global(.news-section__container) {
+  @include padding(20, 20, 30);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  
+  @include breakpoint-up(lg) {
+    @include padding(40, 30, 50);
+  }
+}
+
+:global(.news-section__header) {
+  margin-bottom: rem(32);
+  text-align: center;
+}
+
+:global(.news-section__title) {
+  @include font-ja-l(semibold);
+  margin-bottom: 0;
+  margin-top: rem(10);
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-2l(semibold);
+  }
+}
+
+:global(.news-section--purple .news-section__container) {
+  background-color: $background-primary !important;
+  background-image: radial-gradient(circle, #feecc5 1.5px, transparent 1.5px) !important;
+  background-position: 0 0 !important;
+  background-size: 13px 13px !important;
+  color: $text-primary !important;
+}
+
+:global(.news-section--purple .news-section__title) {
+  color: $text-primary !important;
+}
+
+:global(.news-section__subtitle) {
+  @include font-ja-2s(semibold);
+  color: $text-secondary;
+  margin: 0;
+  letter-spacing: 1px;
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-s(semibold);
+  }
+}
+
+:global(.news-section__tabs) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: rem(8);
+  margin-bottom: rem(32);
+  justify-content: center;
+  
+  @include breakpoint-up(sm) {
+    gap: rem(12);
+  }
+}
+
+:global(.news-section__tab) {
+  @include padding(4, 15);
+  background: transparent;
+  border: 1px solid $text-disabled;
+  color: $text-disabled;
+  @include radius-full;
+  font-size: rem(12);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  @include breakpoint-up(lg) {
+    font-size: rem(14);
+  }
+}
+
+:global(.news-section--light .news-section__tab) {
+  border-color: $text-disabled;
+  color: $text-disabled;
+}
+
+:global(.news-section__tab:hover) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:global(.news-section--light .news-section__tab:hover) {
+  background: $background-secondary;
+}
+
+:global(.news-section__tab--active) {
+  border: 2px solid $brand-turquoise;
+  color: $brand-turquoise;
+}
+
+:global(.news-section__tab--active:hover) {
+  background: rgba($brand-turquoise, 0.1);
+}
+
+:global(.news-section--light .news-section__tab--active) {
+  border: 2px solid $brand-turquoise;
+  color: $brand-turquoise;
+  background: transparent;
+}
+
+:global(.news-section--light .news-section__tab--active:hover) {
+  background: rgba($brand-turquoise, 0.1);
+}
+
+:global(.news-section__content) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: rem(240);
+}
+
+:global(.news-section__list) {
+  flex: 1;
+  margin-bottom: rem(32);
+}
+
+:global(.news-section__empty) {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: rem(40) rem(20);
+}
+
+:global(.news-section__empty p) {
+  opacity: 0.7;
+  font-size: rem(16);
+}
+
+:global(.news-section__actions) {
+  text-align: center;
+  margin-top: auto; // 自動的に下部に配置
+}
+
+:global(.news-section__link-button) {
+  @include padding(12, 24);
+  background: transparent;
+  border: 2px solid currentColor;
+  color: inherit;
+  text-decoration: none;
+  @include radius-m;
+  font-weight: 600;
+  font-size: rem(15);
+  display: inline-flex;
+  align-items: center;
+  gap: rem(8);
+  transition: all 0.3s ease;
+  
+  @include breakpoint-up(sm) {
+    @include padding(14, 28);
+    font-size: rem(16);
+  }
+}
+
+:global(.news-section__link-button:hover) {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+:global(.news-section--light .news-section__link-button:hover) {
+  background: $brand-primary;
+  color: $text-white;
+}
+
+:global(.news-section__link-icon) {
+  width: rem(16);
+  height: rem(16);
+  transition: transform 0.3s ease;
+}
+
+:global(.news-section__link-button:hover .news-section__link-icon) {
+  transform: translateX(2px);
+}
+
+:global(.news-item) {
+  padding: rem(15) rem(10) rem(15) 0;
+  border-bottom: 1px solid $border-secondary;
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: rem(10);
+    width: rem(6);
+    height: rem(6);
+    border-right: 1px solid $text-secondary;
+    border-bottom: 1px solid $text-secondary;
+    transform: translateY(-50%) rotate(-45deg);
+    transition: right 0.3s ease;
+  }
+
+  @include breakpoint-up(lg) {
+    padding: rem(20) rem(10) rem(20) 0;
+  }
+  
+  &:hover::after {
+    right: 0;
+  }
+}
+
+:global(.news-section--light .news-item) {
+  border-bottom-color: $border-secondary;
+}
+
+:global(.news-item:last-child) {
+
+}
+
+:global(.news-item__meta) {
+  display: flex;
+  align-items: center;
+  gap: rem(12);
+  margin-bottom: rem(8);
+  flex-wrap: wrap;
+}
+
+:global(.news-item__date) {
+  @include font-ja-2s(semibold);
+  color: $background-dark-gray;
+}
+
+:global(.news-item__category) {
+  @include padding(1, 8);
+  background: $brand-primary;
+  color: $text-white;
+  @include radius-xs;
+  @include font-ja-3s(semibold);
+  
+  @include breakpoint-up(sm) {
+    // @include padding(5, 10);
+  }
+  @include breakpoint-up(lg) {
+    @include padding(1, 10, 2);
+  }
+}
+
+:global(.news-item__title) {
+  margin: 0;
+  @include font-ja-s(semibold);
+  line-height: 1.5;
+  padding-right: rem(30); // 矢印スペース確保（矢印幅9px + 右端10px + マージン11px）
+}
+
+:global(.news-item__link) {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+:global(.news-item:hover .news-item__link) {
+  color: $brand-secondary;
+}
+
+
+/* むなかた子ども大学とは セクション */
+.what-mku {
+  background-color: $brand-primary;
+  color: $text-white;
+  overflow: visible;
+  border-top-left-radius: rem(30);
+  border-bottom-right-radius: rem(30);
+  position: relative;
+  @include breakpoint-up(md) {
+    border-top-left-radius: rem(60);
+    border-bottom-right-radius: rem(60);
+  }
+  @include breakpoint-up(lg) {
+    border-top-left-radius: rem(72);
+    border-bottom-right-radius: rem(72);
+  }
+  
+  // 左上の切り欠け部分の背景色を設定（上下半分で色分け）
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, $background-tertiary 50%, $background-primary 50%);
+    z-index: -1;
+  }
+
+  &__container {
+    @include container;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: rem(48);
+    align-items: center;
+    padding-bottom: rem(80);
+    
+    @include breakpoint-up(md) {
+      padding-bottom: rem(100);
+      align-items: flex-start;
+    }
+    
+    @include breakpoint-up(lg) {
+      grid-template-columns: 52% 1fr;
+      gap: rem(35);
+      padding-bottom: 0;
+      align-items: start;
+    }
+    @include breakpoint-up(xl) {
+      gap: rem(50);
+    }
+  }
+
+  &__image-slider {
+    width: 88%;
+    margin: 0 auto;
+    height: rem(425);
+    overflow: hidden;
+    position: relative;
+    order: 1;
+    
+    @include breakpoint-up(md) {
+      height: rem(500);
+    }
+    
+    @include breakpoint-up(lg) {
+      height: rem(1000);
+      order: 2;
+    }
+    @include breakpoint-up(xl) {
+      height: rem(960);
+    }
+  }
+
+  &__slider-track {
+    display: flex;
+    flex-direction: column;
+    row-gap: rem(16);
+    height: calc(100% * 2); // 2倍の高さで無限ループ効果
+    animation: slideVertical 20s linear infinite;
+    @include breakpoint-up(sm) {
+      row-gap: rem(24);
+    }
+    @include breakpoint-up(lg) {
+      row-gap: rem(40);
+    }
+  }
+
+  &__slide-image {
+    width: 100%;
+    aspect-ratio: 100 / 72;
+    // height: 20%; // 5枚の画像なので各20%
+    object-fit: cover;
+    display: block;
+    @include radius-2l;
+  }
+
+  &__content {
+    text-align: center;
+    order: 2;
+    
+    @include breakpoint-up(lg) {
+      text-align: left;
+      order: 1;
+    }
+  }
+
+  &__text-wrapper {
+    // max-width: rem(600);
+    margin: 0 auto;
+    
+    @include breakpoint-up(lg) {
+      margin: 0;
+      padding-top: rem(90);
+      padding-bottom: rem(30);
+    }
+  }
+
+  &__header {
+    margin-bottom: rem(32);
+    text-align: left;
+  }
+
+  &__title {
+    @include font-ja-l(semibold);
+    color: $text-white;
+    margin-bottom: 0;
+    margin-top: rem(10);
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-2l(semibold);
+    }
+  }
+
+  &__subtitle {
+    @include font-ja-2s(semibold);
+    color: $brand-purple;
+    margin: 0;
+    letter-spacing: 1px;
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-s(semibold);
+    }
+  }
+
+  &__description {
+    @include font-ja-s;
+    line-height: 1.7;
+    text-align: left;
+  }
+
+  &__paragraph {
+    color: $text-white;
+    margin-bottom: rem(24);
+    opacity: 0.95;
+    text-align: left;
+    
+    @include breakpoint-up(md) {
+      margin-bottom: rem(32);
+    }
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &__action {
+    margin-top: rem(40);
+  }
+
+  &__kids-image {
+    margin-top: rem(24);
+    text-align: left;
+  }
+
+  &__kids-img {
+    display: block;
+    width: 60%;
+    margin: rem(40) auto 0;
+    height: auto;
+    
+    @include breakpoint-up(sm) {
+      width: 50%;
+    }
+    @include breakpoint-up(lg) {
+      margin-right: 0;
+    }
+  }
+}
+
+// 縦スライダーのアニメーション
+@keyframes slideVertical {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-50%); // 半分移動すると元の位置に戻る（無限ループ効果）
+  }
+}
+
+/* むなかた子ども大学 4つの柱 セクション */
+.pillars {
+  @include container;
+  background-color: $background-primary;
+  padding-top: rem(80);
+  padding-bottom: rem(80);
+  position: relative;
+  border-top-left-radius: rem(30);
+  border-bottom-right-radius: rem(30);
+  
+  @include breakpoint-up(md) {
+    padding-top: rem(100);
+    padding-bottom: rem(100);
+    border-top-left-radius: rem(60);
+    border-bottom-right-radius: rem(60);
+  }
+  
+  @include breakpoint-up(lg) {
+    padding-top: rem(120);
+    padding-bottom: rem(120);
+    border-top-left-radius: rem(72);
+    border-bottom-right-radius: rem(72);
+  }
+
+  // 上半分と下半分の背景色を設定
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, $brand-primary 50%, $background-quaternary 50%);
+    z-index: -1;
+  }
+
+  &__decorations {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  &__mark {
+    position: absolute;
+    top: rem(20);
+    left: rem(-10);
+    width: rem(75);
+    height: auto;
+    opacity: 0.5;
+    transform: rotate(-15deg);
+    z-index: 0;
+    pointer-events: none;
+    
+    @include breakpoint-up(sm) {
+      width: rem(140);
+      top: rem(30);
+      left: rem(-20);
+    }
+    
+    @include breakpoint-up(lg) {
+      width: rem(180);
+      top: rem(40);
+      left: rem(-30);
+    }
+  }
+
+  &__header {
+    text-align: center;
+    margin-bottom: rem(64);
+    position: relative;
+    z-index: 1;
+    
+    @include breakpoint-up(md) {
+      margin-bottom: rem(80);
+    }
+  }
+
+  &__title {
+    @include font-ja-l(semibold);
+    margin-bottom: 0;
+    margin-top: rem(10);
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-2l(semibold);
+    }
+  }
+
+  &__subtitle {
+    @include font-ja-2s(semibold);
+    color: $text-secondary;
+    margin: 0;
+    letter-spacing: 1px;
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-s(semibold);
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: rem(32);
+    position: relative;
+    z-index: 1;
+    
+    @include breakpoint-up(md) {
+      grid-template-columns: repeat(2, 1fr);
+      gap: rem(40);
+    }
+    
+    @include breakpoint-up(lg) {
+      grid-template-columns: 1fr;
+      gap: rem(48);
+      justify-items: center;
+    }
+    
+    @include breakpoint-up(xl) {
+      grid-template-columns: repeat(2, 1fr);
+      gap: rem(48);
+      justify-items: center;
+      max-width: rem(1548); // カード幅750px × 2 + gap 48px
+      margin: 0 auto;
+    }
+  }
+}
+
+/* 装飾用正方形 */
+.decoration-square {
+  position: absolute;
+  animation: floatSquare 8s ease-in-out infinite;
+  
+  // 個別設定（位置、サイズ、色、アニメーション遅延）
+  &--01 {
+    top: 10%; left: 5%;
+    width: rem(20); height: rem(20);
+    background-color: $brand-secondary;
+    animation-delay: 0s;
+    
+    @include breakpoint-up(lg) {
+      width: rem(30); height: rem(30);
+    }
+  }
+  
+  &--02 {
+    top: 15%; right: 3%;
+    width: rem(20); height: rem(20);
+    background-color: $brand-turquoise;
+    animation-delay: 0.5s;
+  }
+  
+  &--03 {
+    top: 25%; left: 12%;
+    width: rem(5); height: rem(5);
+    background-color: $brand-primary;
+    animation-delay: 1s;
+    
+    @include breakpoint-up(lg) {
+      width: rem(10); height: rem(10);
+    }
+  }
+  
+  &--04 {
+    top: 30%; right: 2%;
+    width: rem(20); height: rem(20);
+    background-color: $brand-pink;
+    animation-delay: 1.5s;
+    
+    @include breakpoint-up(lg) {
+      width: rem(30); height: rem(30);
+    }
+  }
+  
+  &--05 {
+    top: 40%; left: 3%;
+    width: rem(5); height: rem(5);
+    background-color: $brand-secondary;
+    animation-delay: 2s;
+    
+    @include breakpoint-up(lg) {
+      width: rem(10); height: rem(10);
+    }
+  }
+  
+  &--06 {
+    top: 8%; right: 8%;
+    width: rem(20); height: rem(20);
+    background-color: $brand-primary;
+    animation-delay: 2.5s;
+  }
+  
+  &--07 {
+    top: 3%; left: 20%;
+    width: rem(5); height: rem(5);
+    background-color: $brand-turquoise;
+    animation-delay: 3s;
+    
+    @include breakpoint-up(lg) {
+      width: rem(10); height: rem(10);
+    }
+  }
+  
+  &--08 {
+    top: 60%; right: 5%;
+    width: rem(20); height: rem(20);
+    background-color: $brand-secondary;
+    animation-delay: 3.5s;
+    
+    @include breakpoint-up(lg) {
+      width: rem(30); height: rem(30);
+    }
+  }
+  
+  &--09 {
+    top: 70%; left: 8%;
+    width: rem(20); height: rem(20);
+    background-color: $brand-pink;
+    animation-delay: 4s;
+  }
+  
+  &--10 {
+    top: 75%; right: 2%;
+    width: rem(5); height: rem(5);
+    background-color: $brand-primary;
+    animation-delay: 4.5s;
+    
+    @include breakpoint-up(lg) {
+      width: rem(10); height: rem(10);
+    }
+  }
+  
+  &--11 {
+    top: 80%; left: 15%;
+    width: rem(20); height: rem(20);
+    background-color: $brand-turquoise;
+    animation-delay: 5s;
+  }
+  
+  &--12 {
+    top: 85%; right: 12%;
+    width: rem(5); height: rem(5);
+    background-color: $brand-secondary;
+    animation-delay: 5.5s;
+    
+    @include breakpoint-up(lg) {
+      width: rem(10); height: rem(10);
+    }
+  }
+  
+  &--13 {
+    top: 20%; left: 25%;
+    width: rem(20); height: rem(20);
+    background-color: $brand-primary;
+    animation-delay: 6s;
+    
+    @include breakpoint-up(lg) {
+      width: rem(30); height: rem(30);
+    }
+  }
+  
+  &--14 {
+    top: 35%; right: 45%;
+    width: rem(20); height: rem(20);
+    background-color: $brand-pink;
+    animation-delay: 6.5s;
+  }
+  
+  &--15 {
+    top: 50%; left: 50%;
+    width: rem(5); height: rem(5);
+    background-color: $brand-turquoise;
+    animation-delay: 7s;
+    
+    @include breakpoint-up(lg) {
+      width: rem(10); height: rem(10);
+    }
+  }
+  
+  &--16 {
+    top: 65%; right: 40%;
+    width: rem(20); height: rem(20);
+    background-color: $brand-secondary;
+    animation-delay: 7.5s;
+  }
+  
+  &--17 {
+    top: 90%; left: 25%;
+    width: rem(5); height: rem(5);
+    background-color: $brand-primary;
+    animation-delay: 0.2s;
+    
+    @include breakpoint-up(lg) {
+      width: rem(10); height: rem(10);
+    }
+  }
+  
+  &--18 {
+    bottom: 1%; left: 7%;
+    width: rem(20); height: rem(20);
+    background-color: $brand-turquoise;
+    animation-delay: 0.7s;
+    @include breakpoint-up(sm) {
+      bottom: 3%; left: 7%;
+    }
+    
+    @include breakpoint-up(lg) {
+      width: rem(30); height: rem(30);
+    }
+  }
+  
+  &--19 {
+    top: 97%; left: 35%;
+    width: rem(20); height: rem(20);
+    background-color: $brand-pink;
+    animation-delay: 1.2s;
+    @include breakpoint-up(sm) {
+      top: 93%; left: 30%;
+    }
+  }
+  
+  &--20 {
+    top: 98%; right: 10%;
+    width: rem(5); height: rem(5);
+    background-color: $brand-secondary;
+    animation-delay: 1.7s;
+    
+    @include breakpoint-up(lg) {
+      width: rem(10); height: rem(10);
+    }
+  }
+}
+
+// 正方形の浮遊アニメーション
+@keyframes floatSquare {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(rem(-15)) rotate(5deg);
+  }
+  50% {
+    transform: translateY(rem(-25)) rotate(10deg);
+  }
+  75% {
+    transform: translateY(rem(-10)) rotate(-5deg);
+  }
+}
+
+/* 柱カード */
+.pillar-card {
+  background: $background-primary;
+  border-radius: 0 rem(32) rem(32) rem(32);
+  padding: rem(15) rem(15) rem(50);
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  
+  @include breakpoint-up(lg) {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    text-align: left;
+    border-radius: rem(16) rem(150) rem(150) 0;
+    padding: rem(10) rem(10) rem(10) rem(30);
+    max-width: rem(750);
+  }
+  @include breakpoint-up(xl) {
+    border-radius: rem(16) rem(170) rem(170) 0;
+  }
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  }
+
+  &__english {
+    position: absolute;
+    top: rem(-4);
+    left: 0;
+    line-height: 1;
+    @include font-en-l(semibold);
+    color: $text-tertiary;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    
+    @include breakpoint-up(lg) {
+      @include font-en-2l(semibold);
+      top: auto;
+      bottom: rem(-3);
+      left: rem(-3);
+      z-index: 0;
+    }
+  }
+
+  &__image {
+    width: 70%;
+    aspect-ratio: 1;
+    margin: 0 auto rem(16);
+    flex-shrink: 0;
+    
+    @include breakpoint-up(lg) {
+      width: rem(280);
+      height: rem(280);
+      margin: 0 0 0 rem(32);
+    }
+    @include breakpoint-up(xl) {
+      width: rem(320);
+      height: rem(320);
+    }
+  }
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  &__image-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, $background-tertiary 0%, lighten($background-tertiary, 5%) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid $border-primary;
+    
+    &::before {
+      content: '画像';
+      font-size: rem(14);
+      color: $text-tertiary;
+    }
+  }
+
+  // 各カードの背景色とテキストカラー
+  &--main-campus {
+    background-color: $brand-sub-yellow-low;
+    
+    .pillar-card__english {
+      color: $brand-sub-yellow;
+    }
+  }
+
+  &--special-course {
+    background-color: $brand-sub-turquoise-low;
+    
+    .pillar-card__english {
+      color: $brand-sub-turquoise;
+    }
+  }
+
+  &--mku-day {
+    background-color: $brand-sub-purple-low;
+    
+    .pillar-card__english {
+      color: $brand-sub-purple;
+    }
+  }
+
+  &--summer-course {
+    background-color: $brand-sub-pink-low;
+    
+    .pillar-card__english {
+      color: $brand-sub-pink;
+    }
+  }
+
+  &__content {
+    text-align: center;
+    
+    @include breakpoint-up(lg) {
+      text-align: left;
+      flex: 1;
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  &__title {
+    @include font-ja-m(semibold);
+    color: $text-primary;
+    margin-bottom: rem(12);
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-l(semibold);
+      margin-bottom: rem(16);
+    }
+  }
+
+  &__description {
+    @include font-ja-s;
+    text-align: left;
+    color: $text-primary;
+    line-height: 1.6;
+    margin-bottom: rem(16);
+    
+    @include breakpoint-up(md) {
+      @include font-ja-m;
+    }
+  }
+
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: rem(8);
+    color: $text-primary;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    
+    // lg未満: absolute positioning で右下に配置
+    @include breakpoint-down(lg) {
+      position: absolute;
+      bottom: rem(15);
+      right: rem(15);
+    }
+    
+    // lg以降: static positioning で左揃え
+    @include breakpoint-up(lg) {
+      position: static;
+      align-self: flex-start;
+    }
+    
+    span {
+      @include font-en-2s(semibold);
+    }
+  }
+
+  // カードホバー時にリンク要素を右に移動（アンダーライン無効化）
+  &:hover {
+    text-decoration: none;
+    
+    .pillar-card__link {
+      transform: translateX(rem(8));
+      
+      .pillar-card__arrow {
+        transform: translateX(rem(4));
+      }
+    }
+  }
+
+  &__arrow {
+    width: rem(24);
+    height: rem(24);
+    background-color: $background-secondary;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    
+    &::after {
+      content: '';
+      width: rem(8);
+      height: rem(8);
+      border-right: 2px solid $text-white;
+      border-bottom: 2px solid $text-white;
+      transform: translateX(rem(-1)) rotate(-45deg);
+    }
+    
+    @include breakpoint-up(md) {
+      width: rem(28);
+      height: rem(28);
+      
+      &::after {
+        width: rem(10);
+        height: rem(10);
+        transform: translateX(rem(-2)) rotate(-45deg);
+      }
+    }
+  }
+
+  // カード種別ごとの矢印円の色設定
+  &--main-campus &__arrow {
+    background-color: $brand-secondary;
+  }
+
+  &--special-course &__arrow {
+    background-color: $brand-turquoise;
+  }
+
+  &--mku-day &__arrow {
+    background-color: $brand-purple;
+  }
+
+  &--summer-course &__arrow {
+    background-color: $brand-pink;
+  }
+}
+
+/* ユーティリティクラス：スマホ未満でのみ改行 */
+.u-br-sm {
+  @include breakpoint-up(sm) {
+    display: none;
+  }
+}
+
+/* ユーティリティクラス：md以降でのみ改行 */
+.hero__title-line-br--md-up {
+  display: none;
+  
+  @include breakpoint-up(sm) {
+    display: block;
+  }
+}
+
+/* 数字で見るメインキャンパス セクション */
+.statistics {
+  @include container;
+  background-color: $background-quaternary;
+  padding-top: rem(80);
+  padding-bottom: rem(80);
+  position: relative;
+  border-top-left-radius: rem(30);
+  border-bottom-right-radius: rem(30);
+  
+  @include breakpoint-up(md) {
+    padding-top: rem(100);
+    padding-bottom: rem(100);
+    border-top-left-radius: rem(60);
+    border-bottom-right-radius: rem(60);
+  }
+  
+  @include breakpoint-up(lg) {
+    padding-top: rem(120);
+    padding-bottom: rem(120);
+    border-top-left-radius: rem(72);
+    border-bottom-right-radius: rem(72);
+  }
+
+  // 切り欠け部分の背景色を設定
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: $background-primary;
+    z-index: -1;
+
+  }
+
+  // 右下の切り欠け部分の背景色を設定
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: rem(30);
+    height: rem(30);
+    background-color: $background-quaternary;
+    z-index: -1;
+    
+    @include breakpoint-up(md) {
+      width: rem(60);
+      height: rem(60);
+    }
+    
+    @include breakpoint-up(lg) {
+      width: rem(72);
+      height: rem(72);
+    }
+  }
+
+  &__header {
+    text-align: center;
+    margin-bottom: rem(64);
+    
+    @include breakpoint-up(md) {
+      margin-bottom: rem(80);
+    }
+  }
+
+  &__title-bg {
+    position: absolute;
+    top: rem(-30);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+    
+    @include breakpoint-up(md) {
+    }
+    
+    @include breakpoint-up(lg) {
+      top: rem(-70);
+    }
+  }
+
+  &__title-bg-icon {
+    width: rem(120);
+    height: auto;
+    
+    @include breakpoint-up(md) {
+      // width: rem(200);
+    }
+    
+    @include breakpoint-up(lg) {
+      width: rem(160);
+    }
+  }
+
+  &__title {
+    position: relative;
+    z-index: 2;
+    @include font-ja-l(semibold);
+    margin-bottom: 0;
+    margin-top: rem(10);
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-2l(semibold);
+    }
+  }
+
+  &__title-break {
+    @include breakpoint-down(sm) {
+      display: block;
+    }
+  }
+
+  &__subtitle {
+    position: relative;
+    z-index: 2;
+    @include font-ja-2s(semibold);
+    color: $text-secondary;
+    margin: 0;
+    letter-spacing: 1px;
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-s(semibold);
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: rem(10);
+    
+    @include breakpoint-up(md) {
+      grid-template-columns: repeat(3, 1fr);
+      gap: rem(12);
+    }
+    
+    @include breakpoint-up(xl) {
+      gap: rem(32);
+    }
+  }
+  
+  // md以降でのカード順序変更
+  @include breakpoint-up(md) {
+    .stat-card--01 { order: 2; }
+    .stat-card--02 { order: 1; }
+    .stat-card--03 { order: 3; }
+    .stat-card--04 { order: 4; }
+    .stat-card--05 { order: 6; }
+    .stat-card--06 { order: 5; }
+  }
+}
+
+/* 統計カード */
+.stat-card {
+  background: $background-primary;
+  @include radius-l;
+  padding: rem(20) rem(10);
+  text-align: center;
+  
+  @include breakpoint-up(lg) {
+    padding: rem(20);// padding: rem(20) rem(10);
+  }
+  @include breakpoint-up(xl) {
+    padding: rem(20) rem(40);
+  }
+
+  &__icon {
+    width: 50%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto rem(12);
+    
+    @include breakpoint-up(lg) {
+      width: 40%;
+    }
+    
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+  
+  &__icon-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: rem(6);
+    color: $text-primary;
+    
+    @include breakpoint-up(md) {
+      gap: rem(10);
+    }
+  }
+
+  &__number {
+    font-size: rem(36);
+    font-weight: 800;
+    color: $text-secondary;
+    line-height: 1;
+    
+    @include breakpoint-up(md) {
+      font-size: rem(48);
+    }
+    
+    @include breakpoint-up(lg) {
+      font-size: rem(56);
+    }
+    @include breakpoint-up(xl) {
+      font-size: rem(72);
+    }
+  }
+
+  &__unit {
+    font-size: rem(20);
+    font-weight: 600;
+    color: $text-primary;
+    
+    @include breakpoint-up(md) {
+      font-size: rem(24);
+    }
+    
+    @include breakpoint-up(lg) {
+      font-size: rem(28);
+    }
+  }
+
+  &__label {
+    @include font-ja-s(semibold);
+    color: $text-primary;
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-m(semibold);
+    }
+  }
+  
+  &__sub-comment {
+    width: 100%;
+    text-align: center;
+    padding: rem(15) rem(5);
+    color: $text-primary;
+    @include radius-xs;
+    @include font-ja-3s(semibold);
+    line-height: 1.3;
+    margin-top: rem(12);
+    
+    @include breakpoint-up(md) {
+      @include font-ja-2s(semibold);
+    }
+    
+    @include breakpoint-up(lg) {
+      padding: rem(20) rem(15);
+    }
+  }
+  
+  &__sub-comment-line2 {
+    @include breakpoint-up(xl) {
+      display: block;
+    }
+  }
+  
+  // 個別カードのスタイル
+  &--01, &--04, &--05 {
+    background: $brand-secondary;
+    
+    .stat-card__unit,
+    .stat-card__label {
+      color: $text-white;
+    }
+    
+    .stat-card__sub-comment {
+      background: $background-quaternary;
+    }
+  }
+  
+  &--02, &--03, &--06 {
+    background: $background-primary;
+    
+    .stat-card__sub-comment {
+      background: $background-tertiary;
+    }
+  }
+}
+
+/* ご協力いただいている団体さま セクション */
+.partners {
+  @include container;
+  background-color: $background-primary;
+  padding-top: rem(80);
+  padding-bottom: rem(80);
+  position: relative;
+  border-top-left-radius: rem(30);
+  border-bottom-right-radius: rem(30);
+  
+  @include breakpoint-up(md) {
+    padding-top: rem(100);
+    padding-bottom: rem(100);
+    border-top-left-radius: rem(60);
+    border-bottom-right-radius: rem(60);
+  }
+  
+  @include breakpoint-up(lg) {
+    padding-top: rem(120);
+    padding-bottom: rem(120);
+    border-top-left-radius: rem(72);
+    border-bottom-right-radius: rem(72);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, $background-quaternary 50%, $background-secondary 50%);
+    z-index: -1;
+  }
+
+  &__header {
+    text-align: center;
+    margin-bottom: rem(64);
+    
+    @include breakpoint-up(md) {
+      margin-bottom: rem(80);
+    }
+  }
+
+  &__title {
+    @include font-ja-l(semibold);
+    margin-bottom: 0;
+    margin-top: rem(10);
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-2l(semibold);
+    }
+  }
+
+  &__title-break {
+    @include breakpoint-down(sm) {
+      display: block;
+    }
+  }
+
+  &__subtitle {
+    @include font-ja-2s(semibold);
+    color: $text-secondary;
+    margin: 0;
+    letter-spacing: 1px;
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-s(semibold);
+    }
+  }
+
+  &__description {
+    @include font-ja-s;
+    color: $text-primary;
+    line-height: 1.6;
+    max-width: rem(800);
+    margin: 0 auto 0;
+    text-align: left;
+    
+    @include breakpoint-up(md) {
+      margin-top: rem(32);
+    }
+    
+    @include breakpoint-up(lg) {
+      text-align: center;
+    }
+  }
+
+  &__slider {
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: rem(32);
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    margin-top: rem(70);
+  }
+
+  &__track {
+    display: flex;
+    width: calc(200% + rem(40)); // 2倍の幅で無限ループ
+    
+    &--top {
+      animation: slideHorizontalLeft 30s linear infinite;
+    }
+    
+    &--bottom {
+      animation: slideHorizontalRight 30s linear infinite;
+    }
+  }
+}
+
+.partner-logo {
+  flex: 0 0 rem(200);
+  height: rem(40);
+  margin-right: rem(40);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: grayscale(100%);
+  opacity: 0.7;
+  transition: all 0.3s ease;
+  
+  @include breakpoint-up(md) {
+    // flex: 0 0 rem(240);
+    // height: rem(120);
+    // margin-right: rem(48);
+  }
+  
+  &:hover {
+    filter: grayscale(0%);
+    opacity: 1;
+    transform: scale(1.05);
+  }
+
+  &__placeholder {
+    width: 100%;
+    height: 100%;
+    background: $background-secondary;
+    border: 2px solid $border-secondary;
+    @include radius-m;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: rem(14);
+    color: $text-tertiary;
+    font-weight: 500;
+    
+    @include breakpoint-up(md) {
+      font-size: rem(16);
+    }
+  }
+}
+
+// 横スライダーのアニメーション（左から右へ）
+@keyframes slideHorizontalLeft {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%); // 半分移動すると元の位置に戻る（無限ループ効果）
+  }
+}
+
+// 横スライダーのアニメーション（右から左へ）
+@keyframes slideHorizontalRight {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0); // 逆方向のスクロール
+  }
+}
+
+/* 共通コンテナクラス */
+.u-container {
+
+}
+
+/* PICK UP MOVIE セクション */
+.movie {
+  @include container;
+  background-color: $background-secondary;
+  padding-top: rem(80);
+  padding-bottom: rem(80);
+  
+  @include breakpoint-up(md) {
+    padding-top: rem(100);
+    padding-bottom: rem(100);
+  }
+  
+  @include breakpoint-up(lg) {
+    padding-top: rem(120);
+    padding-bottom: rem(120);
+  }
+
+  &__header {
+    text-align: center;
+    margin-bottom: rem(64);
+    
+    @include breakpoint-up(md) {
+      margin-bottom: rem(80);
+    }
+  }
+
+  &__title {
+    @include font-ja-l(semibold);
+    color: $text-primary;
+    margin-bottom: rem(24);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    position: relative;
+    display: inline-block;
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-2l(semibold);
+      margin-bottom: rem(32);
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: rem(10);
+      width: rem(28);
+      height: rem(28);
+      background-image: url('/images/ui/icon_logo-light-01.svg');
+      background-size: contain;
+      background-repeat: no-repeat;
+      transform: translate(-120%, -50%);
+      @include breakpoint-up(lg) {
+        width: rem(74);
+        height: rem(74);
+      }
+    }
+  }
+
+  &__description {
+    @include font-ja-m;
+    color: $text-secondary;
+    line-height: 1.6;
+    max-width: rem(600);
+    margin: 0 auto;
+    
+    @include breakpoint-up(md) {
+      @include font-ja-l;
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: rem(48);
+    
+    @include breakpoint-up(sm) {
+      grid-template-columns: repeat(2, 1fr);
+      gap: rem(32);
+    }
+    
+    @include breakpoint-up(lg) {
+      gap: rem(48);
+      max-width: rem(1400);
+      margin: 0 auto;
+    }
+  }
+
+  &__item {
+    @include radius-l;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: opacity 0.3s ease;
+    
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+
+  &__video-wrapper {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%; // 16:9のアスペクト比
+    
+    iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+  }
+}
+</style>

@@ -1,0 +1,89 @@
+// ブレークポイント定義
+// ブラウザのデフォルト基準で、1rem = 16px
+
+$breakpoint-sm: 40rem;    // 640px (40 × 16px)
+$breakpoint-md: 48rem;    // 768px (48 × 16px)  
+$breakpoint-lg: 64rem;    // 1024px (64 × 16px)
+$breakpoint-xl: 80rem;    // 1280px (80 × 16px)
+$breakpoint-2xl: 87.5rem; // 1400px (87.5 × 16px)
+
+// モバイルファースト用メディアクエリミックスイン
+@mixin breakpoint-up($size) {
+  @if $size == sm {
+    @media (min-width: $breakpoint-sm) {
+      @content;
+    }
+  } @else if $size == md {
+    @media (min-width: $breakpoint-md) {
+      @content;
+    }
+  } @else if $size == lg {
+    @media (min-width: $breakpoint-lg) {
+      @content;
+    }
+  } @else if $size == xl {
+    @media (min-width: $breakpoint-xl) {
+      @content;
+    }
+  } @else if $size == 2xl {
+    @media (min-width: $breakpoint-2xl) {
+      @content;
+    }
+  } @else {
+    @error "Breakpoint '#{$size}' is not defined. Use: sm, md, lg, xl, 2xl";
+  }
+}
+
+// max-width 用メディアクエリ（必要に応じて）
+@mixin breakpoint-down($size) {
+  @if $size == sm {
+    @media (max-width: calc($breakpoint-sm - 0.0625rem)) {
+      @content;
+    }
+  } @else if $size == md {
+    @media (max-width: calc($breakpoint-md - 0.0625rem)) {
+      @content;
+    }
+  } @else if $size == lg {
+    @media (max-width: calc($breakpoint-lg - 0.0625rem)) {
+      @content;
+    }
+  } @else if $size == xl {
+    @media (max-width: calc($breakpoint-xl - 0.0625rem)) {
+      @content;
+    }
+  } @else if $size == 2xl {
+    @media (max-width: calc($breakpoint-2xl - 0.0625rem)) {
+      @content;
+    }
+  } @else {
+    @error "Breakpoint '#{$size}' is not defined. Use: sm, md, lg, xl, 2xl";
+  }
+}
+
+// ブレークポイント間の範囲指定
+@mixin breakpoint-between($min-size, $max-size) {
+  $min-width: null;
+  $max-width: null;
+  
+  @if $min-size == sm { $min-width: $breakpoint-sm; }
+  @else if $min-size == md { $min-width: $breakpoint-md; }
+  @else if $min-size == lg { $min-width: $breakpoint-lg; }
+  @else if $min-size == xl { $min-width: $breakpoint-xl; }
+  @else if $min-size == 2xl { $min-width: $breakpoint-2xl; }
+  
+  @if $max-size == sm { $max-width: calc($breakpoint-sm - 0.0625rem); }
+  @else if $max-size == md { $max-width: calc($breakpoint-md - 0.0625rem); }
+  @else if $max-size == lg { $max-width: calc($breakpoint-lg - 0.0625rem); }
+  @else if $max-size == xl { $max-width: calc($breakpoint-xl - 0.0625rem); }
+  @else if $max-size == 2xl { $max-width: calc($breakpoint-2xl - 0.0625rem); }
+  
+  @if $min-width and $max-width {
+    @media (min-width: $min-width) and (max-width: $max-width) {
+      @content;
+    }
+  } @else {
+    @error "Invalid breakpoint sizes. Use: sm, md, lg, xl, 2xl";
+  }
+}
+

@@ -1,0 +1,65 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "astro",
+  "rewrites": [
+    {
+      "source": "/course/main-campus/:year(\\d{4})",
+      "destination": "/course/main-campus/[year]"
+    },
+    {
+      "source": "/course/main-campus/:year(\\d{4})/:id",
+      "destination": "/course/main-campus/[year]/[id]"
+    },
+    {
+      "source": "/course/special-course/:year(\\d{4})",
+      "destination": "/course/special-course/[year]"
+    },
+    {
+      "source": "/course/special-course/:year(\\d{4})/:id",
+      "destination": "/course/special-course/[year]/[id]"
+    },
+    {
+      "source": "/course/summer-course/:year(\\d{4})/:id",
+      "destination": "/course/summer-course/[year]/[id]"
+    },
+    {
+      "source": "/course/mku-day/:year(\\d{4})",
+      "destination": "/course/mku-day/[year]"
+    },
+    {
+      "source": "/news/:id",
+      "destination": "/news/[id]"
+    },
+    {
+      "source": "/results/:pillar/:id",
+      "destination": "/results/[pillar]/[id]"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "X-Requested-With, Content-Type, Authorization"
+        }
+      ]
+    }
+  ],
+  "functions": {
+    "src/pages/api/**/*.ts": {
+      "runtime": "nodejs18.x"
+    }
+  }
+}

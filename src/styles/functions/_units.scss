@@ -1,0 +1,58 @@
+// 単位変換関数
+
+// ベースフォントサイズ（通常16px）
+$base-font-size: 16px !default;
+
+// px を rem に変換する関数
+@function rem($pixels) {
+  @if type-of($pixels) == 'number' and unitless($pixels) {
+    @return $pixels / ($base-font-size / 1px) * 1rem;
+  } @else if type-of($pixels) == 'number' and unit($pixels) == 'px' {
+    @return $pixels / $base-font-size * 1rem;
+  } @else {
+    @error "rem() function expects a unitless number or px value. Got #{$pixels}";
+  }
+}
+
+// px を em に変換する関数
+@function em($pixels, $context: $base-font-size) {
+  @if type-of($pixels) == 'number' and unitless($pixels) {
+    @return $pixels / ($context / 1px) * 1em;
+  } @else if type-of($pixels) == 'number' and unit($pixels) == 'px' {
+    @return $pixels / $context * 1em;
+  } @else {
+    @error "em() function expects a unitless number or px value. Got #{$pixels}";
+  }
+}
+
+// vw に変換する関数（デザイン幅ベース）
+@function vw($pixels, $design-width: 375px) {
+  @if type-of($pixels) == 'number' and unitless($pixels) {
+    @return $pixels / ($design-width / 1px) * 100vw;
+  } @else if type-of($pixels) == 'number' and unit($pixels) == 'px' {
+    @return $pixels / $design-width * 100vw;
+  } @else {
+    @error "vw() function expects a unitless number or px value. Got #{$pixels}";
+  }
+}
+
+// vh に変換する関数（デザイン高さベース）
+@function vh($pixels, $design-height: 667px) {
+  @if type-of($pixels) == 'number' and unitless($pixels) {
+    @return $pixels / ($design-height / 1px) * 100vh;
+  } @else if type-of($pixels) == 'number' and unit($pixels) == 'px' {
+    @return $pixels / $design-height * 100vh;
+  } @else {
+    @error "vh() function expects a unitless number or px value. Got #{pixels}";
+  }
+}
+
+// clamp() を簡単に書くためのヘルパー関数
+@function responsive-size($min-size, $max-size, $min-vw: 320px, $max-vw: 1200px) {
+  $min-rem: rem($min-size);
+  $max-rem: rem($max-size);
+  $slope: calc(($max-size - $min-size) / ($max-vw / 1px - $min-vw / 1px));
+  $intersection: calc($min-size - $slope * $min-vw / 1px);
+  
+  @return clamp(#{$min-rem}, #{rem($intersection)} + #{$slope * 100}vw, #{$max-rem});
+}

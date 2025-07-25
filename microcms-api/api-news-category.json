@@ -1,0 +1,43 @@
+{
+  "apiFields": [
+    {
+      "fieldId": "nameJa",
+      "name": "カテゴリー名（表示用）",
+      "kind": "text",
+      "required": true
+    },
+    {
+      "fieldId": "slug",
+      "name": "スラッグ（英数字）",
+      "kind": "text",
+      "description": "URL に使用する英数字（未入力の場合は自動生成可）",
+      "isUnique": true
+    },
+    {
+      "fieldId": "type",
+      "name": "区分",
+      "kind": "select",
+      "description": "お知らせ or メディア掲載 を選択",
+      "required": true,
+      "selectItems": [
+        { "id": "news",  "value": "お知らせ" },
+        { "id": "media", "value": "メディア掲載" }
+      ],
+      "selectInitialValue": ["news"],
+      "multipleSelect": false
+    },
+    {
+      "fieldId": "sort",
+      "name": "表示順",
+      "kind": "number",
+      "description": "小さいほど上に表示（任意）"
+    },
+    {
+      "fieldId": "description",
+      "name": "説明文",
+      "kind": "textArea",
+      "description": "カテゴリの補足説明（任意）"
+    }
+  ],
+  "customFields": []
+}

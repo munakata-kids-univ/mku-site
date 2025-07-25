@@ -1,0 +1,42 @@
+{
+  "name": "munakata-kids-university",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "NODE_OPTIONS='--max_old_space_size=4096' astro dev",
+    "start": "NODE_OPTIONS='--max_old_space_size=4096' astro dev",
+    "build": "NODE_OPTIONS='--max_old_space_size=4096' astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.astro",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.astro --fix",
+    "format": "prettier --write .",
+    "check": "astro check",
+    "type-check": "tsc --noEmit",
+    "generate:tokens": "node scripts/generate-scss-tokens.js",
+    "generate:types": "node scripts/generate-types-from-schema.js"
+  },
+  "dependencies": {
+    "@astrojs/react": "^3.0.0",
+    "@astrojs/vercel": "^7.0.0",
+    "astro": "^4.0.0",
+    "microcms-js-sdk": "^3.2.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "sass": "^1.69.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "eslint-plugin-astro": "^0.29.0",
+    "eslint-plugin-jsx-a11y": "^6.0.0",
+    "eslint-plugin-react": "^7.0.0",
+    "eslint-plugin-react-hooks": "^4.0.0",
+    "prettier": "^3.0.0",
+    "prettier-plugin-astro": "^0.12.0",
+    "typescript": "^5.0.0"
+  }
+}

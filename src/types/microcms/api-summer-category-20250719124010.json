@@ -1,0 +1,1 @@
+{"apiFields":[{"fieldId":"category","name":"カテゴリー","kind":"text","required":false},{"fieldId":"slug","name":"スラッグ","kind":"text","required":false}],"customFields":[]}

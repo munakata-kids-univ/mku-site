@@ -1,0 +1,117 @@
+// タイポグラフィ用ミックスイン
+@use 'sass:color';
+@use 'sass:math';
+@use '../tokens/variables' as vars;
+
+// フォントファミリー設定
+@mixin font-family-ja {
+  font-family: vars.$font-family-ja, sans-serif;
+}
+
+@mixin font-family-en {
+  font-family: vars.$font-family-en, sans-serif;
+}
+
+// フォントサイズとレスポンシブ対応（mixed-decls警告修正）
+@mixin responsive-font-size($size-key, $lang: 'ja') {
+  @if $lang == 'ja' {
+    & {
+      font-size: var(--font-size-sp-ja-#{$size-key});
+      
+      @media (min-width: 768px) {
+        font-size: var(--font-size-pc-ja-#{$size-key});
+      }
+    }
+  } @else {
+    & {
+      font-size: var(--font-size-sp-en-#{$size-key});
+      
+      @media (min-width: 768px) {
+        font-size: var(--font-size-pc-en-#{$size-key});
+      }
+    }
+  }
+}
+
+// ヘッディング用ミックスイン
+@mixin heading-xl($lang: 'ja') {
+  @include responsive-font-size('5-l', $lang);
+  
+  & {
+    font-weight: if($lang == 'ja', vars.$font-weight-ja-semibold, vars.$font-weight-en-semibold);
+    line-height: 1.2;
+  }
+}
+
+@mixin heading-l($lang: 'ja') {
+  @include responsive-font-size('4-l', $lang);
+  
+  & {
+    font-weight: if($lang == 'ja', vars.$font-weight-ja-semibold, vars.$font-weight-en-semibold);
+    line-height: 1.3;
+  }
+}
+
+@mixin heading-m($lang: 'ja') {
+  @include responsive-font-size('3-l', $lang);
+  
+  & {
+    font-weight: if($lang == 'ja', vars.$font-weight-ja-semibold, vars.$font-weight-en-semibold);
+    line-height: 1.4;
+  }
+}
+
+@mixin heading-s($lang: 'ja') {
+  @include responsive-font-size('2-l', $lang);
+  
+  & {
+    font-weight: if($lang == 'ja', vars.$font-weight-ja-semibold, vars.$font-weight-en-semibold);
+    line-height: 1.4;
+  }
+}
+
+@mixin heading-xs($lang: 'ja') {
+  @include responsive-font-size('l', $lang);
+  
+  & {
+    font-weight: if($lang == 'ja', vars.$font-weight-ja-semibold, vars.$font-weight-en-semibold);
+    line-height: 1.5;
+  }
+}
+
+// 本文用ミックスイン
+@mixin body-l($lang: 'ja') {
+  @include responsive-font-size('m', $lang);
+  
+  & {
+    font-weight: if($lang == 'ja', vars.$font-weight-ja-regular, vars.$font-weight-en-regular);
+    line-height: 1.6;
+  }
+}
+
+@mixin body-m($lang: 'ja') {
+  @include responsive-font-size('s', $lang);
+  
+  & {
+    font-weight: if($lang == 'ja', vars.$font-weight-ja-regular, vars.$font-weight-en-regular);
+    line-height: 1.6;
+  }
+}
+
+@mixin body-s($lang: 'ja') {
+  @include responsive-font-size('2-s', $lang);
+  
+  & {
+    font-weight: if($lang == 'ja', vars.$font-weight-ja-regular, vars.$font-weight-en-regular);
+    line-height: 1.5;
+  }
+}
+
+@mixin body-xs($lang: 'ja') {
+  @include responsive-font-size('4-s', $lang);
+  
+  & {
+    font-weight: if($lang == 'ja', vars.$font-weight-ja-regular, vars.$font-weight-en-regular);
+    line-height: 1.4;
+  }
+}

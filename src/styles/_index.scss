@@ -1,0 +1,173 @@
+// メインSCSSファイル - モダンな@use/@forward API使用
+// Sass の新しい module system を使用してメモリ効率を向上
+
+// 1. 関数とトークンを最初に読み込み
+@use 'sass:math';
+@use 'sass:color';
+@use 'functions/units' as units;
+@use 'functions/font-helpers' as font-helpers;
+@use 'tokens/variables' as vars;
+@use 'tokens/breakpoints' as bp;
+
+// 2. ミックスインを読み込み（トークンに依存）
+@use 'mixins/typography' as typo;
+@use 'mixins/color' as colors;
+@use 'mixins/layout' as layout;
+@use 'mixins/spacing' as spacing-mixins;
+
+// 3. ベーススタイルとユーティリティを最後に読み込み
+@use 'base/reset';
+@use 'base/typography';
+@use 'utilities/spacing';
+@use 'utilities/display';
+@use 'utilities/color' as color-utils;
+
+// 4. コンポーネントスタイル
+@use 'components/base-button';
+
+// グローバル変数と関数を再エクスポート（後方互換性のため）
+// Variables
+$brand-primary: vars.$brand-primary;
+$brand-secondary: vars.$brand-secondary;
+$brand-black: vars.$brand-black;
+$brand-turquoise: vars.$brand-turquoise;
+$brand-purple: vars.$brand-purple;
+$brand-pink: vars.$brand-pink;
+$brand-sub-yellow: vars.$brand-sub-yellow;
+$brand-sub-turquoise: vars.$brand-sub-turquoise;
+$brand-sub-purple: vars.$brand-sub-purple;
+$brand-sub-pink: vars.$brand-sub-pink;
+$brand-sub-yellow-low: vars.$brand-sub-yellow-low;
+$brand-sub-turquoise-low: vars.$brand-sub-turquoise-low;
+$brand-sub-purple-low: vars.$brand-sub-purple-low;
+$brand-sub-pink-low: vars.$brand-sub-pink-low;
+$brand-sub-yellow-very-low: vars.$brand-sub-yellow-very-low;
+$brand-sub-purple-very-low: vars.$brand-sub-purple-very-low;
+$text-primary: vars.$text-primary;
+$text-secondary: vars.$text-secondary;
+$text-tertiary: vars.$text-tertiary;
+$text-disabled: vars.$text-disabled;
+$text-white: vars.$text-white;
+$text-link: vars.$text-link;
+$text-link-hover: vars.$text-link-hover;
+$text-success: vars.$text-success;
+$text-error: vars.$text-error;
+$text-select: vars.$text-select;
+$text-dark-gray: vars.$text-dark-gray;
+$background-primary: vars.$background-primary;
+$background-secondary: vars.$background-secondary;
+$background-tertiary: vars.$background-tertiary;
+$background-quaternary: vars.$background-quaternary;
+$background-accent: vars.$background-accent;
+$background-hover: vars.$background-hover;
+$background-select: vars.$background-select;
+$background-dark-gray: vars.$background-dark-gray;
+$border-primary: vars.$border-primary;
+$border-secondary: vars.$border-secondary;
+$border-tertiary: vars.$border-tetiery;
+$border-hover: vars.$border-hover;
+$feedback-success: vars.$feedback-success;
+$feedback-error: vars.$feedback-error;
+
+// フォントサイズ変数（CSS Custom Properties）
+$font-size-ja-5l: vars.$font-size-ja-5l;
+$font-size-ja-4l: vars.$font-size-ja-4l;
+$font-size-ja-3l: vars.$font-size-ja-3l;
+$font-size-ja-2l: vars.$font-size-ja-2l;
+$font-size-ja-l: vars.$font-size-ja-l;
+$font-size-ja-m: vars.$font-size-ja-m;
+$font-size-ja-s: vars.$font-size-ja-s;
+$font-size-ja-2s: vars.$font-size-ja-2s;
+$font-size-ja-3s: vars.$font-size-ja-3s;
+$font-size-ja-4s: vars.$font-size-ja-4s;
+
+// Breakpoints
+$breakpoint-sm: bp.$breakpoint-sm;
+$breakpoint-md: bp.$breakpoint-md;
+$breakpoint-lg: bp.$breakpoint-lg;
+$breakpoint-xl: bp.$breakpoint-xl;
+$breakpoint-2xl: bp.$breakpoint-2xl;
+
+// Functions
+@function rem($pixels) {
+  @return units.rem($pixels);
+}
+
+// Mixins
+@mixin breakpoint-up($size) {
+  @include bp.breakpoint-up($size) {
+    @content;
+  }
+}
+
+@mixin breakpoint-down($size) {
+  @include bp.breakpoint-down($size) {
+    @content;
+  }
+}
+
+@mixin container {
+  @include layout.container;
+}
+
+@mixin padding($values...) {
+  @include spacing-mixins.padding($values...);
+}
+
+@mixin radius-xs { @include layout.radius-xs; }
+@mixin radius-s { @include layout.radius-s; }
+@mixin radius-m { @include layout.radius-m; }
+@mixin radius-l { @include layout.radius-l; }
+@mixin radius-xl { @include layout.radius-xl; }
+@mixin radius-2l { @include layout.radius-2l; }
+@mixin radius-4l { @include layout.radius-4l; }
+@mixin radius-5l { @include layout.radius-5l; }
+@mixin radius-full { border-radius: vars.$radius-full; }
+
+@mixin heading-xs($lang: 'ja') { @include typo.heading-xs($lang); }
+@mixin heading-s($lang: 'ja') { @include typo.heading-s($lang); }
+@mixin heading-m($lang: 'ja') { @include typo.heading-m($lang); }
+@mixin heading-l($lang: 'ja') { @include typo.heading-l($lang); }
+
+@mixin body-xs($lang: 'ja') { @include typo.body-xs($lang); }
+@mixin body-s($lang: 'ja') { @include typo.body-s($lang); }
+@mixin body-m($lang: 'ja') { @include typo.body-m($lang); }
+@mixin body-l($lang: 'ja') { @include typo.body-l($lang); }
+
+// CSS Custom Properties フォントサイズ変数（すでに定義済み）
+// 使用例: font-size: $font-size-ja-l; (fluid typography で自動レスポンシブ)
+
+// フォントサイズ関数の再エクスポート
+@function font-size-ja-5l($weight: regular) { @return font-helpers.font-size-ja-5l($weight); }
+@function font-size-ja-4l($weight: regular) { @return font-helpers.font-size-ja-4l($weight); }
+@function font-size-ja-3l($weight: regular) { @return font-helpers.font-size-ja-3l($weight); }
+@function font-size-ja-2l($weight: regular) { @return font-helpers.font-size-ja-2l($weight); }
+@function font-size-ja-l($weight: regular) { @return font-helpers.font-size-ja-l($weight); }
+@function font-size-ja-m($weight: regular) { @return font-helpers.font-size-ja-m($weight); }
+@function font-size-ja-s($weight: regular) { @return font-helpers.font-size-ja-s($weight); }
+@function font-size-ja-2s($weight: regular) { @return font-helpers.font-size-ja-2s($weight); }
+@function font-size-ja-3s($weight: regular) { @return font-helpers.font-size-ja-3s($weight); }
+@function font-size-ja-4s($weight: regular) { @return font-helpers.font-size-ja-4s($weight); }
+
+// フォントミックスインの再エクスポート（推奨）
+@mixin font-ja-5l($weight: regular) { @include font-helpers.font-ja-5l($weight); }
+@mixin font-ja-4l($weight: regular) { @include font-helpers.font-ja-4l($weight); }
+@mixin font-ja-3l($weight: regular) { @include font-helpers.font-ja-3l($weight); }
+@mixin font-ja-2l($weight: regular) { @include font-helpers.font-ja-2l($weight); }
+@mixin font-ja-l($weight: regular) { @include font-helpers.font-ja-l($weight); }
+@mixin font-ja-m($weight: regular) { @include font-helpers.font-ja-m($weight); }
+@mixin font-ja-s($weight: regular) { @include font-helpers.font-ja-s($weight); }
+@mixin font-ja-2s($weight: regular) { @include font-helpers.font-ja-2s($weight); }
+@mixin font-ja-3s($weight: regular) { @include font-helpers.font-ja-3s($weight); }
+@mixin font-ja-4s($weight: regular) { @include font-helpers.font-ja-4s($weight); }
+
+// 英語フォントミックスインの再エクスポート
+@mixin font-en-5l($weight: regular) { @include font-helpers.font-en-5l($weight); }
+@mixin font-en-4l($weight: regular) { @include font-helpers.font-en-4l($weight); }
+@mixin font-en-3l($weight: regular) { @include font-helpers.font-en-3l($weight); }
+@mixin font-en-2l($weight: regular) { @include font-helpers.font-en-2l($weight); }
+@mixin font-en-l($weight: regular) { @include font-helpers.font-en-l($weight); }
+@mixin font-en-s($weight: regular) { @include font-helpers.font-en-s($weight); }
+@mixin font-en-2s($weight: regular) { @include font-helpers.font-en-2s($weight); }
+@mixin font-en-3s($weight: regular) { @include font-helpers.font-en-3s($weight); }
+@mixin font-en-4s($weight: regular) { @include font-helpers.font-en-4s($weight); }
