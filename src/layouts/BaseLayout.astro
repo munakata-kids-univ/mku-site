@@ -175,14 +175,18 @@ const currentPath = Astro.url.pathname;
 
           <!-- お問い合わせボタン -->
           <div class="footer__contact">
-            <a href="/contact" class="footer__contact-button">お問い合わせ</a>
+            <a href="/contact" class="base-button base-button--white">
+              <span class="base-button__text">お問い合わせ</span>
+              <div class="base-button__icon">
+                <div class="base-button__icon-arrow"></div>
+              </div>
+            </a>
           </div>
         </div>
 
         <!-- 右側：メニュー -->
         <div class="footer__right">
           <nav class="footer__nav">
-            <div class="footer__nav-title">メニュー：</div>
             <ul class="footer__nav-list">
               <li class="footer__nav-item"><a href="/" class="footer__nav-link">ホーム</a></li>
               <li class="footer__nav-item"><a href="/about" class="footer__nav-link">むなかた子ども大学について</a></li>
@@ -197,20 +201,28 @@ const currentPath = Astro.url.pathname;
           </nav>
         </div>
       </div>
+    </div>
 
-      <!-- バナーゾーン -->
+    <!-- バナーゾーン -->
+    <div class="u-container">
       <div class="footer__banners">
         <div class="footer__banner-list">
           <div class="footer__banner-item">
-            <img src="/images/banners/banner_munakata-hp-01.webp" alt="宗像市ホームページ" class="footer__banner-image" />
+            <a href="https://www.city.munakata.lg.jp/" target="_blank" rel="noopener noreferrer">
+              <img src="/images/banners/banner_munakata-hp-01.webp" alt="宗像市ホームページ" class="footer__banner-image" />
+            </a>
           </div>
           <div class="footer__banner-item">
-            <img src="/images/banners/banner_mku-ch-01.webp" alt="むなかた子ども大学チャンネル" class="footer__banner-image" />
+            <a href="https://youtube.com/channel/UCV6F6imUn7XYxMHCE5auIFQ?si=m-DD3izrOchD3iAm" target="_blank" rel="noopener noreferrer">
+              <img src="/images/banners/banner_mku-ch-01.webp" alt="むなかた子ども大学チャンネル" class="footer__banner-image" />
+            </a>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- コピーライト -->
+    <!-- コピーライト -->
+    <div class="u-container">
       <div class="footer__copyright">
         <p>© 2025 Munakata Kids University</p>
       </div>
@@ -858,21 +870,25 @@ const currentPath = Astro.url.pathname;
 
 /* フッター */
 .footer {
-  background: linear-gradient(135deg, $brand-primary 0%, lighten($brand-primary, 8%) 100%);
+  background-color: $background-select;
   color: $text-white;
-  padding: rem(80) 0 rem(32);
-  margin-top: rem(96);
+  padding: rem(80) 0 0;
+
+  .u-container {
+    @include container;
+  }
 
   &__main {
     display: flex;
     flex-direction: column;
     gap: rem(48);
     margin-bottom: rem(64);
+    text-align: center;
     
-    @include breakpoint-up(sm) {
+    @include breakpoint-up(md) {
       flex-direction: row;
-      gap: rem(64);
       align-items: flex-start;
+      text-align: left;
     }
     
     @include breakpoint-up(lg) {
@@ -883,7 +899,7 @@ const currentPath = Astro.url.pathname;
   &__left {
     flex: 1;
     
-    @include breakpoint-up(sm) {
+    @include breakpoint-up(md) {
       max-width: 50%;
     }
   }
@@ -891,29 +907,40 @@ const currentPath = Astro.url.pathname;
   &__right {
     flex: 1;
     
-    @include breakpoint-up(sm) {
+    @include breakpoint-up(md) {
       max-width: 50%;
     }
   }
 
   &__logo {
     margin-bottom: rem(32);
+    width: 50%;
+    margin: 0 auto rem(32);
+    text-align: center;
+    
+    @include breakpoint-up(md) {
+      margin-left: 0;
+      margin: 0 0 rem(32) 0;
+    }
+    @include breakpoint-up(lg) {
+      width: 30%;
+    }
     
     &-image {
-      height: rem(80);
-      width: auto;
+      width: 100%;
       
       @include breakpoint-up(md) {
-        height: rem(100);
+
       }
     }
   }
 
   &__org {
     margin-bottom: rem(32);
+    text-align: left;
+    @include font-ja-s;
     
     &-title {
-      font-weight: 600;
       margin-bottom: rem(16);
       color: $text-white;
       
@@ -926,7 +953,7 @@ const currentPath = Astro.url.pathname;
       p {
         font-size: rem(14);
         line-height: 1.6;
-        color: rgba(255, 255, 255, 0.9);
+        color: $text-white;
         margin-bottom: rem(4);
         
         @include breakpoint-up(md) {
@@ -942,58 +969,48 @@ const currentPath = Astro.url.pathname;
 
   &__phone {
     font-weight: 600;
-    margin-top: rem(8);
+    margin-top: rem(20);
+    color: $text-white;
   }
 
   &__contact {
     margin-bottom: rem(32);
+    text-align: center;
     
-    &-button {
-      display: inline-block;
-      padding: rem(12) rem(24);
-      background: $brand-secondary;
-      color: $brand-black;
-      text-decoration: none;
-      @include radius-m;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      
-      @include breakpoint-up(md) {
-        padding: rem(14) rem(28);
-        font-size: rem(16);
-      }
-      
-      &:hover {
-        background: lighten($brand-secondary, 10%);
-        transform: translateY(-2px);
-      }
+    @include breakpoint-up(md) {
+      text-align: left;
     }
   }
 
   &__nav {
-    &-title {
-      font-weight: 600;
-      margin-bottom: rem(20);
-      color: $text-white;
-      
-      @include breakpoint-up(md) {
-        font-size: rem(16);
-      }
+    text-align: center;
+    
+    @include breakpoint-up(md) {
+      text-align: left;
     }
+    
     
     &-list {
       display: flex;
       flex-direction: column;
-      gap: rem(12);
+      gap: rem(20);
+      list-style: none;
+      padding-left: 0;
       
       @include breakpoint-up(md) {
-        gap: rem(14);
+      }
+      
+      @include breakpoint-up(lg) {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: repeat(5, auto);
+        grid-auto-flow: column;
       }
     }
     
     &-link {
-      color: rgba(255, 255, 255, 0.8);
-      font-size: rem(14);
+      color: $text-white;
+      @include font-ja-s(semibold);
       transition: color 0.3s ease;
       text-decoration: none;
       
@@ -1002,15 +1019,32 @@ const currentPath = Astro.url.pathname;
       }
       
       &:hover {
-        color: $text-white;
+        color: $brand-secondary;
+        text-decoration: none;
       }
     }
   }
 
+  &__copyright {
+    text-align: center;
+    padding: rem(32) 0;
+    
+    p {
+      font-size: rem(14);
+      color: $text-white;
+      margin: 0;
+    }
+  }
+
   &__banners {
-    margin-bottom: rem(48);
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    padding-top: rem(48);
+    @include container;
+    background-color: $brand-primary;
+    padding: rem(30) rem(15);
+    margin-top: rem(32);
+    border-radius: rem(16);
+    @include breakpoint-up(lg) {
+      padding: rem(40) rem(60);
+    }
   }
 
   &__banner-list {
@@ -1018,6 +1052,7 @@ const currentPath = Astro.url.pathname;
     flex-direction: column;
     gap: rem(24);
     align-items: center;
+    height: 100%;
     
     @include breakpoint-up(sm) {
       flex-direction: row;
@@ -1028,32 +1063,24 @@ const currentPath = Astro.url.pathname;
 
   &__banner-item {
     flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    max-width: rem(480);
   }
 
   &__banner-image {
-    height: rem(60);
-    width: auto;
-    opacity: 0.9;
+    width: 100%;
+    height: auto;
     transition: opacity 0.3s ease;
+    border-radius: rem(10);
     
     @include breakpoint-up(md) {
-      height: rem(80);
+      // width: 40%;
     }
     
     &:hover {
       opacity: 1;
-    }
-  }
-
-  &__copyright {
-    text-align: center;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    padding-top: rem(32);
-    
-    p {
-      font-size: rem(14);
-      color: rgba(255, 255, 255, 0.8);
-      margin: 0;
     }
   }
 }
