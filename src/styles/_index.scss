@@ -114,11 +114,21 @@ $breakpoint-2xl: bp.$breakpoint-2xl;
   @include spacing-mixins.padding($values...);
 }
 
+//Radius variables
+$radius-xs: vars.$radius-xs;
+$radius-s: vars.$radius-s;
+$radius-m: vars.$radius-m;
+$radius-l: vars.$radius-l;
+$radius-2l: vars.$radius-2l;
+$radius-3l: vars.$radius-3l;
+$radius-4l: vars.$radius-4l;
+$radius-5l: vars.$radius-5l;
+$radius-full: vars.$radius-full;
+
 @mixin radius-xs { @include layout.radius-xs; }
 @mixin radius-s { @include layout.radius-s; }
 @mixin radius-m { @include layout.radius-m; }
 @mixin radius-l { @include layout.radius-l; }
-@mixin radius-xl { @include layout.radius-xl; }
 @mixin radius-2l { @include layout.radius-2l; }
 @mixin radius-4l { @include layout.radius-4l; }
 @mixin radius-5l { @include layout.radius-5l; }
@@ -167,6 +177,7 @@ $breakpoint-2xl: bp.$breakpoint-2xl;
 @mixin font-en-3l($weight: regular) { @include font-helpers.font-en-3l($weight); }
 @mixin font-en-2l($weight: regular) { @include font-helpers.font-en-2l($weight); }
 @mixin font-en-l($weight: regular) { @include font-helpers.font-en-l($weight); }
+@mixin font-en-m($weight: regular) { @include font-helpers.font-en-l($weight); }
 @mixin font-en-s($weight: regular) { @include font-helpers.font-en-s($weight); }
 @mixin font-en-2s($weight: regular) { @include font-helpers.font-en-2s($weight); }
 @mixin font-en-3s($weight: regular) { @include font-helpers.font-en-3s($weight); }

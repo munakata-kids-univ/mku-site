@@ -1,0 +1,478 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="むなかた子ども大学について" description="むなかた子ども大学について詳しく知るためのページです。ねらい・目的、学長・副学長からのメッセージ、運営元である宗像市地域教育連携室の概要をご紹介しています。">
+  <main>
+    <section class="hero">
+      <div class="hero__container">
+        <div class="hero__content">
+          <div class="hero__text">
+            <h1 class="hero__title">むなかた子ども大学について</h1>
+            <p class="hero__subtitle">About Us</p>
+          </div>
+          <div class="hero__image">
+            <img
+              src="/images/backgrounds/img_bg-hero_about-01.webp"
+              alt="学長からのメッセージ"
+              width={600}
+              height={400}
+              loading="eager"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="breadcrumb">
+      <div class="breadcrumb__container">
+        <nav aria-label="パンくずナビゲーション">
+          <ol class="breadcrumb__list">
+            <li class="breadcrumb__item">
+              <a href="/">ホーム</a>
+            </li>
+            <li class="breadcrumb__item" aria-current="page">
+              学長からのメッセージ
+            </li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+
+    <!-- About Menu Section -->
+    <section class="about-menu">
+      <div class="about-menu__container">
+        <ul class="about-menu__list">
+          <!-- ねらい・目的 -->
+          <li class="about-menu__item">
+            <a href="/about/aims" class="about-menu__link">
+              <div class="about-menu__image">
+                <img src="/images/content/img_about_menu-01.webp" alt="ねらい・目的" />
+                <div class="about-menu__english-title">Our Aims & Approach</div>
+              </div>
+              <div class="about-menu__content">
+                <div class="about-menu__english-title-mobile">Our Aims & Approach</div>
+                <div class="about-menu__title-wrapper">
+                  <h3 class="about-menu__title">ねらい・目的</h3>
+                  <div class="about-menu__arrow">
+                    <div class="about-menu__arrow-icon"></div>
+                  </div>
+                </div>
+                <p class="about-menu__description">
+                  むなかた子ども大学のねらい・目的や、取組について紹介します。
+                </p>
+              </div>
+            </a>
+          </li>
+
+          <!-- 代表者メッセージ -->
+          <li class="about-menu__item">
+            <a href="/about/message" class="about-menu__link">
+              <div class="about-menu__image">
+                <img src="/images/content/img_about_menu-02.webp" alt="代表者メッセージ" />
+                <div class="about-menu__english-title">Message</div>
+              </div>
+              <div class="about-menu__content">
+                <div class="about-menu__english-title-mobile">Message</div>
+                <div class="about-menu__title-wrapper">
+                  <h3 class="about-menu__title">代表者メッセージ</h3>
+                  <div class="about-menu__arrow">
+                    <div class="about-menu__arrow-icon"></div>
+                  </div>
+                </div>
+                <p class="about-menu__description">
+                  学長（伊豆美沙子市長）、副学長（猿樂隆司教育長）からの挨拶をご覧ください。
+                </p>
+              </div>
+            </a>
+          </li>
+
+          <!-- 団体概要 -->
+          <li class="about-menu__item">
+            <a href="/about/organization" class="about-menu__link">
+              <div class="about-menu__image">
+                <img src="/images/content/img_about_menu-03.webp" alt="団体概要" />
+                <div class="about-menu__english-title">Organization Outline</div>
+              </div>
+              <div class="about-menu__content">
+                <div class="about-menu__english-title-mobile">Organization Outline</div>
+                <div class="about-menu__title-wrapper">
+                  <h3 class="about-menu__title">団体概要</h3>
+                  <div class="about-menu__arrow">
+                    <div class="about-menu__arrow-icon"></div>
+                  </div>
+                </div>
+                <p class="about-menu__description">
+                  むなかた子ども大学を運営する宗像市地域教育連携室について紹介します。
+                </p>
+              </div>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+  @import "../styles/index";
+
+  .hero {
+    position: relative;
+    padding: rem(80) 0 rem(20);
+    background: $background-primary;
+    border-radius: 0 rem(120) 0 0;
+    
+    @include breakpoint-up(md) {
+      padding: 0;
+      border-radius: 0 rem(240) 0 0;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      background-color: $brand-primary;
+      z-index: -1;
+    }
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 0 0 5%;
+      @include breakpoint-up(xl) {
+        padding: 0 0 0 rem(50);
+      }
+    }
+
+    &__content {
+      position: relative;
+      padding: rem(40) 0 0;
+
+      @include breakpoint-up(md) {
+        padding: 0;
+        display: flex;
+        align-items: stretch;
+        gap: rem(60);
+      }
+    }
+
+    &__text {
+      @include breakpoint-up(md) {
+        flex: 1;
+        padding: rem(120) 0 0;
+      }
+      @include breakpoint-up(xl) {
+        padding: rem(160) 0 0;
+      }
+    }
+
+    &__title {
+      @include font-ja-2l(semibold);
+      font-weight: bold;
+      color: $text-primary;
+      margin: 0 0 rem(8) 0;
+      line-height: 1.4;
+
+      @include breakpoint-up(lg) {
+        @include font-ja-3l(semibold);
+        margin-bottom: rem(12);
+      }
+    }
+
+    &__subtitle {
+      @include font-en-s(semibold);
+      color: $text-secondary;
+      margin: 0 0 rem(30) 0;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+
+      @include breakpoint-up(lg) {
+        @include font-en-m(semibold);
+        margin-bottom: 0;
+      }
+    }
+
+    &__image {
+      aspect-ratio: 16 / 9;
+      width: 100%;
+      @include breakpoint-up(md) {
+        flex: 0 0 auto;
+        width: 45%;
+        min-height: rem(100);
+      }
+      @include breakpoint-up(xl) {
+        max-width: rem(600);
+        min-height: rem(400);
+      }
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: rem(8) 0 0 rem(8);
+        box-shadow: 0 rem(4) rem(20) rgba(0, 0, 0, 0.1);
+        @include breakpoint-up(md) {
+          border-radius: 0 rem(240) 0 $radius-l;
+        }
+        @include breakpoint-up(xl) {
+          border-radius: 0 rem(240) 0 $radius-2l;
+        }
+      }
+    }
+  }
+
+  .breadcrumb {
+    padding: rem(20) 0;
+    background: $background-primary;
+    @include breakpoint-up(lg) {
+      padding: rem(50) 0 rem(20);
+    }
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 0 0 5%;
+      @include breakpoint-up(xl) {
+        padding: 0 0 0 rem(50);
+      }
+    }
+
+    &__list {
+      display: flex;
+      align-items: center;
+      gap: rem(8);
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      @include font-ja-3s;
+    }
+
+    &__item {
+      display: flex;
+      align-items: center;
+
+      &:not(:last-child)::after {
+        content: '>';
+        margin-left: rem(8);
+        color: $text-secondary;
+      }
+
+      a {
+        @include font-ja-3s(semibold);
+        color: $text-link;
+        text-decoration: underline;
+
+        &:hover {
+          color: $text-link-hover;
+          text-decoration: underline;
+        }
+      }
+
+      &[aria-current="page"] {
+        @include font-ja-3s;
+        color: $text-primary;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .about-menu {
+    padding: rem(80) 0 rem(120);
+    background: $background-primary;
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 5% 0;
+      @include breakpoint-up(md) {
+        overflow: hidden;
+      }
+      @include breakpoint-up(xl) {
+        padding: 0 rem(50) 0;
+      }
+    }
+
+    &__list {
+      display: flex;
+      flex-direction: column;
+      gap: rem(90);
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      @include breakpoint-up(xl) {
+        max-width: rem(1400);
+        margin: 0 auto;
+      }
+    }
+
+    &__item {
+      position: relative;
+    }
+
+    &__link {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.3s ease;
+      padding-bottom: rem(20);
+      @include breakpoint-up(md) {
+        padding-bottom: 0;
+      }
+
+      &:hover {
+        transform: translateY(rem(-8));
+        text-decoration: none;
+
+        .about-menu__arrow {
+          transform: translateX(rem(4));
+        }
+      }
+    }
+
+    &__image {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      margin-bottom: rem(24);
+      overflow: hidden;
+      border-radius: rem(16);
+
+      @include breakpoint-up(md) {
+        width: 40%;
+        height: auto;
+        margin-bottom: 0;
+        margin-right: rem(40);
+        flex-shrink: 0;
+        max-width: rem(480);
+      }
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
+    &__content {
+      position: relative;
+      padding-left: rem(10);
+      
+      @include breakpoint-up(md) {
+        paddinng-left: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 100%;
+        min-height: 0;
+      }
+    }
+
+    &__english-title {
+      display: none;
+    }
+
+    &__english-title-mobile {
+      position: absolute;
+      bottom: rem(-40);
+      left: calc(-5% - #{rem(20)});
+      right: calc(-5% - #{rem(20)});
+      @include font-en-4l(semibold);
+      // font-size: rem(26);
+      // font-weight: 500;
+      background: linear-gradient(90deg, rgba($background-accent, 0.3) 0%, rgba($background-accent, 0.7) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.05em;
+      opacity: 0.1;
+      z-index: 1;
+      pointer-events: none;
+      white-space: nowrap;
+      
+      @include breakpoint-up(sm) {
+        left: 0;
+        right: 0;
+        bottom: auto;
+        top: 0;
+        @include font-en-2l(semibold);
+      }
+      
+      @include breakpoint-up(md) {
+        bottom: auto;
+        top: rem(-15);
+        left: 0;
+        right: calc(-5% - #{rem(50)});
+        @include font-en-3l(semibold);
+        white-space: nowrap;
+      }
+      @include breakpoint-up(lg) {
+        @include font-en-3l(semibold);
+        top: rem(40);
+      }
+      
+      @include breakpoint-up(xl) {
+        right: rem(-50);
+        top: rem(70);
+      }
+      
+    }
+
+    &__title-wrapper {
+      display: flex;
+      align-items: center;
+      gap: rem(16);
+      margin-bottom: rem(16);
+    }
+
+    &__title {
+      @include font-ja-l(semibold);
+      color: $text-primary;
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    &__arrow {
+      flex-shrink: 0;
+      width: rem(24);
+      height: rem(24);
+      background-color: $background-accent;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      margin-top: rem(4);
+
+      &-icon {
+        width: rem(8);
+        height: rem(8);
+        border-right: 2px solid $text-white;
+        border-bottom: 2px solid $text-white;
+        transform: translateX(rem(-1)) rotate(-45deg);
+      }
+    }
+
+    &__description {
+      @include font-ja-s;
+      color: $text-primary;
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    // md以降のレイアウト
+    @include breakpoint-up(md) {
+      &__item {
+        display: flex;
+        align-items: stretch;
+      }
+
+      &__link {
+        display: flex;
+        align-items: stretch;
+        width: 100%;
+      }
+    }
+  }
+</style>

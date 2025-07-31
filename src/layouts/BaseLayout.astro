@@ -61,7 +61,7 @@ const currentPath = Astro.url.pathname;
               <li class={`header__nav-item ${item.hasSubmenu ? 'header__nav-item--dropdown' : ''}`}>
                 <a 
                   href={item.href} 
-                  class={`header__nav-link ${currentPath === item.href ? 'header__nav-link--active' : ''}`}
+                  class="header__nav-link"
                 >
                   {item.name}
                   {item.hasSubmenu && (
@@ -1037,7 +1037,6 @@ const currentPath = Astro.url.pathname;
   }
 
   &__banners {
-    @include container;
     background-color: $brand-primary;
     padding: rem(30) rem(15);
     margin-top: rem(32);
@@ -1067,6 +1066,12 @@ const currentPath = Astro.url.pathname;
     justify-content: center;
     align-items: center;
     max-width: rem(480);
+    @include breakpoint-up(md) {
+      width: 43%;
+    }
+    @include breakpoint-up(lg) {
+      max-width: rem(600);
+    }
   }
 
   &__banner-image {
