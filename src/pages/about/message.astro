@@ -1,57 +1,34 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import HeroSection from "../../components/HeroSection.astro";
+import Breadcrumb from "../../components/Breadcrumb.astro";
+import ContentSectionHeader from "../../components/ContentSectionHeader.astro";
+
+const breadcrumbItems = [
+  { href: "/", label: "ホーム" },
+  { href: "/about", label: "むなかた子ども大学について" },
+  { label: "代表者メッセージ", current: true }
+];
 ---
 
 <BaseLayout title="代表者メッセージ" description="むなかた子ども大学の学長（伊豆美沙子市長）、副学長（猿樂隆司教育長）からの挨拶をご覧ください。子どもたちの未来への想いと、本物の学びへの取り組みについてお話しします。">
   <main>
-    <section class="hero">
-      <div class="hero__container">
-        <div class="hero__content">
-          <div class="hero__text">
-            <h1 class="hero__title">代表者メッセージ</h1>
-            <p class="hero__subtitle">Message</p>
-          </div>
-          <div class="hero__image">
-            <img
-              src="/images/backgrounds/img_bg-hero_message-01.webp"
-              alt="代表者メッセージ"
-              width={600}
-              height={400}
-              loading="eager"
-            />
-          </div>
-        </div>
-      </div>
-    </section>
+    <HeroSection 
+      title="代表者メッセージ"
+      subtitle="Message"
+      customBackgroundStyle="hero--message"
+      showImage={false}
+    />
 
-    <div class="breadcrumb">
-      <div class="breadcrumb__container">
-        <nav aria-label="パンくずナビゲーション">
-          <ol class="breadcrumb__list">
-            <li class="breadcrumb__item">
-              <a href="/">ホーム</a>
-            </li>
-            <li class="breadcrumb__item">
-              <a href="/about">むなかた子ども大学について</a>
-            </li>
-            <li class="breadcrumb__item" aria-current="page">
-              代表者メッセージ
-            </li>
-          </ol>
-        </nav>
-      </div>
-    </div>
+    <Breadcrumb items={breadcrumbItems} />
 
     <!-- 学長挨拶 Section -->
     <section id="president" class="content-section president-section">
       <div class="content-section__container">
-        <div class="content-section__header">
-          <div class="content-section__english-title">President Message</div>
-          <div class="content-section__title-wrapper">
-            <img src="/images/ui/icon_subpage-section-title-01.svg" alt="" class="content-section__icon" />
-            <h2 class="content-section__title">学長挨拶</h2>
-          </div>
-        </div>
+        <ContentSectionHeader 
+          englishTitle="President Message"
+          title="学長挨拶"
+        />
         
         <div class="message-content">
           <!-- President Message Box -->
@@ -87,13 +64,10 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     <!-- 副学長挨拶 Section -->
     <section id="vice-president" class="content-section vice-president-section">
       <div class="content-section__container">
-        <div class="content-section__header">
-          <div class="content-section__english-title">Vice President Message</div>
-          <div class="content-section__title-wrapper">
-            <img src="/images/ui/icon_subpage-section-title-01.svg" alt="" class="content-section__icon" />
-            <h2 class="content-section__title">副学長挨拶</h2>
-          </div>
-        </div>
+        <ContentSectionHeader 
+          englishTitle="Vice President Message"
+          title="副学長挨拶"
+        />
         
         <div class="message-content">
           <!-- Vice President Message Box -->
@@ -129,13 +103,12 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     <!-- 説明動画 Section -->
     <section id="explanation-video" class="content-section explanation-video-section">
       <div class="content-section__container">
-        <div class="content-section__header">
-          <div class="content-section__english-title">Explanation Video</div>
-          <div class="content-section__title-wrapper">
-            <img src="/images/ui/icon_subpage-section-title-01.svg" alt="" class="content-section__icon" />
-            <h2 class="content-section__title">むなかた子ども大学<br>説明動画</h2>
-          </div>
-        </div>
+        <ContentSectionHeader 
+          englishTitle="Explanation Video"
+          title="むなかた子ども大学<br>説明動画"
+          customTitleWrapperStyle="explanation-video-title-wrapper"
+          customIconStyle="explanation-video-icon"
+        />
         
         <div class="video-content">
           <!-- md未満時の順序: 動画 → ロゴ -->
@@ -716,18 +689,6 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       background: linear-gradient(to bottom, $background-primary 0%, $background-primary 57%, $background-secondary 57%, $background-secondary 100%);
     }
 
-    .content-section__title-wrapper {
-      align-items: flex-start;
-
-    }
-
-    .content-section__icon {
-      margin-top: rem(12);
-      
-      @include breakpoint-up(lg) {
-        margin-top: rem(16);
-      }
-    }
   }
 
   .video-content {

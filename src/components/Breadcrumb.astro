@@ -1,7 +1,8 @@
 ---
 interface BreadcrumbItem {
-  label: string;
   href?: string;
+  label: string;
+  current?: boolean;
 }
 
 interface Props {
@@ -9,104 +10,80 @@ interface Props {
 }
 
 const { items } = Astro.props;
-
-// 最後のアイテムは現在のページなのでリンクにしない
-const breadcrumbItems = items.map((item, index) => ({
-  ...item,
-  href: index === items.length - 1 ? undefined : item.href
-}));
 ---
 
-{items.length > 0 && (
-  <nav class="breadcrumb" aria-label="パンくずリスト">
-    <ol class="breadcrumb__list">
-      {breadcrumbItems.map((item, index) => (
-        <li class="breadcrumb__item">
-          {item.href ? (
-            <a href={item.href} class="breadcrumb__link">
-              {item.label}
-            </a>
-          ) : (
-            <span class="breadcrumb__current" aria-current="page">
-              {item.label}
-            </span>
-          )}
-          {index < breadcrumbItems.length - 1 && (
-            <span class="breadcrumb__separator" aria-hidden="true">
-              <svg class="breadcrumb__separator-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 18L15 12L9 6" />
-              </svg>
-            </span>
-          )}
-        </li>
-      ))}
-    </ol>
-  </nav>
-)}
+<div class="breadcrumb">
+  <div class="breadcrumb__container">
+    <nav aria-label="パンくずナビゲーション">
+      <ol class="breadcrumb__list">
+        {items.map((item, index) => (
+          <li class={`breadcrumb__item ${item.current ? 'breadcrumb__item--current' : ''}`} aria-current={item.current ? 'page' : undefined}>
+            {item.href && !item.current ? (
+              <a href={item.href}>{item.label}</a>
+            ) : (
+              item.label
+            )}
+          </li>
+        ))}
+      </ol>
+    </nav>
+  </div>
+</div>
 
 <style lang="scss">
-@import '@/styles/vars';
+  @import "../styles/index";
 
-.breadcrumb {
-  margin-bottom: $spacing-lg;
-  
-  &__list {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: $spacing-xs;
-    font-size: $font-size-sm;
-    color: $color-gray-600;
-  }
-  
-  &__item {
-    display: flex;
-    align-items: center;
-    gap: $spacing-xs;
-  }
-  
-  &__link {
-    color: $color-gray-600;
-    text-decoration: none;
-    padding: $spacing-xs $spacing-sm;
-    border-radius: $border-radius-md;
-    transition: all 0.3s ease;
-    
-    &:hover {
-      color: $color-primary;
-      background-color: $color-gray-50;
-    }
-    
-    &:focus {
-      outline: 2px solid $color-primary;
-      outline-offset: 2px;
-    }
-  }
-  
-  &__current {
-    color: $color-text;
-    font-weight: 500;
-    padding: $spacing-xs $spacing-sm;
-  }
-  
-  &__separator {
-    display: flex;
-    align-items: center;
-    color: $color-gray-400;
-    
-    &-icon {
-      width: 16px;
-      height: 16px;
-    }
-  }
-}
-
-// レスポンシブ対応
-@include media-sm {
   .breadcrumb {
+    padding: rem(20) 0;
+    background: $background-primary;
+    @include breakpoint-up(lg) {
+      padding: rem(50) 0 rem(20);
+    }
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 0 0 5%;
+      @include breakpoint-up(xl) {
+        padding: 0 0 0 rem(50);
+      }
+    }
+
     &__list {
-      font-size: $font-size-base;
+      display: flex;
+      align-items: center;
+      gap: rem(8);
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      @include font-ja-3s;
+    }
+
+    &__item {
+      display: flex;
+      align-items: center;
+
+      &:not(:last-child)::after {
+        content: '>';
+        margin-left: rem(8);
+        color: $text-secondary;
+      }
+
+      a {
+        @include font-ja-3s(semibold);
+        color: $text-link;
+        text-decoration: underline;
+
+        &:hover {
+          color: $text-link-hover;
+          text-decoration: underline;
+        }
+      }
+
+      &--current {
+        @include font-ja-3s;
+        color: $text-primary;
+        font-weight: 500;
+      }
     }
   }
-}
 </style>

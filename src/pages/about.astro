@@ -1,43 +1,25 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import HeroSection from "../components/HeroSection.astro";
+import Breadcrumb from "../components/Breadcrumb.astro";
+import ContentSectionHeader from "../components/ContentSectionHeader.astro";
+
+const breadcrumbItems = [
+  { href: "/", label: "ホーム" },
+  { label: "むなかた子ども大学について", current: true }
+];
 ---
 
 <BaseLayout title="むなかた子ども大学について" description="むなかた子ども大学について詳しく知るためのページです。ねらい・目的、学長・副学長からのメッセージ、運営元である宗像市地域教育連携室の概要をご紹介しています。">
   <main>
-    <section class="hero">
-      <div class="hero__container">
-        <div class="hero__content">
-          <div class="hero__text">
-            <h1 class="hero__title">むなかた子ども大学について</h1>
-            <p class="hero__subtitle">About Us</p>
-          </div>
-          <div class="hero__image">
-            <img
-              src="/images/backgrounds/img_bg-hero_about-01.webp"
-              alt="学長からのメッセージ"
-              width={600}
-              height={400}
-              loading="eager"
-            />
-          </div>
-        </div>
-      </div>
-    </section>
+    <HeroSection 
+      title="むなかた子ども大学について"
+      subtitle="About Us"
+      imageSrc="/images/backgrounds/img_bg-hero_about-01.webp"
+      imageAlt="むなかた子ども大学について"
+    />
 
-    <div class="breadcrumb">
-      <div class="breadcrumb__container">
-        <nav aria-label="パンくずナビゲーション">
-          <ol class="breadcrumb__list">
-            <li class="breadcrumb__item">
-              <a href="/">ホーム</a>
-            </li>
-            <li class="breadcrumb__item" aria-current="page">
-              学長からのメッセージ
-            </li>
-          </ol>
-        </nav>
-      </div>
-    </div>
+    <Breadcrumb items={breadcrumbItems} />
 
     <!-- About Menu Section -->
     <section class="about-menu">

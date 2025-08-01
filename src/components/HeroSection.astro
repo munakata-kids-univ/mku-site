@@ -1,0 +1,173 @@
+---
+interface Props {
+  title: string;
+  subtitle: string;
+  imageSrc?: string;
+  imageAlt?: string;
+  showImage?: boolean;
+  customBackgroundStyle?: string; // カスタム背景用
+}
+
+const { 
+  title, 
+  subtitle, 
+  imageSrc, 
+  imageAlt = title,
+  showImage = true,
+  customBackgroundStyle 
+} = Astro.props;
+---
+
+<section class={`hero ${customBackgroundStyle || ''}`}>
+  <div class="hero__container">
+    <div class="hero__content">
+      <div class="hero__text">
+        <h1 class="hero__title">{title}</h1>
+        <p class="hero__subtitle">{subtitle}</p>
+      </div>
+      {showImage && imageSrc && (
+        <div class="hero__image">
+          <img
+            src={imageSrc}
+            alt={imageAlt}
+            width={600}
+            height={400}
+            loading="eager"
+          />
+        </div>
+      )}
+      {showImage && !imageSrc && (
+        <div class="hero__image">
+          <!-- 画像なしでもレイアウト維持 -->
+        </div>
+      )}
+    </div>
+  </div>
+</section>
+
+<style lang="scss">
+  @import "../styles/index";
+
+  .hero {
+    position: relative;
+    padding: rem(80) 0 rem(20);
+    background: linear-gradient(to bottom, $background-secondary 0%, $background-primary 70%, $background-primary 100%);
+    border-radius: 0 rem(120) 0 0;
+    
+    @include breakpoint-up(md) {
+      padding: 0;
+      border-radius: 0 rem(240) 0 0;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      background-color: $brand-primary;
+      z-index: -1;
+    }
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 0 0 5%;
+      overflow: hidden;
+      @include breakpoint-up(xl) {
+        padding: 0 0 0 rem(50);
+      }
+    }
+
+    &__content {
+      position: relative;
+      padding: rem(40) 0 0;
+
+      @include breakpoint-up(md) {
+        padding: 0;
+        display: flex;
+        align-items: stretch;
+        gap: rem(60);
+      }
+    }
+
+    &__text {
+      @include breakpoint-up(md) {
+        flex: 1;
+        padding: rem(120) 0 0;
+      }
+      @include breakpoint-up(xl) {
+        padding: rem(160) 0 0;
+      }
+    }
+
+    &__title {
+      @include font-ja-2l(semibold);
+      font-weight: bold;
+      color: $text-primary;
+      margin: 0 0 rem(8) 0;
+      line-height: 1.4;
+
+      @include breakpoint-up(lg) {
+        @include font-ja-3l(semibold);
+        margin-bottom: rem(12);
+      }
+    }
+
+    &__subtitle {
+      @include font-en-s(semibold);
+      color: $text-secondary;
+      margin: 0 0 rem(30) 0;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+
+      @include breakpoint-up(lg) {
+        @include font-en-m(semibold);
+        margin-bottom: 0;
+      }
+    }
+
+    &__image {
+      aspect-ratio: 16 / 9;
+      width: 100%;
+      @include breakpoint-up(md) {
+        flex: 0 0 auto;
+        width: 45%;
+        min-height: rem(100);
+      }
+      @include breakpoint-up(xl) {
+        max-width: rem(600);
+        min-height: rem(400);
+      }
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: rem(8) 0 0 rem(8);
+        @include breakpoint-up(md) {
+          border-radius: 0 rem(240) 0 $radius-l;
+        }
+        @include breakpoint-up(xl) {
+          border-radius: 0 rem(240) 0 $radius-2l;
+        }
+      }
+    }
+  }
+
+  // messageページ用のカスタマイズ
+  .hero.hero--message {
+    .hero__image {
+      display: none;
+      
+      @include breakpoint-up(md) {
+        display: block;
+        background: transparent;
+      }
+
+      img {
+        display: none;
+      }
+    }
+  }
+</style>

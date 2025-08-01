@@ -1,0 +1,117 @@
+---
+interface Props {
+  englishTitle: string;
+  title: string;
+  icon?: string;
+  customIconStyle?: string; // messageページのアイコン位置調整用
+  customTitleWrapperStyle?: string; // title-wrapper全体のカスタマイズ用
+}
+
+const { 
+  englishTitle, 
+  title, 
+  icon = "/images/ui/icon_subpage-section-title-01.svg",
+  customIconStyle,
+  customTitleWrapperStyle 
+} = Astro.props;
+---
+
+<div class="content-section__header">
+  <div class="content-section__english-title">{englishTitle}</div>
+  <div class={`content-section__title-wrapper ${customTitleWrapperStyle || ''}`}>
+    <img 
+      src={icon} 
+      alt="" 
+      class={`content-section__icon ${customIconStyle || ''}`} 
+    />
+    <h2 class="content-section__title" set:html={title}></h2>
+  </div>
+</div>
+
+<style lang="scss">
+  @import "../styles/index";
+
+  .content-section__header {
+    position: relative;
+    margin-bottom: rem(50);
+    margin-right: -5%;
+    overflow: hidden;
+    @include breakpoint-up(xl) {
+      margin-bottom: rem(70);
+      margin-right: 0;
+    }
+  }
+
+  .content-section__english-title {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    @include font-en-2l(semibold);
+    background: linear-gradient(90deg, rgba($background-accent, 0.3) 0%, rgba($background-accent, 0.7) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    opacity: 0.1;
+    z-index: 1;
+    pointer-events: none;
+    white-space: nowrap;
+
+    @include breakpoint-up(lg) {
+      @include font-en-4l(semibold);
+      top: rem(-10);
+    }
+  }
+
+  .content-section__title-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: rem(8);
+    z-index: 2;
+    margin-top: rem(40);
+    
+    @include breakpoint-up(lg) {
+      margin-top: rem(80);
+    }
+  }
+
+  .content-section__icon {
+    width: rem(24);
+    height: rem(24);
+    flex-shrink: 0;
+    margin-top: rem(2);
+
+    @include breakpoint-up(lg) {
+      width: rem(36);
+      height: rem(36);
+      margin-top: rem(4);
+    }
+
+    // explanation-video-iconの特別調整
+    &.explanation-video-icon {
+      margin-top: rem(12);
+      
+      @include breakpoint-up(lg) {
+        margin-top: rem(16);
+      }
+    }
+  }
+
+  .content-section__title-wrapper {
+    &.explanation-video-title-wrapper {
+      align-items: flex-start;
+    }
+  }
+
+  .content-section__title {
+    @include font-ja-l(semibold);
+    color: $text-primary;
+    margin: 0;
+    line-height: 1.4;
+
+    @include breakpoint-up(lg) {
+      @include font-ja-2l(semibold);
+    }
+  }
+</style>

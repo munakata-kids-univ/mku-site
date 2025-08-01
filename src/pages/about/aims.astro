@@ -1,46 +1,26 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import HeroSection from "../../components/HeroSection.astro";
+import Breadcrumb from "../../components/Breadcrumb.astro";  
+import ContentSectionHeader from "../../components/ContentSectionHeader.astro";
+
+const breadcrumbItems = [
+  { href: "/", label: "ホーム" },
+  { href: "/about", label: "むなかた子ども大学について" },
+  { label: "ねらい・目的", current: true }
+];
 ---
 
 <BaseLayout title="ねらい・目的" description="むなかた子ども大学のねらい・目的について詳しくご紹介します。取組の背景や具体的な目標、期待される効果などを説明しています。">
   <main>
-    <section class="hero">
-      <div class="hero__container">
-        <div class="hero__content">
-          <div class="hero__text">
-            <h1 class="hero__title">ねらい・目的</h1>
-            <p class="hero__subtitle">Our Aims & Approach</p>
-          </div>
-          <div class="hero__image">
-            <img
-              src="/images/backgrounds/img_bg-hero_aims-01.webp"
-              alt="ねらい・目的"
-              width={600}
-              height={400}
-              loading="eager"
-            />
-          </div>
-        </div>
-      </div>
-    </section>
+    <HeroSection 
+      title="ねらい・目的"
+      subtitle="Our Aims & Approach"
+      imageSrc="/images/backgrounds/img_bg-hero_aims-01.webp"
+      imageAlt="ねらい・目的"
+    />
 
-    <div class="breadcrumb">
-      <div class="breadcrumb__container">
-        <nav aria-label="パンくずナビゲーション">
-          <ol class="breadcrumb__list">
-            <li class="breadcrumb__item">
-              <a href="/">ホーム</a>
-            </li>
-            <li class="breadcrumb__item">
-              <a href="/about">むなかた子ども大学について</a>
-            </li>
-            <li class="breadcrumb__item" aria-current="page">
-              ねらい・目的
-            </li>
-          </ol>
-        </nav>
-      </div>
-    </div>
+    <Breadcrumb items={breadcrumbItems} />
 
     <!-- Introduction Section -->
     <section class="introduction">
@@ -79,13 +59,10 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     <!-- 地域特性・社会課題 Section -->
     <section id="challenges" class="content-section">
       <div class="content-section__container">
-        <div class="content-section__header">
-          <div class="content-section__english-title">Challenges in Munakata</div>
-          <div class="content-section__title-wrapper">
-            <img src="/images/ui/icon_subpage-section-title-01.svg" alt="" class="content-section__icon" />
-            <h2 class="content-section__title">地域特性・社会課題</h2>
-          </div>
-        </div>
+        <ContentSectionHeader 
+          englishTitle="Challenges in Munakata"
+          title="地域特性・社会課題"
+        />
         
         <div class="content-section__intro">
           <p class="content-section__intro-text">
@@ -135,13 +112,10 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     <!-- 使命・ビジョン Section -->
     <section id="mission" class="content-section mission-vision-section">
       <div class="content-section__container">
-        <div class="content-section__header">
-          <div class="content-section__english-title">Mission & Vision</div>
-          <div class="content-section__title-wrapper">
-            <img src="/images/ui/icon_subpage-section-title-01.svg" alt="" class="content-section__icon" />
-            <h2 class="content-section__title">使命・ビジョン</h2>
-          </div>
-        </div>
+        <ContentSectionHeader 
+          englishTitle="Mission & Vision"
+          title="使命・ビジョン"
+        />
         
         <div class="mission-vision-content">
           <!-- Mission Box -->
@@ -182,13 +156,10 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     <!-- ねらい Section -->
     <section id="aims" class="content-section">
       <div class="content-section__container">
-        <div class="content-section__header">
-          <div class="content-section__english-title">Educational Aims</div>
-          <div class="content-section__title-wrapper">
-            <img src="/images/ui/icon_subpage-section-title-01.svg" alt="" class="content-section__icon" />
-            <h2 class="content-section__title">ねらい</h2>
-          </div>
-        </div>
+        <ContentSectionHeader 
+          englishTitle="Educational Aims"
+          title="ねらい"
+        />
         
         <div class="content-section__intro">
           <h3 class="content-section__intro-title">学びの4ステップ</h3>
@@ -308,13 +279,10 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     <!-- 具体的な取組 Section -->
     <section id="programs" class="content-section programs-section">
       <div class="content-section__container">
-        <div class="content-section__header">
-          <div class="content-section__english-title">Programs & Activities</div>
-          <div class="content-section__title-wrapper">
-            <img src="/images/ui/icon_subpage-section-title-01.svg" alt="" class="content-section__icon" />
-            <h2 class="content-section__title">具体的な取組</h2>
-          </div>
-        </div>
+        <ContentSectionHeader 
+          englishTitle="Programs & Activities"
+          title="具体的な取組"
+        />
         
         <div class="pillars-program-grid">
           <!-- メインキャンパス -->
