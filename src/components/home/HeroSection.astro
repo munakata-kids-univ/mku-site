@@ -1,0 +1,186 @@
+---
+interface Props {
+  videoSrc?: string;
+  emblemSrc?: string;
+  emblemAlt?: string;
+}
+
+const { 
+  videoSrc = "/movie/movie_topview-01.mp4",
+  emblemSrc = "/images/content/icon_emblem-01.webp",
+  emblemAlt = "むなかた子ども大学エンブレム"
+} = Astro.props;
+---
+
+<section class="hero">
+  <!-- 背景動画 -->
+  <div class="hero__video-bg">
+    <video autoplay muted loop playsinline class="hero__video">
+      <source src={videoSrc} type="video/mp4">
+    </video>
+  </div>
+
+  <div class="hero__container">
+    <div class="hero__content">
+      <h1 class="hero__title">
+        <span class="hero__title-line hero__title-line--sm">本物から学び、</span><br class="u-br-sm"><span class="hero__title-line hero__title-line--sm">本物を体験し</span><br class="u-br-sm"><span class="hero__title-line hero__title-line--sm">興味・関心から「<span class="hero__title-accent">志</span>」へ</span>
+        <span class="hero__title-line hero__title-line--md-up">本物から学び、本物を体験し</span><br class="hero__title-line-br--md-up"><span class="hero__title-line hero__title-line--md-up">興味・関心から「<span class="hero__title-accent">志</span>」へ</span>
+      </h1>
+    </div>
+    
+    <div class="hero__emblem">
+      <img 
+        src={emblemSrc} 
+        alt={emblemAlt} 
+        class="hero__emblem-image" 
+      />
+    </div>
+  </div>
+</section>
+
+<style lang="scss">
+  @import "../../styles/index";
+
+  .hero {
+    position: relative;
+    color: $text-white;
+    padding: 0;
+    overflow: visible;
+    height: rem(540);
+    display: flex;
+    align-items: center;
+    border-bottom-right-radius: rem(60);
+    
+    @include breakpoint-up(md) {
+      height: 100vh;
+      max-height: rem(940);
+    }
+    
+    // 切り欠け部分の背景色を設定
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: rem(60);
+      height: rem(60);
+      background-color: $background-tertiary;
+      z-index: -1;
+    }
+    
+
+    &__video-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    &__video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-bottom-right-radius: rem(60);
+      @include breakpoint-up(lg) {
+        border-bottom-right-radius: rem(72);
+      }
+    }
+
+
+    &__container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      height: 100%;
+    }
+    
+    &__content {
+      position: absolute;
+      bottom: rem(25);
+      left: rem(20);
+      max-width: rem(600);
+      
+      @include breakpoint-up(md) {
+        left: rem(40);
+        bottom: rem(30);
+      }
+      
+      @include breakpoint-up(lg) {
+        left: rem(60);
+        bottom: rem(45);
+      }
+    }
+
+    &__title {
+      @include font-ja-m(semibold);
+      margin-bottom: 0;
+      line-height: 1.4;
+      
+      @include breakpoint-up(lg) {
+        @include font-ja-2l(semibold);
+      }
+    }
+
+    &__title-line {
+      display: inline;
+      background: linear-gradient(to bottom, transparent 15%, $background-primary 15%, $background-primary 93%, transparent 93%);
+      color: $text-primary;
+      line-height: 1.6;
+      padding: rem(2) rem(3);
+      
+      &--sm {
+        @include breakpoint-up(sm) {
+          display: none;
+        }
+      }
+      
+      &--md-up {
+        display: none;
+        
+        @include breakpoint-up(sm) {
+          display: inline;
+        }
+      }
+    }
+    
+    &__title-accent {
+      color: $brand-primary;
+    }
+    
+    &__emblem {
+      position: absolute;
+      bottom: rem(20);
+      right: rem(20);
+      
+      @include breakpoint-up(md) {
+        right: rem(40);
+        bottom: rem(20);
+      }
+      
+      @include breakpoint-up(lg) {
+        right: rem(60);
+        bottom: rem(35);
+      }
+    }
+    
+    &__emblem-image {
+      height: rem(120);
+      width: auto;
+      
+      @include breakpoint-up(lg) {
+        height: rem(192);
+      }
+    }
+  }
+
+  /* ユーティリティクラス：md以降でのみ改行 */
+  .hero__title-line-br--md-up {
+    display: none;
+    
+    @include breakpoint-up(sm) {
+      display: block;
+    }
+  }
+</style>

@@ -1,24 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import NewsSection from '../components/NewsSection.tsx';
+import JobsSlider from '../components/home/JobsSlider.astro';
+import HeroSection from '../components/home/HeroSection.astro';
 import { getGlobalSettings, getNewsItems, getMediaItems, getCategoriesWithLabels } from '../lib/microcms';
 
-// job アイコンのインポート
-import iconPlane from '../assets/icons/jobs/icon_job-plane-01.svg';
-import iconPolice from '../assets/icons/jobs/icon_job-police-01.svg';
-import iconTrain from '../assets/icons/jobs/icon_job-train-01.svg';
-import iconStethoscope from '../assets/icons/jobs/icon_job-stethoscope-01.svg';
-import iconChefHat from '../assets/icons/jobs/icon_job-chef-hat-01.svg';
-import iconWrench from '../assets/icons/jobs/icon_job-wrench-01.svg';
-import iconFish from '../assets/icons/jobs/icon_job-fish-01.svg';
-import iconMicrophone from '../assets/icons/jobs/icon_job-microphone-01.svg';
-import iconInjection from '../assets/icons/jobs/icon_job-injection-01.svg';
-import iconHelmet from '../assets/icons/jobs/icon_job-helmet-01.svg';
-import iconPencil from '../assets/icons/jobs/icon_job-pencil-01.svg';
-import iconRocket from '../assets/icons/jobs/icon_job-rocket-01.svg';
-import iconGame from '../assets/icons/jobs/icon_job-game-01.svg';
-import iconPrograming from '../assets/icons/jobs/icon_job-programing-01.svg';
-import iconBaseball from '../assets/icons/jobs/icon_job-baseball-01.svg';
 
 // 統計カード アイコンのインポート
 import iconNumbers01 from '../assets/icons/numbers-mc/icon_numbers-main-campus-01.svg';
@@ -73,175 +59,10 @@ const pageDescription = '本物から学び、本物を体験し 興味・関心
 
 <BaseLayout title={pageTitle} description={pageDescription}>
   <!-- ヒーローセクション -->
-  <section class="hero">
-    <!-- 背景動画 -->
-    <div class="hero__video-bg">
-      <video autoplay muted loop playsinline class="hero__video">
-        <source src="/movie/movie_topview-01.mp4" type="video/mp4">
-      </video>
-    </div>
-
-    <div class="hero__container">
-      <div class="hero__content">
-        <h1 class="hero__title">
-          <span class="hero__title-line hero__title-line--sm">本物から学び、</span><br class="u-br-sm"><span class="hero__title-line hero__title-line--sm">本物を体験し</span><br class="u-br-sm"><span class="hero__title-line hero__title-line--sm">興味・関心から「<span class="hero__title-accent">志</span>」へ</span>
-          <span class="hero__title-line hero__title-line--md-up">本物から学び、本物を体験し</span><br class="hero__title-line-br--md-up"><span class="hero__title-line hero__title-line--md-up">興味・関心から「<span class="hero__title-accent">志</span>」へ</span>
-        </h1>
-      </div>
-      
-      <div class="hero__emblem">
-        <img src="/images/content/icon_emblem-01.webp" alt="むなかた子ども大学エンブレム" class="hero__emblem-image" />
-      </div>
-    </div>
-  </section>
+  <HeroSection />
 
   <!-- jobsアイコンスライダーセクション -->
-  <section class="jobs-slider-section">
-    <div class="jobs-slider">
-      <div class="jobs-slider__track">
-        <!-- アイコン一覧（指定順序） -->
-        <div class="jobs-icon">
-          <img src={iconPlane.src} alt="パイロット" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconPolice.src} alt="警察官" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconTrain.src} alt="電車運転士" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconStethoscope.src} alt="医師" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconChefHat.src} alt="シェフ" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconWrench.src} alt="整備士" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconFish.src} alt="漁師" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconMicrophone.src} alt="アナウンサー" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconInjection.src} alt="看護師" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconHelmet.src} alt="建設作業員" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconPencil.src} alt="デザイナー" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconRocket.src} alt="宇宙飛行士" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconGame.src} alt="ゲームクリエイター" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconPrograming.src} alt="プログラマー" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconBaseball.src} alt="野球選手" class="jobs-icon__image" />
-        </div>
-        
-        <!-- 無限ループ用の複製（2セット目） -->
-        <div class="jobs-icon">
-          <img src={iconPlane.src} alt="パイロット" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconPolice.src} alt="警察官" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconTrain.src} alt="電車運転士" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconStethoscope.src} alt="医師" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconChefHat.src} alt="シェフ" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconWrench.src} alt="整備士" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconFish.src} alt="漁師" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconMicrophone.src} alt="アナウンサー" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconInjection.src} alt="看護師" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconHelmet.src} alt="建設作業員" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconPencil.src} alt="デザイナー" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconRocket.src} alt="宇宙飛行士" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconGame.src} alt="ゲームクリエイター" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconPrograming.src} alt="プログラマー" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconBaseball.src} alt="野球選手" class="jobs-icon__image" />
-        </div>
-        
-        <!-- 無限ループ用の複製（3セット目） -->
-        <div class="jobs-icon">
-          <img src={iconPlane.src} alt="パイロット" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconPolice.src} alt="警察官" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconTrain.src} alt="電車運転士" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconStethoscope.src} alt="医師" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconChefHat.src} alt="シェフ" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconWrench.src} alt="整備士" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconFish.src} alt="漁師" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconMicrophone.src} alt="アナウンサー" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconInjection.src} alt="看護師" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconHelmet.src} alt="建設作業員" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconPencil.src} alt="デザイナー" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconRocket.src} alt="宇宙飛行士" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconGame.src} alt="ゲームクリエイター" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconPrograming.src} alt="プログラマー" class="jobs-icon__image" />
-        </div>
-        <div class="jobs-icon">
-          <img src={iconBaseball.src} alt="野球選手" class="jobs-icon__image" />
-        </div>
-      </div>
-    </div>
-  </section>
+  <JobsSlider />
 
   <!-- お知らせ・メディア掲載セクション -->
   <section class="news-media-section">

@@ -1,0 +1,198 @@
+---
+// jobアイコンのインポート（個別で必要）
+import iconPlane from '../../assets/icons/jobs/icon_job-plane-01.svg';
+import iconPolice from '../../assets/icons/jobs/icon_job-police-01.svg';
+import iconTrain from '../../assets/icons/jobs/icon_job-train-01.svg';
+import iconStethoscope from '../../assets/icons/jobs/icon_job-stethoscope-01.svg';
+import iconChefHat from '../../assets/icons/jobs/icon_job-chef-hat-01.svg';
+import iconWrench from '../../assets/icons/jobs/icon_job-wrench-01.svg';
+import iconFish from '../../assets/icons/jobs/icon_job-fish-01.svg';
+import iconMicrophone from '../../assets/icons/jobs/icon_job-microphone-01.svg';
+import iconInjection from '../../assets/icons/jobs/icon_job-injection-01.svg';
+import iconHelmet from '../../assets/icons/jobs/icon_job-helmet-01.svg';
+import iconPencil from '../../assets/icons/jobs/icon_job-pencil-01.svg';
+import iconRocket from '../../assets/icons/jobs/icon_job-rocket-01.svg';
+import iconGame from '../../assets/icons/jobs/icon_job-game-01.svg';
+import iconPrograming from '../../assets/icons/jobs/icon_job-programing-01.svg';
+import iconBaseball from '../../assets/icons/jobs/icon_job-baseball-01.svg';
+
+// jobアイコンのデータ配列（元の順序を保持）
+const jobIcons = [
+  { icon: iconPlane, label: 'パイロット' },
+  { icon: iconPolice, label: '警察官' },
+  { icon: iconTrain, label: '電車運転士' },
+  { icon: iconStethoscope, label: '医師' },
+  { icon: iconChefHat, label: 'シェフ' },
+  { icon: iconWrench, label: '整備士' },
+  { icon: iconFish, label: '漁師' },
+  { icon: iconMicrophone, label: 'アナウンサー' },
+  { icon: iconInjection, label: '看護師' },
+  { icon: iconHelmet, label: '建設作業員' },
+  { icon: iconPencil, label: 'デザイナー' },
+  { icon: iconRocket, label: '宇宙飛行士' },
+  { icon: iconGame, label: 'ゲームクリエイター' },
+  { icon: iconPrograming, label: 'プログラマー' },
+  { icon: iconBaseball, label: '野球選手' }
+];
+---
+
+<section class="jobs-slider-section">
+  <div class="jobs-slider">
+    <div class="jobs-slider__track">
+      <!-- アイコン一覧（1セットのみ） -->
+      {jobIcons.map((job) => (
+        <div class="jobs-icon">
+          <img 
+            src={job.icon.src} 
+            alt={job.label} 
+            class="jobs-icon__image" 
+          />
+        </div>
+      ))}
+      
+      <!-- 無限ループ用の複製（2セット目） -->
+      {jobIcons.map((job) => (
+        <div class="jobs-icon">
+          <img 
+            src={job.icon.src} 
+            alt={job.label} 
+            class="jobs-icon__image" 
+          />
+        </div>
+      ))}
+      
+      <!-- 無限ループ用の複製（3セット目） -->
+      {jobIcons.map((job) => (
+        <div class="jobs-icon">
+          <img 
+            src={job.icon.src} 
+            alt={job.label} 
+            class="jobs-icon__image" 
+          />
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style lang="scss">
+  @import "../../styles/index";
+
+  .jobs-slider-section {
+    background-color: $background-tertiary;
+    
+    @include breakpoint-up(xl) {
+      padding-top: rem(20);
+    }
+  }
+
+  .jobs-slider {
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: visible;
+    position: relative;
+    
+    // フェードアウト効果（左右端）
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: rem(60);
+      z-index: 2;
+      pointer-events: none;
+    }
+    
+    &::before {
+      left: 0;
+      background: linear-gradient(to right, $background-tertiary, transparent);
+    }
+    
+    &::after {
+      right: 0;
+      background: linear-gradient(to left, $background-tertiary, transparent);
+    }
+    
+    &__track {
+      display: flex;
+      margin-top: rem(40);
+      margin-bottom: rem(40);
+      width: calc(300%); // 3倍の幅で無限ループ
+      animation: slideJobsRight 45s linear infinite; // 右から左へ
+    }
+  }
+
+  .jobs-icon {
+    flex: 0 0 rem(50);
+    height: rem(50);
+    margin-right: rem(20);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    @include breakpoint-up(lg) {
+      flex: 0 0 rem(60);
+      height: rem(60);
+      margin-right: rem(30);
+    }
+    
+    @include breakpoint-up(xl) {
+      flex: 0 0 rem(80);
+      height: rem(80);
+      margin-right: rem(40);
+    }
+    
+    // 個別のプカプカアニメーション（遅延を使って自然な動きに）
+    &:nth-child(odd) {
+      animation: floatUp 3s ease-in-out infinite;
+    }
+    
+    &:nth-child(even) {
+      animation: floatUp 3s ease-in-out infinite 1.5s;
+    }
+    
+    &:nth-child(3n) {
+      animation: floatUp 3.5s ease-in-out infinite 0.8s;
+    }
+    
+    &:nth-child(4n) {
+      animation: floatUp 2.8s ease-in-out infinite 2.2s;
+    }
+    
+    &:nth-child(5n) {
+      animation: floatUp 3.2s ease-in-out infinite 1.8s;
+    }
+    
+    &__image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: transform 0.3s ease;
+    }
+    
+    &:hover &__image {
+      transform: scale(1.1) rotate(30deg);
+    }
+  }
+
+  // 右から左へのスライダーアニメーション
+  @keyframes slideJobsRight {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-33.333%); // 1/3移動すると元の位置に戻る（無限ループ効果）
+    }
+  }
+
+  // 上下プカプカアニメーション
+  @keyframes floatUp {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(rem(-12));
+    }
+  }
+</style>
