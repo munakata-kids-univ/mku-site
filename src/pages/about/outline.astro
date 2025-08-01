@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { Image } from "astro:assets";
 ---
 
 <BaseLayout title="団体概要" description="むなかた子ども大学の基本情報、沿革、協力パートナーについてご紹介します。2021年の開学以来の歩みと、社会とともに進めるキャリア教育の現在地をご覧ください。">
@@ -12,11 +13,13 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
             <p class="hero__subtitle">Outline</p>
           </div>
           <div class="hero__image">
-            <img
+            <Image
               src="/images/backgrounds/img_bg-hero_outline-01.webp"
               alt="団体概要"
               width={600}
               height={400}
+              format="webp"
+              quality={85}
               loading="eager"
             />
           </div>
@@ -79,7 +82,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         <div class="content-section__header">
           <div class="content-section__english-title">Information</div>
           <div class="content-section__title-wrapper">
-            <img src="/images/ui/icon_subpage-section-title-01.svg" alt="" class="content-section__icon" />
+            <Image src="/images/ui/icon_subpage-section-title-01.svg" alt="" width={36} height={36} format="svg" loading="lazy" class="content-section__icon" />
             <h2 class="content-section__title">基本情報</h2>
           </div>
         </div>
@@ -134,7 +137,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         <div class="content-section__header">
           <div class="content-section__english-title">History</div>
           <div class="content-section__title-wrapper">
-            <img src="/images/ui/icon_subpage-section-title-01.svg" alt="" class="content-section__icon" />
+            <Image src="/images/ui/icon_subpage-section-title-01.svg" alt="" width={36} height={36} format="svg" loading="lazy" class="content-section__icon" />
             <h2 class="content-section__title">沿革</h2>
           </div>
         </div>
@@ -143,7 +146,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           <div class="timeline-item">
             <div class="timeline-item__marker">
               <div class="timeline-item__circle">
-                <img src="/images/ui/mark_muk-white.svg" alt="" class="timeline-item__icon" />
+                <Image src="/images/ui/mark_muk-white.svg" alt="" width={24} height={24} format="svg" loading="lazy" class="timeline-item__icon" />
               </div>
               <div class="timeline-item__line">
                 <div class="timeline-item__line-progress"></div>
@@ -159,7 +162,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
                   </p>
                 </div>
                 <div class="timeline-bubble__image">
-                  <img src="/images/content/img_outline_history-01.webp" alt="2021年度 開学" />
+                  <Image src="/images/content/img_outline_history-01.webp" alt="2021年度 開学" width={240} height={180} format="webp" quality={85} loading="lazy" />
                 </div>
               </div>
             </div>
@@ -168,7 +171,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           <div class="timeline-item">
             <div class="timeline-item__marker">
               <div class="timeline-item__circle">
-                <img src="/images/ui/mark_muk-white.svg" alt="" class="timeline-item__icon" />
+                <Image src="/images/ui/mark_muk-white.svg" alt="" width={24} height={24} format="svg" loading="lazy" class="timeline-item__icon" />
               </div>
               <div class="timeline-item__line">
                 <div class="timeline-item__line-progress"></div>
@@ -185,7 +188,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
                   </p>
                 </div>
                 <div class="timeline-bubble__image">
-                  <img src="/images/content/img_course-menu-02.webp" alt="2022年度 拡大・新設" />
+                  <Image src="/images/content/img_course-menu-02.webp" alt="2022年度 拡大・新設" width={240} height={180} format="webp" quality={85} loading="lazy" />
                 </div>
               </div>
             </div>
@@ -195,7 +198,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           <div class="timeline-item">
             <div class="timeline-item__marker">
               <div class="timeline-item__circle">
-                <img src="/images/ui/mark_muk-white.svg" alt="" class="timeline-item__icon" />
+                <Image src="/images/ui/mark_muk-white.svg" alt="" width={24} height={24} format="svg" loading="lazy" class="timeline-item__icon" />
               </div>
               <div class="timeline-item__line">
                 <div class="timeline-item__line-progress"></div>
@@ -210,7 +213,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
                   </p>
                 </div>
                 <div class="timeline-bubble__image">
-                  <img src="/images/content/img_outline_history-03.webp" alt="2023年度 夏の課外授業スタート" />
+                  <Image src="/images/content/img_outline_history-03.webp" alt="2023年度 夏の課外授業スタート" width={240} height={180} format="webp" quality={85} loading="lazy" />
                 </div>
               </div>
             </div>
@@ -219,7 +222,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           <div class="timeline-item">
             <div class="timeline-item__marker">
               <div class="timeline-item__circle">
-                <img src="/images/ui/mark_muk-white.svg" alt="" class="timeline-item__icon" />
+                <Image src="/images/ui/mark_muk-white.svg" alt="" width={24} height={24} format="svg" loading="lazy" class="timeline-item__icon" />
               </div>
             </div>
             <div class="timeline-item__content">
@@ -232,7 +235,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
                   </p>
                 </div>
                 <div class="timeline-bubble__image">
-                  <img src="/images/content/img_outline_history-04.webp" alt="2024年度 講座数拡大と最優秀賞受賞" />
+                  <Image src="/images/content/img_outline_history-04.webp" alt="2024年度 講座数拡大と最優秀賞受賞" width={240} height={180} format="webp" quality={85} loading="lazy" />
                 </div>
               </div>
             </div>
@@ -247,7 +250,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         <div class="content-section__header">
           <div class="content-section__english-title">Partners</div>
           <div class="content-section__title-wrapper">
-            <img src="/images/ui/icon_subpage-section-title-01.svg" alt="" class="content-section__icon" />
+            <Image src="/images/ui/icon_subpage-section-title-01.svg" alt="" width={36} height={36} format="svg" loading="lazy" class="content-section__icon" />
             <h2 class="content-section__title">協力パートナー</h2>
           </div>
         </div>
@@ -436,7 +439,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         min-height: rem(400);
       }
 
-      img {
+      img,
+      :global(img) {
         width: 100%;
         height: 100%;
         object-fit: cover;
@@ -1006,7 +1010,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       border-radius: 0 rem(20) rem(20) 0;
     }
     
-    img {
+    img,
+    :global(img) {
       width: 100%;
       height: 100%;
       object-fit: cover;

@@ -1,4 +1,6 @@
 ---
+import { Image } from "astro:assets";
+
 interface Props {
   englishTitle: string;
   title: string;
@@ -19,9 +21,13 @@ const {
 <div class="content-section__header">
   <div class="content-section__english-title">{englishTitle}</div>
   <div class={`content-section__title-wrapper ${customTitleWrapperStyle || ''}`}>
-    <img 
+    <Image 
       src={icon} 
       alt="" 
+      width={36}
+      height={36}
+      format="svg"
+      loading="lazy"
       class={`content-section__icon ${customIconStyle || ''}`} 
     />
     <h2 class="content-section__title" set:html={title}></h2>

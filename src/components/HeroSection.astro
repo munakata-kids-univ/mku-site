@@ -1,4 +1,6 @@
 ---
+import { Image } from "astro:assets";
+
 interface Props {
   title: string;
   subtitle: string;
@@ -27,11 +29,13 @@ const {
       </div>
       {showImage && imageSrc && (
         <div class="hero__image">
-          <img
+          <Image
             src={imageSrc}
             alt={imageAlt}
             width={600}
             height={400}
+            format="webp"
+            quality={85}
             loading="eager"
           />
         </div>
@@ -140,7 +144,8 @@ const {
         min-height: rem(400);
       }
 
-      img {
+      img,
+      :global(img) {
         width: 100%;
         height: 100%;
         object-fit: cover;
@@ -165,7 +170,8 @@ const {
         background: transparent;
       }
 
-      img {
+      img,
+      :global(img) {
         display: none;
       }
     }

@@ -3,6 +3,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import HeroSection from "../../components/HeroSection.astro";
 import Breadcrumb from "../../components/Breadcrumb.astro";  
 import ContentSectionHeader from "../../components/ContentSectionHeader.astro";
+import { Image } from "astro:assets";
 
 const breadcrumbItems = [
   { href: "/", label: "ホーム" },
@@ -73,7 +74,15 @@ const breadcrumbItems = [
         <div class="content-section__challenge-list">
           <div class="challenge-item">
             <div class="challenge-item__image">
-              <img src="/images/content/img_aims_charange-01.webp" alt="ベッドタウンの特性" />
+              <Image 
+                src="/images/content/img_aims_charange-01.webp" 
+                alt="ベッドタウンの特性" 
+                width={300}
+                height={300}
+                format="webp"
+                quality={85}
+                loading="lazy"
+              />
             </div>
             <div class="challenge-item__content">
               <p class="challenge-item__text">
@@ -85,7 +94,15 @@ const breadcrumbItems = [
 
           <div class="challenge-item">
             <div class="challenge-item__image">
-              <img src="/images/content/img_aims_charange-02.webp" alt="社会環境の変化" />
+              <Image 
+                src="/images/content/img_aims_charange-02.webp" 
+                alt="社会環境の変化" 
+                width={300}
+                height={300}
+                format="webp"
+                quality={85}
+                loading="lazy"
+              />
             </div>
             <div class="challenge-item__content">
               <p class="challenge-item__text">
@@ -96,7 +113,15 @@ const breadcrumbItems = [
 
           <div class="challenge-item">
             <div class="challenge-item__image">
-              <img src="/images/content/img_aims_charange-03.webp" alt="学校現場の課題" />
+              <Image 
+                src="/images/content/img_aims_charange-03.webp" 
+                alt="学校現場の課題" 
+                width={300}
+                height={300}
+                format="webp"
+                quality={85}
+                loading="lazy"
+              />
             </div>
             <div class="challenge-item__content">
               <p class="challenge-item__text">
@@ -121,7 +146,15 @@ const breadcrumbItems = [
           <!-- Mission Box -->
           <div class="mission-vision-box">
             <div class="mission-vision-box__image">
-              <img src="/images/content/img_aims_mision-01.webp" alt="Mission" />
+              <Image 
+                src="/images/content/img_aims_mision-01.webp" 
+                alt="Mission" 
+                width={500}
+                height={375}
+                format="webp"
+                quality={85}
+                loading="lazy"
+              />
             </div>
             <div class="mission-vision-box__content">
               <div class="mission-vision-box__text-wrapper">
@@ -137,7 +170,15 @@ const breadcrumbItems = [
           <!-- Vision Box -->
           <div class="mission-vision-box mission-vision-box--reverse">
             <div class="mission-vision-box__image">
-              <img src="/images/content/img_aims_mision-02.webp" alt="Vision" />
+              <Image 
+                src="/images/content/img_aims_mision-02.webp" 
+                alt="Vision" 
+                width={500}
+                height={375}
+                format="webp"
+                quality={85}
+                loading="lazy"
+              />
             </div>
             <div class="mission-vision-box__content">
               <div class="mission-vision-box__text-wrapper">
@@ -289,7 +330,16 @@ const breadcrumbItems = [
           <a href="/course/main-campus" class="pillar-card pillar-card--main-campus">
             <div class="pillar-card__english">Main Campus</div>
             <div class="pillar-card__image">
-              <img src="/images/content/img_course-menu-01.webp" alt="メインキャンパス" class="pillar-card__img" />
+              <Image 
+                src="/images/content/img_course-menu-01.webp" 
+                alt="メインキャンパス" 
+                width={330}
+                height={330}
+                format="webp"
+                quality={85}
+                loading="lazy"
+                class="pillar-card__img" 
+              />
             </div>
             <div class="pillar-card__content">
               <h3 class="pillar-card__title">メインキャンパス</h3>
@@ -315,7 +365,16 @@ const breadcrumbItems = [
           <a href="/course/special-course" class="pillar-card pillar-card--special-course">
             <div class="pillar-card__english">Special Course</div>
             <div class="pillar-card__image">
-              <img src="/images/content/img_course-menu-02.webp" alt="特設講座" class="pillar-card__img" />
+              <Image 
+                src="/images/content/img_course-menu-02.webp" 
+                alt="特設講座" 
+                width={330}
+                height={330}
+                format="webp"
+                quality={85}
+                loading="lazy"
+                class="pillar-card__img" 
+              />
             </div>
             <div class="pillar-card__content">
               <h3 class="pillar-card__title">特設講座</h3>
@@ -340,7 +399,16 @@ const breadcrumbItems = [
           <a href="/course/mku-day" class="pillar-card pillar-card--mku-day">
             <div class="pillar-card__english">MKU Day</div>
             <div class="pillar-card__image">
-              <img src="/images/content/img_course-menu-03.webp" alt="むなかた子ども大学の日" class="pillar-card__img" />
+              <Image 
+                src="/images/content/img_course-menu-03.webp" 
+                alt="むなかた子ども大学の日" 
+                width={330}
+                height={330}
+                format="webp"
+                quality={85}
+                loading="lazy"
+                class="pillar-card__img" 
+              />
             </div>
             <div class="pillar-card__content">
               <h3 class="pillar-card__title">むなかた子ども大学の日</h3>
@@ -364,7 +432,16 @@ const breadcrumbItems = [
           <a href="/course/summer-course" class="pillar-card pillar-card--summer-course">
             <div class="pillar-card__english">Summer Course</div>
             <div class="pillar-card__image">
-              <img src="/images/content/img_course-menu-04.webp" alt="夏の課外授業" class="pillar-card__img" />
+              <Image 
+                src="/images/content/img_course-menu-04.webp" 
+                alt="夏の課外授業" 
+                width={330}
+                height={330}
+                format="webp"
+                quality={85}
+                loading="lazy"
+                class="pillar-card__img" 
+              />
             </div>
             <div class="pillar-card__content">
               <h3 class="pillar-card__title">夏の課外授業</h3>
@@ -486,7 +563,8 @@ const breadcrumbItems = [
         min-height: rem(400);
       }
 
-      img {
+      img,
+      :global(img) {
         width: 100%;
         height: 100%;
         object-fit: cover;
@@ -891,7 +969,8 @@ const breadcrumbItems = [
         width: rem(300);
       }
       
-      img {
+      img,
+      :global(img) {
         width: 100%;
         height: 100%;
         object-fit: cover;
@@ -980,7 +1059,8 @@ const breadcrumbItems = [
           margin-right: rem(-50);
         }
         
-        img {
+        img,
+        :global(img) {
           @include breakpoint-up(md) {
             border-radius: $radius-m 0 0 $radius-m;
           }
@@ -1043,7 +1123,8 @@ const breadcrumbItems = [
         margin-left: rem(-50);
       }
       
-      img {
+      img,
+      :global(img) {
         width: 100%;
         height: 100%;
         object-fit: cover;
@@ -1710,7 +1791,8 @@ const breadcrumbItems = [
       }
     }
     
-    &__img {
+    &__img,
+    :global(&__img) {
       width: 100%;
       height: 100%;
       object-fit: cover;

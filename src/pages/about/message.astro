@@ -3,6 +3,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import HeroSection from "../../components/HeroSection.astro";
 import Breadcrumb from "../../components/Breadcrumb.astro";
 import ContentSectionHeader from "../../components/ContentSectionHeader.astro";
+import { Image } from "astro:assets";
 
 const breadcrumbItems = [
   { href: "/", label: "ホーム" },
@@ -34,7 +35,15 @@ const breadcrumbItems = [
           <!-- President Message Box -->
           <div class="message-box">
             <div class="message-box__image">
-              <img src="/images/content/img_about_message-01.webp" alt="President" />
+              <Image 
+                src="/images/content/img_about_message-01.webp" 
+                alt="President" 
+                width={494}
+                height={659}
+                format="webp"
+                quality={85}
+                loading="lazy"
+              />
             </div>
             <div class="message-box__content">
               <div class="message-box__text-wrapper">
@@ -73,7 +82,15 @@ const breadcrumbItems = [
           <!-- Vice President Message Box -->
           <div class="message-box message-box--reverse">
             <div class="message-box__image">
-              <img src="/images/content/img_about_message-02.webp" alt="Vice President" />
+              <Image 
+                src="/images/content/img_about_message-02.webp" 
+                alt="Vice President" 
+                width={494}
+                height={659}
+                format="webp"
+                quality={85}
+                loading="lazy"
+              />
             </div>
             <div class="message-box__content">
               <div class="message-box__text-wrapper">
@@ -126,7 +143,14 @@ const breadcrumbItems = [
           </div>
           
           <div class="video-content__logo">
-            <img src="/logos/logo-del_mku_vertical-color1.svg" alt="むなかた子ども大学ロゴ" />
+            <Image 
+              src="/logos/logo-del_mku_vertical-color1.svg" 
+              alt="むなかた子ども大学ロゴ" 
+              width={400}
+              height={600}
+              format="svg"
+              loading="lazy"
+            />
           </div>
         </div>
       </div>
@@ -450,6 +474,23 @@ const breadcrumbItems = [
         }
       }
       
+      // Astro Image component compatibility
+      :global(img) {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 0.75;
+        object-fit: cover;
+        border-radius: $radius-m;
+        
+        @include breakpoint-up(md) {
+          border-radius: 0 $radius-m $radius-m 0;
+        }
+        
+        @include breakpoint-up(lg) {
+          border-radius: 0 $radius-l $radius-l 0;
+        }
+      }
+      
       // 白いグラデーションオーバーレイ（右下が白く）
       &::after {
         content: '';
@@ -611,7 +652,8 @@ const breadcrumbItems = [
           margin-right: rem(-50);
         }
         
-        img {
+        img,
+        :global(img) {
           @include breakpoint-up(md) {
             border-radius: $radius-m 0 0 $radius-m;
           }
@@ -760,7 +802,8 @@ const breadcrumbItems = [
         max-width: rem(500);
       }
 
-      img {
+      img,
+      :global(img) {
         width: 100%;
         height: auto;
       }
