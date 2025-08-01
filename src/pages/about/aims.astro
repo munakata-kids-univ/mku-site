@@ -429,7 +429,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   .hero {
     position: relative;
     padding: rem(80) 0 rem(20);
-    background: $background-primary;
+    background: linear-gradient(to bottom, $background-secondary 0%, $background-primary 70%, $background-primary 100%);
     border-radius: 0 rem(120) 0 0;
     
     @include breakpoint-up(md) {
@@ -523,7 +523,6 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         height: 100%;
         object-fit: cover;
         border-radius: rem(8) 0 0 rem(8);
-        box-shadow: 0 rem(4) rem(20) rgba(0, 0, 0, 0.1);
         @include breakpoint-up(md) {
           border-radius: 0 rem(240) 0 $radius-l;
         }
@@ -711,6 +710,42 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         padding: 0 rem(50);
       }
     }
+    
+    // 地域特性・社会課題セクションのコンテナはxl以降でoverflow:hiddenを解除
+    &#challenges &__container {
+      @include breakpoint-up(xl) {
+        overflow: visible;
+      }
+    }
+    
+    // 各セクションのpadding-bottomを小さく
+    &#challenges {
+      padding-bottom: rem(60);
+      @include breakpoint-up(xl) {
+        padding-bottom: rem(100);
+      }
+    }
+    
+    &#mission {
+      padding-bottom: rem(60);
+      @include breakpoint-up(xl) {
+        padding-bottom: rem(100);
+      }
+    }
+    
+    &#aims {
+      padding-bottom: rem(60);
+      @include breakpoint-up(xl) {
+        padding-bottom: rem(100);
+      }
+    }
+    
+    &#programs {
+      padding-bottom: rem(60);
+      @include breakpoint-up(xl) {
+        padding-bottom: rem(100);
+      }
+    }
 
     &__header {
       position: relative;
@@ -719,6 +754,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       overflow: hidden;
       @include breakpoint-up(xl) {
         margin-bottom: rem(70);
+        margin-right: 0;
       }
     }
 

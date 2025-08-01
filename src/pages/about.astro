@@ -89,7 +89,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
           <!-- 団体概要 -->
           <li class="about-menu__item">
-            <a href="/about/organization" class="about-menu__link">
+            <a href="/about/outline" class="about-menu__link">
               <div class="about-menu__image">
                 <img src="/images/content/img_about_menu-03.webp" alt="団体概要" />
                 <div class="about-menu__english-title">Organization Outline</div>
@@ -120,7 +120,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   .hero {
     position: relative;
     padding: rem(80) 0 rem(20);
-    background: $background-primary;
+    background: linear-gradient(to bottom, $background-secondary 0%, $background-primary 70%, $background-primary 100%);
     border-radius: 0 rem(120) 0 0;
     
     @include breakpoint-up(md) {
@@ -213,7 +213,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         height: 100%;
         object-fit: cover;
         border-radius: rem(8) 0 0 rem(8);
-        box-shadow: 0 rem(4) rem(20) rgba(0, 0, 0, 0.1);
         @include breakpoint-up(md) {
           border-radius: 0 rem(240) 0 $radius-l;
         }
