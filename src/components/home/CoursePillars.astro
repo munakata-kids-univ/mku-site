@@ -67,14 +67,14 @@ const pillars = [
   <img src="/logos/mark-del_mku_color1.svg" alt="" class="pillars__mark" />
   
   <div class="u-container">
-    <div class="pillars__header">
+    <div class="pillars__header fade-up">
       <h2 class="pillars__title">
         むなかた子ども大学<br class="u-br-sm">4つの柱
       </h2>
       <p class="pillars__subtitle">4 Pillars</p>
     </div>
 
-    <div class="pillars__grid">
+    <div class="pillars__grid fade-up fade-up--delay-2">
       {pillars.map((pillar) => (
         <a href={pillar.href} class={`pillar-card ${pillar.className}`}>
           <div class="pillar-card__english">{pillar.english}</div>

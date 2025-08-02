@@ -7,6 +7,7 @@ interface Props {
   icon?: string;
   customIconStyle?: string; // messageページのアイコン位置調整用
   customTitleWrapperStyle?: string; // title-wrapper全体のカスタマイズ用
+  class?: string; // アニメーション用のクラス
 }
 
 const { 
@@ -14,11 +15,12 @@ const {
   title, 
   icon = "/images/ui/icon_subpage-section-title-01.svg",
   customIconStyle,
-  customTitleWrapperStyle 
+  customTitleWrapperStyle,
+  class: className
 } = Astro.props;
 ---
 
-<div class="content-section__header">
+<div class={`content-section__header ${className || ''}`}>
   <div class="content-section__english-title">{englishTitle}</div>
   <div class={`content-section__title-wrapper ${customTitleWrapperStyle || ''}`}>
     <Image 

@@ -18,6 +18,7 @@
 // 3. ベーススタイルとユーティリティを最後に読み込み
 @use 'base/reset';
 @use 'base/typography';
+@use 'base/animations';
 @use 'utilities/spacing';
 @use 'utilities/display';
 @use 'utilities/color' as color-utils;

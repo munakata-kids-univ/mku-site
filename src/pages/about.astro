@@ -27,7 +27,7 @@ const breadcrumbItems = [
       <div class="about-menu__container">
         <ul class="about-menu__list">
           <!-- ねらい・目的 -->
-          <li class="about-menu__item">
+          <li class="about-menu__item fade-up">
             <a href="/about/aims" class="about-menu__link">
               <div class="about-menu__image">
                 <Image 
@@ -57,7 +57,7 @@ const breadcrumbItems = [
           </li>
 
           <!-- 代表者メッセージ -->
-          <li class="about-menu__item">
+          <li class="about-menu__item fade-up fade-up--delay-1">
             <a href="/about/message" class="about-menu__link">
               <div class="about-menu__image">
                 <Image 
@@ -87,7 +87,7 @@ const breadcrumbItems = [
           </li>
 
           <!-- 団体概要 -->
-          <li class="about-menu__item">
+          <li class="about-menu__item fade-up fade-up--delay-2">
             <a href="/about/outline" class="about-menu__link">
               <div class="about-menu__image">
                 <Image 
@@ -302,7 +302,7 @@ const breadcrumbItems = [
     &__list {
       display: flex;
       flex-direction: column;
-      gap: rem(90);
+      gap: rem(60);
       list-style: none;
       margin: 0;
       padding: 0;
@@ -483,3 +483,29 @@ const breadcrumbItems = [
     }
   }
 </style>
+
+<script>
+// スクロールアニメーション用のIntersection Observer
+document.addEventListener('DOMContentLoaded', function() {
+  const observerOptions = {
+    threshold: 0.1, // 要素の10%が見えたら発火
+    rootMargin: '0px 0px -50px 0px' // 下から50px余裕を持たせる
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        // 一度表示されたら監視を停止（パフォーマンス向上）
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  // fade-upクラスを持つ全ての要素を監視対象に追加
+  const fadeUpElements = document.querySelectorAll('.fade-up');
+  fadeUpElements.forEach(element => {
+    observer.observe(element);
+  });
+});
+</script>

@@ -105,12 +105,12 @@ const pageDescription = '本物から学び、本物を体験し 興味・関心
   <section class="movie">
     <div class="u-container">
       <div class="movie__header">
-        <h2 class="movie__title">PICK UP MOVIE</h2>
+        <h2 class="movie__title fade-up">PICK UP MOVIE</h2>
       </div>
 
       <div class="movie__grid">
         <!-- 動画1 -->
-        <div class="movie__item">
+        <div class="movie__item fade-up fade-up--delay-1">
           <div class="movie__video-wrapper">
             <iframe
               src="https://www.youtube.com/embed/Sdsqeye050k"
@@ -123,7 +123,7 @@ const pageDescription = '本物から学び、本物を体験し 興味・関心
         </div>
 
         <!-- 動画2 -->
-        <div class="movie__item">
+        <div class="movie__item fade-up fade-up--delay-2">
           <div class="movie__video-wrapper">
             <iframe
               src="https://www.youtube.com/embed/ToJWUGuK7Bg"
@@ -139,6 +139,31 @@ const pageDescription = '本物から学び、本物を体験し 興味・関心
   </section>
 </BaseLayout>
 
+<script>
+// スクロールアニメーション用のIntersection Observer
+document.addEventListener('DOMContentLoaded', function() {
+  const observerOptions = {
+    threshold: 0.1, // 要素の10%が見えたら発火
+    rootMargin: '0px 0px -50px 0px' // 下から50px余裕を持たせる
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        // 一度表示されたら監視を停止（パフォーマンス向上）
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  // fade-upクラスを持つ全ての要素を監視対象に追加
+  const fadeUpElements = document.querySelectorAll('.fade-up');
+  fadeUpElements.forEach(element => {
+    observer.observe(element);
+  });
+});
+</script>
 
 <style lang="scss">
 @import '../styles/_index';
@@ -460,7 +485,7 @@ const pageDescription = '本物から学び、本物を体験し 興味・関心
 }
 
 :global(.news-section--purple) {
-  background: linear-gradient(135deg, $brand-primary 0%, lighten($brand-primary, 8%) 100%);
+  background: transparent;
   color: $text-white;
 }
 
@@ -616,45 +641,6 @@ const pageDescription = '本物から学び、本物を体験し 興味・関心
   margin-top: auto; // 自動的に下部に配置
 }
 
-:global(.news-section__link-button) {
-  @include padding(12, 24);
-  background: transparent;
-  border: 2px solid currentColor;
-  color: inherit;
-  text-decoration: none;
-  @include radius-m;
-  font-weight: 600;
-  font-size: rem(15);
-  display: inline-flex;
-  align-items: center;
-  gap: rem(8);
-  transition: all 0.3s ease;
-  
-  @include breakpoint-up(sm) {
-    @include padding(14, 28);
-    font-size: rem(16);
-  }
-}
-
-:global(.news-section__link-button:hover) {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
-}
-
-:global(.news-section--light .news-section__link-button:hover) {
-  background: $brand-primary;
-  color: $text-white;
-}
-
-:global(.news-section__link-icon) {
-  width: rem(16);
-  height: rem(16);
-  transition: transform 0.3s ease;
-}
-
-:global(.news-section__link-button:hover .news-section__link-icon) {
-  transform: translateX(2px);
-}
 
 :global(.news-item) {
   padding: rem(15) rem(10) rem(15) 0;

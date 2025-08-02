@@ -63,6 +63,7 @@ const breadcrumbItems = [
         <ContentSectionHeader 
           englishTitle="Challenges in Munakata"
           title="地域特性・社会課題"
+          class="fade-up"
         />
         
         <div class="content-section__intro">
@@ -72,7 +73,7 @@ const breadcrumbItems = [
         </div>
 
         <div class="content-section__challenge-list">
-          <div class="challenge-item">
+          <div class="challenge-item fade-up">
             <div class="challenge-item__image">
               <Image 
                 src="/images/content/img_aims_charange-01.webp" 
@@ -92,7 +93,7 @@ const breadcrumbItems = [
             </div>
           </div>
 
-          <div class="challenge-item">
+          <div class="challenge-item fade-up fade-up--delay-1">
             <div class="challenge-item__image">
               <Image 
                 src="/images/content/img_aims_charange-02.webp" 
@@ -111,7 +112,7 @@ const breadcrumbItems = [
             </div>
           </div>
 
-          <div class="challenge-item">
+          <div class="challenge-item fade-up fade-up--delay-2">
             <div class="challenge-item__image">
               <Image 
                 src="/images/content/img_aims_charange-03.webp" 
@@ -140,11 +141,12 @@ const breadcrumbItems = [
         <ContentSectionHeader 
           englishTitle="Mission & Vision"
           title="使命・ビジョン"
+          class="fade-up"
         />
         
         <div class="mission-vision-content">
           <!-- Mission Box -->
-          <div class="mission-vision-box">
+          <div class="mission-vision-box fade-up">
             <div class="mission-vision-box__image">
               <Image 
                 src="/images/content/img_aims_mision-01.webp" 
@@ -168,7 +170,7 @@ const breadcrumbItems = [
           </div>
 
           <!-- Vision Box -->
-          <div class="mission-vision-box mission-vision-box--reverse">
+          <div class="mission-vision-box mission-vision-box--reverse fade-up fade-up--delay-1">
             <div class="mission-vision-box__image">
               <Image 
                 src="/images/content/img_aims_mision-02.webp" 
@@ -200,6 +202,7 @@ const breadcrumbItems = [
         <ContentSectionHeader 
           englishTitle="Educational Aims"
           title="ねらい"
+          class="fade-up"
         />
         
         <div class="content-section__intro">
@@ -323,11 +326,12 @@ const breadcrumbItems = [
         <ContentSectionHeader 
           englishTitle="Programs & Activities"
           title="具体的な取組"
+          class="fade-up"
         />
         
         <div class="pillars-program-grid">
           <!-- メインキャンパス -->
-          <a href="/course/main-campus" class="pillar-card pillar-card--main-campus">
+          <a href="/course/main-campus" class="pillar-card pillar-card--main-campus fade-up">
             <div class="pillar-card__english">Main Campus</div>
             <div class="pillar-card__image">
               <Image 
@@ -362,7 +366,7 @@ const breadcrumbItems = [
           </a>
           
           <!-- 特設講座 -->
-          <a href="/course/special-course" class="pillar-card pillar-card--special-course">
+          <a href="/course/special-course" class="pillar-card pillar-card--special-course fade-up fade-up--delay-1">
             <div class="pillar-card__english">Special Course</div>
             <div class="pillar-card__image">
               <Image 
@@ -396,7 +400,7 @@ const breadcrumbItems = [
           </a>
           
           <!-- むなかた子ども大学の日 -->
-          <a href="/course/mku-day" class="pillar-card pillar-card--mku-day">
+          <a href="/course/mku-day" class="pillar-card pillar-card--mku-day fade-up fade-up--delay-2">
             <div class="pillar-card__english">MKU Day</div>
             <div class="pillar-card__image">
               <Image 
@@ -429,7 +433,7 @@ const breadcrumbItems = [
           </a>
           
           <!-- 夏の課外授業 -->
-          <a href="/course/summer-course" class="pillar-card pillar-card--summer-course">
+          <a href="/course/summer-course" class="pillar-card pillar-card--summer-course fade-up fade-up--delay-3">
             <div class="pillar-card__english">Summer Course</div>
             <div class="pillar-card__image">
               <Image 
@@ -1737,7 +1741,9 @@ const breadcrumbItems = [
       max-width: rem(1200);
     }
     
-    &:hover {
+    // fade-upアニメーションが完了した後にhoverエフェクトを有効にする
+    &:not(.fade-up):hover,
+    &.fade-up.is-visible:hover {
       transform: translateY(-4px);
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
       text-decoration: none;
@@ -1792,7 +1798,7 @@ const breadcrumbItems = [
     }
     
     &__img,
-    :global(&__img) {
+    :global(.pillar-card__img) {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -2018,5 +2024,27 @@ const breadcrumbItems = [
     if (pyramidContainer) {
       observer.observe(pyramidContainer);
     }
+  });
+
+  // スクロールアニメーション用のIntersection Observer
+  const observerOptions = {
+    threshold: 0.1, // 要素の10%が見えたら発火
+    rootMargin: '0px 0px -50px 0px' // 下から50px余裕を持たせる
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        // 一度表示されたら監視を停止（パフォーマンス向上）
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  // fade-upクラスを持つ全ての要素を監視対象に追加
+  const fadeUpElements = document.querySelectorAll('.fade-up');
+  fadeUpElements.forEach(element => {
+    observer.observe(element);
   });
 </script>

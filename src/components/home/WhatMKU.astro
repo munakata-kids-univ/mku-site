@@ -1,4 +1,6 @@
 ---
+import BaseButton from '../BaseButton.astro';
+
 // スライダー画像のデータ
 const sliderImages = [
   {
@@ -47,7 +49,7 @@ const content = {
   <div class="what-mku__container">
     <!-- テキストコンテンツ -->
     <div class="what-mku__content">
-      <div class="what-mku__text-wrapper">
+      <div class="what-mku__text-wrapper fade-up">
         <div class="what-mku__header">
           <h2 class="what-mku__title">{content.title}</h2>
           <p class="what-mku__subtitle">{content.subtitle}</p>
@@ -61,12 +63,9 @@ const content = {
         
         <!-- ボタン -->
         <div class="what-mku__action">
-          <a href={content.actionButton.href} class="base-button base-button--white">
-            <span class="base-button__text">{content.actionButton.text}</span>
-            <div class="base-button__icon">
-              <div class="base-button__icon-arrow"></div>
-            </div>
-          </a>
+          <BaseButton href={content.actionButton.href} variant="white">
+            詳しくみる
+          </BaseButton>
         </div>
         
         <!-- イラスト -->
@@ -266,6 +265,14 @@ const content = {
 
   &__action {
     margin-top: rem(40);
+    display: flex;
+    flex-direction: column;
+    gap: rem(16);
+    align-items: center;
+    
+    @include breakpoint-up(lg) {
+      align-items: flex-start;
+    }
   }
 
   &__kids-image {

@@ -49,15 +49,6 @@
   transform: rotate(360deg) !important;
 }
 
-:global(.base-button--white .base-button__icon-arrow) {
-  border-color: vars.$background-primary !important;
-}
-
-:global(.base-button--white:hover .base-button__icon-arrow) {
-  border-color: vars.$brand-secondary !important;
-  transform: rotate(-45deg) rotate(360deg) !important;
-}
-
 :global(.base-button__text) {
   flex: 1;
   padding-right: units.rem(10);
@@ -77,8 +68,25 @@
   transition: all 0.5s ease;
 }
 
+// 基本設定（デフォルト色で初期化）
+:global(.base-button__icon-arrow) {
+  width: units.rem(8);
+  height: units.rem(8);
+  border-top: 0;
+  border-left: 0;
+  border-right: 2px solid transparent;
+  border-bottom: 2px solid transparent;
+  transform: rotate(-45deg);
+  transition: all 0.5s ease;
+}
+
+// ブルーボタン用のアイコンとアロー
 :global(.base-button--blue .base-button__icon) {
   background-color: vars.$background-primary;
+}
+
+:global(.base-button--blue .base-button__icon-arrow) {
+  border-color: vars.$brand-primary;
 }
 
 :global(.base-button--blue:hover .base-button__icon) {
@@ -86,16 +94,46 @@
   transform: rotate(360deg);
 }
 
-:global(.base-button__icon-arrow) {
-  width: units.rem(8);
-  height: units.rem(8);
-  border-right: 2px solid vars.$brand-primary;
-  border-bottom: 2px solid vars.$brand-primary;
-  transform: rotate(-45deg);
-  transition: all 0.5s ease;
+:global(.base-button--blue:hover .base-button__icon-arrow) {
+  border-color: vars.$brand-secondary;
+  transform: rotate(-45deg) rotate(360deg);
 }
 
-:global(.base-button--blue:hover .base-button__icon-arrow) {
+// ホワイトボタン用のアイコンとアロー
+:global(.base-button--white .base-button__icon-arrow) {
+  border-color: vars.$background-primary;
+}
+
+:global(.base-button--white:hover .base-button__icon-arrow) {
+  border-color: vars.$brand-secondary;
+  transform: rotate(-45deg) rotate(360deg);
+}
+
+// ピンクボタン用のスタイル
+:global(.base-button--pink) {
+  background-color: vars.$brand-pink;
+  color: vars.$text-white;
+}
+
+:global(.base-button--pink:hover) {
+  background-color: vars.$brand-secondary;
+  color: vars.$text-primary;
+}
+
+:global(.base-button--pink .base-button__icon) {
+  background-color: vars.$background-primary;
+}
+
+:global(.base-button--pink:hover .base-button__icon) {
+  background-color: vars.$brand-primary;
+  transform: rotate(360deg);
+}
+
+:global(.base-button--pink .base-button__icon-arrow) {
+  border-color: vars.$brand-pink;
+}
+
+:global(.base-button--pink:hover .base-button__icon-arrow) {
   border-color: vars.$brand-secondary;
   transform: rotate(-45deg) rotate(360deg);
 }

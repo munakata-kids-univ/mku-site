@@ -29,11 +29,12 @@ const breadcrumbItems = [
         <ContentSectionHeader 
           englishTitle="President Message"
           title="学長挨拶"
+          class="fade-up"
         />
         
         <div class="message-content">
           <!-- President Message Box -->
-          <div class="message-box">
+          <div class="message-box fade-up">
             <div class="message-box__image">
               <Image 
                 src="/images/content/img_about_message-01.webp" 
@@ -76,11 +77,12 @@ const breadcrumbItems = [
         <ContentSectionHeader 
           englishTitle="Vice President Message"
           title="副学長挨拶"
+          class="fade-up"
         />
         
         <div class="message-content">
           <!-- Vice President Message Box -->
-          <div class="message-box message-box--reverse">
+          <div class="message-box message-box--reverse fade-up fade-up--delay-1">
             <div class="message-box__image">
               <Image 
                 src="/images/content/img_about_message-02.webp" 
@@ -125,12 +127,13 @@ const breadcrumbItems = [
           title="むなかた子ども大学<br>説明動画"
           customTitleWrapperStyle="explanation-video-title-wrapper"
           customIconStyle="explanation-video-icon"
+          class="fade-up"
         />
         
         <div class="video-content">
           <!-- md未満時の順序: 動画 → ロゴ -->
           <!-- md以降の順序: ロゴ → 動画 -->
-          <div class="video-content__video">
+          <div class="video-content__video fade-up fade-up--delay-1">
             <div class="video-content__video-wrapper">
               <iframe
                 src="https://www.youtube.com/embed/ToJWUGuK7Bg"
@@ -142,7 +145,7 @@ const breadcrumbItems = [
             </div>
           </div>
           
-          <div class="video-content__logo">
+          <div class="video-content__logo fade-up">
             <Image 
               src="/logos/logo-del_mku_vertical-color1.svg" 
               alt="むなかた子ども大学ロゴ" 
@@ -408,13 +411,25 @@ const breadcrumbItems = [
   .president-section {
     background: linear-gradient(to bottom, $background-primary 0%, $background-secondary 100%) !important;
     padding-top: rem(20);
+    padding-bottom: rem(60);
     @include breakpoint-up(lg) {
       padding-top: rem(60);
+      padding-bottom: rem(80);
+    }
+    @include breakpoint-up(xl) {
+      padding-bottom: rem(100);
     }
   }
 
   .vice-president-section {
     background: linear-gradient(to bottom, $background-secondary 0%, $background-primary 100%) !important;
+    padding-bottom: rem(60);
+    @include breakpoint-up(lg) {
+      padding-bottom: rem(80);
+    }
+    @include breakpoint-up(xl) {
+      padding-bottom: rem(100);
+    }
   }
 
   .message-content {
@@ -810,3 +825,29 @@ const breadcrumbItems = [
     }
   }
 </style>
+
+<script>
+// スクロールアニメーション用のIntersection Observer
+document.addEventListener('DOMContentLoaded', function() {
+  const observerOptions = {
+    threshold: 0.1, // 要素の10%が見えたら発火
+    rootMargin: '0px 0px -50px 0px' // 下から50px余裕を持たせる
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        // 一度表示されたら監視を停止（パフォーマンス向上）
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  // fade-upクラスを持つ全ての要素を監視対象に追加
+  const fadeUpElements = document.querySelectorAll('.fade-up');
+  fadeUpElements.forEach(element => {
+    observer.observe(element);
+  });
+});
+</script>

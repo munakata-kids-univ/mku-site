@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import BaseButton from './BaseButton';
 
 // ニュース項目の型定義
 interface NewsItem {
@@ -44,6 +45,8 @@ interface NewsSectionProps {
 export default function NewsSection({ newsItems, allItems, categoryData, categories, type, title, className = '' }: NewsSectionProps) {
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [displayItems, setDisplayItems] = useState<NewsItem[]>(newsItems.slice(0, 3));
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   // カテゴリー変更時にデータを設定
   useEffect(() => {
@@ -54,6 +57,31 @@ export default function NewsSection({ newsItems, allItems, categoryData, categor
       setDisplayItems(categoryItems.slice(0, 3));
     }
   }, [activeCategory, allItems, categoryData]);
+
+  // スクロールアニメーション用のIntersection Observer
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    });
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => {
+      if (containerRef.current) {
+        observer.unobserve(containerRef.current);
+      }
+    };
+  }, []);
 
   // 日付をフォーマット
   const formatDate = (dateString: string) => {
@@ -67,7 +95,15 @@ export default function NewsSection({ newsItems, allItems, categoryData, categor
 
   return (
     <section className={`news-section ${className}`}>
-      <div className="news-section__container">
+      <div 
+        ref={containerRef}
+        className="news-section__container"
+        style={{
+          opacity: isVisible ? 1 : 0,
+          transform: isVisible ? 'translateY(0)' : 'translateY(40px)',
+          transition: 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+        }}
+      >
         <div className="news-section__header">
           <h2 className="news-section__title">{title}</h2>
           <p className="news-section__subtitle">{type === 'news' ? 'News' : 'Media'}</p>
@@ -125,14 +161,9 @@ export default function NewsSection({ newsItems, allItems, categoryData, categor
 
           {/* 一覧へのリンク */}
           <div className="news-section__actions">
-            <a href={`/${type}`} className="base-button base-button--blue">
-              <span className="base-button__text">
-                {title}一覧へ
-              </span>
-              <div className="base-button__icon">
-                <div className="base-button__icon-arrow"></div>
-              </div>
-            </a>
+            <BaseButton href={`/${type}`} variant="blue">
+              {title}一覧へ
+            </BaseButton>
           </div>
         </div>
       </div>
