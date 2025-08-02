@@ -311,49 +311,105 @@ const statisticsData = [
   }
 
   &__content {
-    // 特に追加スタイルなし
+    display: flex;
+    flex-direction: column;
+    gap: rem(6);
+    color: $text-primary;
+    
+    @include breakpoint-up(md) {
+      gap: rem(10);
+    }
   }
 
   &__number {
-    @include font-ja-l(semibold);
-    color: $text-primary;
-    margin-bottom: rem(8);
-    line-height: 1.2;
+    font-size: rem(36);
+    font-weight: 800;
+    color: $text-secondary;
+    line-height: 1;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: rem(2);
+    
+    @include breakpoint-up(md) {
+      font-size: rem(48);
+    }
     
     @include breakpoint-up(lg) {
-      @include font-ja-2l(semibold);
-      margin-bottom: rem(12);
+      font-size: rem(56);
+    }
+    @include breakpoint-up(xl) {
+      font-size: rem(72);
     }
   }
 
   &__unit {
+    font-size: rem(20);
+    font-weight: 600;
+    color: $text-primary;
+    
+    @include breakpoint-up(md) {
+      font-size: rem(24);
+    }
+    
+    @include breakpoint-up(lg) {
+      font-size: rem(28);
+    }
+  }
+
+  &__label {
     @include font-ja-s(semibold);
-    color: $text-secondary;
+    color: $text-primary;
     
     @include breakpoint-up(lg) {
       @include font-ja-m(semibold);
     }
   }
-
-  &__label {
-    @include font-ja-2s(semibold);
-    color: $text-secondary;
-    margin-bottom: rem(8);
+  
+  &__sub-comment {
+    width: 100%;
+    text-align: center;
+    padding: rem(15) rem(5);
+    color: $text-primary;
+    @include radius-xs;
+    @include font-ja-3s(semibold);
     line-height: 1.3;
+    margin-top: rem(12);
+    
+    @include breakpoint-up(md) {
+      @include font-ja-2s(semibold);
+    }
     
     @include breakpoint-up(lg) {
-      @include font-ja-s(semibold);
-      margin-bottom: rem(12);
+      padding: rem(20) rem(15);
     }
   }
-
-  &__sub-comment {
-    @include font-ja-3s;
-    color: $text-tertiary;
-    line-height: 1.4;
+  
+  &__sub-comment-line2 {
+    @include breakpoint-up(xl) {
+      display: block;
+    }
+  }
+  
+  // 個別カードのスタイル
+  &--01, &--04, &--05 {
+    background: $brand-secondary;
     
-    @include breakpoint-up(lg) {
-      @include font-ja-2s;
+    .stat-card__unit,
+    .stat-card__label {
+      color: $text-white;
+    }
+    
+    .stat-card__sub-comment {
+      background: $background-quaternary;
+    }
+  }
+  
+  &--02, &--03, &--06 {
+    background: $background-primary;
+    
+    .stat-card__sub-comment {
+      background: $background-tertiary;
     }
   }
 
