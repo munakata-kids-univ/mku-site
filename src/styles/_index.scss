@@ -116,14 +116,14 @@ $breakpoint-2xl: bp.$breakpoint-2xl;
 }
 
 //Radius variables
-$radius-xs: vars.$radius-xs;
+$radius-xs: vars.$radius-x-s;
 $radius-s: vars.$radius-s;
 $radius-m: vars.$radius-m;
 $radius-l: vars.$radius-l;
-$radius-2l: vars.$radius-2l;
-$radius-3l: vars.$radius-3l;
-$radius-4l: vars.$radius-4l;
-$radius-5l: vars.$radius-5l;
+$radius-2l: vars.$radius-2-l;
+$radius-3l: vars.$radius-3-l;
+$radius-4l: vars.$radius-4-l;
+$radius-5l: vars.$radius-5-l;
 $radius-full: vars.$radius-full;
 
 @mixin radius-xs { @include layout.radius-xs; }
@@ -139,6 +139,7 @@ $radius-full: vars.$radius-full;
 @mixin heading-s($lang: 'ja') { @include typo.heading-s($lang); }
 @mixin heading-m($lang: 'ja') { @include typo.heading-m($lang); }
 @mixin heading-l($lang: 'ja') { @include typo.heading-l($lang); }
+@mixin heading-xl($lang: 'ja') { @include typo.heading-xl($lang); }
 
 @mixin body-xs($lang: 'ja') { @include typo.body-xs($lang); }
 @mixin body-s($lang: 'ja') { @include typo.body-s($lang); }

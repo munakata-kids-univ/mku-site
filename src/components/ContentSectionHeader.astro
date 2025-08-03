@@ -48,6 +48,14 @@ const {
       margin-bottom: rem(70);
       margin-right: 0;
     }
+    
+    // 英語サブタイトルがない場合のmargin-bottom調整
+    &:has(.content-section__english-title:empty) {
+      margin-bottom: rem(30);
+      @include breakpoint-up(xl) {
+        margin-bottom: rem(40);
+      }
+    }
   }
 
   .content-section__english-title {

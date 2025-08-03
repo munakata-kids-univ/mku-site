@@ -6,7 +6,7 @@
 
 // ボーダーラディウス
 @mixin radius-xs {
-  border-radius: vars.$radius-xs;
+  border-radius: vars.$radius-x-s;
 }
 
 @mixin radius-s {
@@ -22,23 +22,23 @@
 }
 
 @mixin radius-xl {
-  border-radius: vars.$radius-2l;
+  border-radius: vars.$radius-2-l;
 }
 
 @mixin radius-xxl {
-  border-radius: vars.$radius-3l;
+  border-radius: vars.$radius-3-l;
 }
 
 @mixin radius-4l {
-  border-radius: vars.$radius-4l;
+  border-radius: vars.$radius-4-l;
 }
 
 @mixin radius-5l {
-  border-radius: vars.$radius-5l;
+  border-radius: vars.$radius-5-l;
 }
 
 @mixin radius-2l {
-  border-radius: vars.$radius-2l;
+  border-radius: vars.$radius-2-l;
 }
 
 @mixin radius-full {

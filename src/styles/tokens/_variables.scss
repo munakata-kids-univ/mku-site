@@ -55,6 +55,50 @@ $font-weight-ja-semibold: SemiBold;
 $font-weight-en-regular: Regular;
 $font-weight-ja-regular: Regular;
 
+// タイポグラフィ - フォントサイズ（PC）
+$font-size-pc-ja-4-s: 9px;
+$font-size-pc-ja-s: 16px;
+$font-size-pc-ja-m: 22px;
+$font-size-pc-ja-4-l: 90px;
+$font-size-pc-ja-2-l: 45px;
+$font-size-pc-ja-l: 32px;
+$font-size-pc-ja-3-s: 12px;
+$font-size-pc-ja-3-l: 64px;
+$font-size-pc-ja-5-l: 128px;
+$font-size-pc-en-5-l: 130px;
+$font-size-pc-en-4-l: 92px;
+$font-size-pc-en-3-l: 66px;
+$font-size-pc-en-2-l: 47px;
+$font-size-pc-en-l: 34px;
+$font-size-pc-en-m: 24px;
+$font-size-pc-en-s: 18px;
+$font-size-pc-en-2-s: 16px;
+$font-size-pc-en-4-s: 11px;
+$font-size-pc-ja-2-s: 14px;
+$font-size-pc-en-3-s: 14px;
+
+// タイポグラフィ - フォントサイズ（SP）
+$font-size-sp-ja-5-l: 120px;
+$font-size-sp-ja-4-l: 84px;
+$font-size-sp-ja-3-l: 60px;
+$font-size-sp-ja-2-l: 42px;
+$font-size-sp-ja-l: 30px;
+$font-size-sp-ja-m: 20px;
+$font-size-sp-ja-s: 14px;
+$font-size-sp-ja-2-s: 12px;
+$font-size-sp-ja-4-s: 7px;
+$font-size-sp-en-5-l: 128px;
+$font-size-sp-en-4-l: 90px;
+$font-size-sp-en-3-l: 64px;
+$font-size-sp-en-2-l: 45px;
+$font-size-sp-en-l: 32px;
+$font-size-sp-en-m: 22px;
+$font-size-sp-en-s: 16px;
+$font-size-sp-en-2-s: 14px;
+$font-size-sp-en-4-s: 9px;
+$font-size-sp-ja-3s: 10px;
+$font-size-sp-en-3-s: 12px;
+
 // CSS Custom Properties でレスポンシブフォントサイズを定義（fluid typography）
 // lg境界（1024px）を基準に clamp() 関数でスムーズにスケール
 
@@ -83,11 +127,11 @@ $font-size-en-4s: var(--font-size-en-4s);     // 9px → 11px
 
 // ボーダーラディウス
 $radius-full: 9999px;
-$radius-3l: 48px;
-$radius-2l: 32px;
+$radius-3-l: 48px;
+$radius-2-l: 32px;
 $radius-m: 16px;
 $radius-s: 8px;
-$radius-xs: 4px;
+$radius-x-s: 4px;
 $radius-l: 24px;
-$radius-4l: 60px;
-$radius-5l: 72px;
+$radius-4-l: 60px;
+$radius-5-l: 72px;

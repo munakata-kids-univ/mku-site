@@ -8,7 +8,8 @@ export const client = createClient({
 
 // 基本的な型定義
 export interface GlobalSettings {
-  currentYear: number;
+  currentYear: string | string[];
+  scheduleDescription?: string;
   siteOGP: {
     title: string;
     description: string;
@@ -21,20 +22,71 @@ export interface GlobalSettings {
 }
 
 export interface MainCampusSettings {
-  phase: 'before' | 'during' | 'after';
-  buttons: Array<{
-    text: string;
-    url: string;
-    enabled: boolean;
+  activeYear: string | string[];
+  executedDate: Array<{
+    year: string | string[];
+    date: string;
   }>;
+  phase: string | string[];
+  globalNotice?: string;
+  deadlines: Array<{
+    deadlineKey: string | string[];
+    deadlineDate: string;
+  }>;
+  buttons: Array<{
+    type: string | string[];
+    visible: boolean;
+    labelAbove?: string;
+    buttonText: string;
+    url: string;
+    labelBelow?: string;
+  }>;
+  firstWinners?: string;
+  finalEnrollment?: string;
 }
 
 export interface MainCampusCourse {
   id: string;
-  status: 'published' | 'draft';
-  year: number;
+  status: string | string[];
+  year: string | string[];
+  providerInfo?: Array<{
+    providerName: string;
+    providerUrl?: string;
+  }>;
   title: string;
-  scheduleDate: string;
+  subtitle?: string;
+  courseType?: string | string[];
+  targetGrades: string | string[];
+  capacity?: number;
+  periods?: Array<{
+    periodNo: string | string[];
+    periodDesc: string;
+  }>;
+  venue?: {
+    openingMeeting?: string | string[];
+    lecture?: string | string[];
+    closingMeeting?: string | string[];
+  };
+  preparation?: string;
+  thumbImg?: {
+    url: string;
+    width: number;
+    height: number;
+  };
+  remarks?: string;
+  recpAndDism?: {
+    reception?: string;
+    dismissal?: string;
+  };
+  noticeCourse?: string;
+  afterImages?: Array<{
+    url: string;
+    width: number;
+    height: number;
+  }>;
+  instructor?: string;
+  afterReport?: string;
+  afterMovieUrl?: string;
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
@@ -43,10 +95,52 @@ export interface MainCampusCourse {
 
 export interface SpecialCourse {
   id: string;
-  status: 'published' | 'draft';
-  year: number;
+  status: string | string[];
+  year: string | string[];
+  providerInfo?: Array<{
+    providerName: string;
+    providerUrl?: string;
+  }>;
   title: string;
-  description: string;
+  subtitle?: string;
+  outline?: string;
+  courseType?: string | string[];
+  targetGrades: string | string[];
+  capacity?: number;
+  executedDate: string; // 実施日
+  lectureTime?: string; // 実施時間
+  applicationDeadline?: string; // 申込締切
+  venue?: string; // 会場
+  participationFee?: string; // 参加費
+  preparation?: string;
+  thumbImg?: {
+    url: string;
+    width: number;
+    height: number;
+  };
+  remarks?: string;
+  cityOutsideOk: boolean; // 市外住民の参加可否
+  recpAndDism?: {
+    reception?: string;
+    dismissal?: string;
+  };
+  noticeCourse?: string;
+  instructor?: string;
+  buttons?: Array<{
+    type: string | string[];
+    visible: boolean;
+    labelAbove?: string;
+    buttonText: string;
+    url: string;
+    labelBelow?: string;
+  }>;
+  afterImages?: Array<{
+    url: string;
+    width: number;
+    height: number;
+  }>;
+  afterReport?: string;
+  afterMovieUrl?: string;
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
@@ -55,10 +149,58 @@ export interface SpecialCourse {
 
 export interface SummerCourse {
   id: string;
-  status: 'published' | 'draft';
-  year: number;
+  status: string | string[];
+  year: string | string[];
+  providerInfo?: Array<{
+    providerName: string;
+    providerUrl?: string;
+  }>;
   title: string;
-  description: string;
+  subtitle?: string;
+  outline?: string;
+  courseType?: string | string[];
+  targetGrades: string | string[];
+  capacity?: number;
+  schedule?: Array<{
+    fieldId: string;
+    date: string;
+    subStatus?: string | string[];
+    startTime?: string;
+    endTime?: string;
+    entryDeadline?: string;
+  }>;
+  atAnyTime?: boolean;
+  venue?: string;
+  participationFee?: string;
+  preparation?: string;
+  thumbImg?: {
+    url: string;
+    width: number;
+    height: number;
+  };
+  remarks?: string;
+  cityOutsideOk?: boolean;
+  recpAndDism?: {
+    reception?: string;
+    dismissal?: string;
+  };
+  noticeCourse?: string;
+  instructor?: string;
+  buttons?: Array<{
+    type: string | string[];
+    visible: boolean;
+    labelAbove?: string;
+    buttonText: string;
+    url: string;
+    labelBelow?: string;
+  }>;
+  afterImages?: Array<{
+    url: string;
+    width: number;
+    height: number;
+  }>;
+  afterReport?: string;
+  afterMovieUrl?: string;
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
@@ -68,9 +210,28 @@ export interface SummerCourse {
 export interface MkuDay {
   id: string;
   status: 'published' | 'draft';
-  year: number;
-  title: string;
-  description: string;
+  year: string | string[];
+  isCurrent?: boolean;
+  schoolName: {
+    id: string;
+    name: string;
+  };
+  eventDates: Array<{
+    date: string;
+  }>;
+  expActivities?: Array<{
+    grade: string | string[];
+    experienceDesc: string;
+  }>;
+  presenActivities?: Array<{
+    grade: string | string[];
+    presentationDesc: string;
+  }>;
+  afterImages?: Array<{
+    url: string;
+    width: number;
+    height: number;
+  }>;
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
@@ -138,42 +299,59 @@ export async function getMainCampusSettings(): Promise<MainCampusSettings> {
     console.error('メインキャンパス設定の取得に失敗しました:', error);
     // 開発時のフォールバック
     return {
-      phase: 'before' as const,
+      activeYear: 'R07',
+      executedDate: [
+        {
+          year: 'R07',
+          date: '2025-02-22'
+        }
+      ],
+      phase: 'preEntry',
+      deadlines: [],
       buttons: [
         {
-          text: '申し込みフォーム',
-          url: '/form',
-          enabled: true
+          type: 'pQqq3kkPPq',
+          visible: false,
+          buttonText: '申し込みフォーム',
+          url: '/form'
         }
       ]
     };
   }
 }
 
-export async function getMainCampusCourses(year?: number): Promise<MainCampusCourse[]> {
+export async function getMainCampusCourses(yearValue?: string): Promise<MainCampusCourse[]> {
   try {
     const queries: Record<string, any> = {};
     
-    if (year) {
-      queries.filters = `year[equals]${year}`;
+    if (yearValue) {
+      queries.filters = `year[contains]${yearValue}`;
     }
+    
+    console.log('getMainCampusCourses called with yearValue:', yearValue);
+    console.log('queries:', queries);
     
     const data = await client.get({
       endpoint: 'main-campus-course',
-      queries,
+      queries: {
+        ...queries,
+        limit: 100 // 取得件数を100件に増加
+      },
     });
     
+    console.log('API response:', data);
+    console.log('All courses data:', JSON.stringify(data.contents, null, 2));
     return data.contents as MainCampusCourse[];
   } catch (error) {
     console.error('メインキャンパス講座の取得に失敗しました:', error);
-    // 開発時のフォールバック
+    // 開発時のフォールバック（microCMSのvalueに基づく）
     return [
       {
         id: 'sample-1',
-        status: 'published' as const,
-        year: year || 2024,
+        status: 'pre',
+        year: yearValue || '令和7年度',
         title: 'サンプル講座1',
-        scheduleDate: '2024年4月開催予定',
+        targetGrades: ['4年', '5年', '6年'],
         createdAt: '2024-01-01T00:00:00.000Z',
         updatedAt: '2024-01-01T00:00:00.000Z',
         publishedAt: '2024-01-01T00:00:00.000Z',
@@ -181,10 +359,10 @@ export async function getMainCampusCourses(year?: number): Promise<MainCampusCou
       },
       {
         id: 'sample-2',
-        status: 'published' as const,
-        year: year || 2024,
+        status: 'pre',
+        year: yearValue || '令和7年度',
         title: 'サンプル講座2',
-        scheduleDate: '2024年5月開催予定',
+        targetGrades: ['7年', '8年', '9年'],
         createdAt: '2024-01-01T00:00:00.000Z',
         updatedAt: '2024-01-01T00:00:00.000Z',
         publishedAt: '2024-01-01T00:00:00.000Z',
@@ -194,63 +372,81 @@ export async function getMainCampusCourses(year?: number): Promise<MainCampusCou
   }
 }
 
-export async function getSpecialCourses(year?: number): Promise<SpecialCourse[]> {
+export async function getSpecialCourses(yearValue?: string): Promise<SpecialCourse[]> {
   try {
     const queries: Record<string, any> = {};
     
-    if (year) {
-      queries.filters = `year[equals]${year}`;
+    if (yearValue) {
+      queries.filters = `year[contains]${yearValue}`;
     }
     
     const data = await client.get({
       endpoint: 'special-course',
-      queries,
+      queries: {
+        ...queries,
+        limit: 100 // 取得件数を100件に増加
+      },
     });
     
     return data.contents as SpecialCourse[];
   } catch (error) {
     console.error('特設講座の取得に失敗しました:', error);
-    throw error;
+    return []; // エラー時は空配列を返す
   }
 }
 
-export async function getSummerCourses(year?: number): Promise<SummerCourse[]> {
+export async function getSummerCourses(yearValue?: string): Promise<SummerCourse[]> {
   try {
     const queries: Record<string, any> = {};
     
-    if (year) {
-      queries.filters = `year[equals]${year}`;
-    }
+    // フィルターは使わず、全件取得してクライアント側でフィルタリング
+    // microCMSの配列フィルターが複雑なため
     
     const data = await client.get({
       endpoint: 'summer-course',
-      queries,
+      queries: {
+        limit: 100 // 取得件数を100件に増加
+      },
     });
     
-    return data.contents as SummerCourse[];
+    let contents = data.contents as SummerCourse[];
+    
+    // クライアント側で年度フィルタリング
+    if (yearValue) {
+      contents = contents.filter(course => {
+        const courseYear = Array.isArray(course.year) ? course.year[0] : course.year;
+        return courseYear === yearValue;
+      });
+    }
+    
+    return contents;
   } catch (error) {
     console.error('夏の課外授業講座の取得に失敗しました:', error);
-    throw error;
+    return []; // エラー時は空配列を返す
   }
 }
 
-export async function getMkuDays(year?: number): Promise<MkuDay[]> {
+export async function getMkuDays(yearValue?: string): Promise<MkuDay[]> {
   try {
     const queries: Record<string, any> = {};
     
-    if (year) {
-      queries.filters = `year[equals]${year}`;
+    if (yearValue) {
+      queries.filters = `year[contains]${yearValue}`;
     }
     
     const data = await client.get({
       endpoint: 'mku-day',
-      queries,
+      queries: {
+        ...queries,
+        limit: 100,
+        depth: 1 // schoolNameのリレーション展開
+      },
     });
     
     return data.contents as MkuDay[];
   } catch (error) {
     console.error('むなかた子ども大学の日の取得に失敗しました:', error);
-    throw error;
+    return []; // エラー時は空配列を返す
   }
 }
 

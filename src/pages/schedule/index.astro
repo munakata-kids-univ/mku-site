@@ -1,0 +1,1092 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import HeroSection from '../../components/HeroSection.astro';
+import Breadcrumb from '../../components/Breadcrumb.astro';
+import ContentSectionHeader from '../../components/ContentSectionHeader.astro';
+import { 
+  getGlobalSettings, 
+  getMainCampusSettings,
+  getMainCampusCourses,
+  getSpecialCourses,
+  getMkuDays,
+  getSummerCourses
+} from '../../lib/microcms';
+
+// データ取得
+const globalSettings = await getGlobalSettings();
+const currentYear = Array.isArray(globalSettings.currentYear) 
+  ? globalSettings.currentYear[0] 
+  : globalSettings.currentYear;
+
+// 年度コードを抽出（配列の場合は最初の要素を取得）
+const yearCode = Array.isArray(currentYear) ? currentYear[0] : currentYear;
+
+
+// スケジュール関連データを取得
+const [mainCampusSettings, mainCampusCourses, specialCourses, mkuDays, summerCourses] = await Promise.all([
+  getMainCampusSettings(),
+  getMainCampusCourses(yearCode), // valueを使用
+  getSpecialCourses(yearCode), // 年度パラメータを追加
+  getMkuDays(yearCode), // 年度パラメータを追加
+  getSummerCourses(yearCode) // 年度パラメータ対応済み
+]);
+
+// スケジュール情報を月別に整理
+interface ScheduleEvent {
+  date: string;
+  course: string;
+  target: string | string[];
+}
+
+interface ScheduleItem {
+  month: number;
+  events: ScheduleEvent[];
+}
+
+// 日付ごとにグループ化されたイベント
+interface GroupedEvent {
+  date: string;
+  events: Array<{
+    course: string;
+    target: string | string[];
+  }>;
+}
+
+// 表示用のイベント情報
+interface DisplayEvent {
+  date: string;
+  course: string;
+  target: string | string[];
+  isFirstOfDate: boolean;
+  isFirstOfMonth: boolean;
+  dateRowspan: number;
+  monthRowspan: number;
+}
+
+function parseDate(dateString: string): Date | null {
+  if (!dateString) return null;
+  try {
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? null : date;
+  } catch {
+    return null;
+  }
+}
+
+function formatDateForDisplay(date: Date): string {
+  const day = date.getDate();
+  const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+  const dayOfWeek = dayNames[date.getDay()];
+  return `${day}日(${dayOfWeek})`;
+}
+
+function getCourseClass(courseName: string): string {
+  if (courseName === 'メインキャンパス') return 'main-campus';
+  if (courseName.includes('特設講座')) return 'special-course';
+  if (courseName === 'むなかた子ども大学の日') return 'mku-day';
+  if (courseName.includes('夏の課外授業')) return 'summer-course';
+  return 'main-campus'; // デフォルト
+}
+
+function getGradeColorClass(grade: string): string {
+  // むなかた子ども大学の日（学校名）の場合
+  if (grade.includes('小学校') || grade.includes('中学校') || grade.includes('学校') || grade.includes('学園')) {
+    return 'mku-day';
+  }
+  
+  // 特殊なケース
+  if (grade === '未就学児' || grade === 'だれでも' || grade.includes('その他')) {
+    return 'special';
+  }
+  
+  // 数字を抽出
+  const yearMatch = grade.match(/^(\d+)年$/);
+  if (yearMatch) {
+    const num = parseInt(yearMatch[1]);
+    if (num >= 1 && num <= 3) return 'elementary-low';    // 1~3年
+    if (num >= 4 && num <= 6) return 'elementary-high';   // 4~6年
+    if (num >= 7 && num <= 9) return 'junior';            // 7~9年
+  }
+  
+  // 高校生
+  if (grade.match(/^高\d+$/)) {
+    return 'junior'; // 高校生は中学生と同じ色
+  }
+  
+  // その他
+  return 'special';
+}
+
+function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: string[]; htmlString: string } {
+  const grades = Array.isArray(targetGrades) ? targetGrades : [targetGrades];
+  
+  // 学年の表示順を決める関数
+  function getGradeOrder(grade: string): number {
+    // 未就学児は最初
+    if (grade === '未就学児') {
+      return 0;
+    }
+    
+    // 1年～9年（小中学校）
+    const elementaryJuniorMatch = grade.match(/^(\d+)年$/);
+    if (elementaryJuniorMatch) {
+      const num = parseInt(elementaryJuniorMatch[1]);
+      if (num >= 1 && num <= 9) {
+        return num; // 1～9の順序
+      }
+    }
+    
+    // 高1～高3（高校）
+    const highSchoolMatch = grade.match(/^高(\d+)$/);
+    if (highSchoolMatch) {
+      const num = parseInt(highSchoolMatch[1]);
+      if (num >= 1 && num <= 3) {
+        return 10 + num; // 11～13の順序（10 + 1～3）
+      }
+    }
+    
+    // その他は最後
+    return 999;
+  }
+  
+  // 学年を指定された順序でソート
+  const sortedGrades = grades.sort((a, b) => {
+    return getGradeOrder(a) - getGradeOrder(b);
+  });
+  
+  return {
+    sortedGrades,
+    htmlString: sortedGrades.join('・') // 後方互換性のため
+  };
+}
+
+// 年間スケジュールデータを作成
+const scheduleData: ScheduleItem[] = [];
+
+// 月別に初期化（4月〜3月）
+for (let i = 0; i < 12; i++) {
+  const month = (i + 4) % 12 || 12; // 4月から始まって3月で終わる
+  scheduleData.push({
+    month,
+    events: []
+  });
+}
+
+// デバッグ情報（開発時のみ）
+console.log('mainCampusCourses:', mainCampusCourses);
+console.log('mainCampusCourses length:', mainCampusCourses?.length);
+
+// メインキャンパスの対象学年をまとめて準備（配列形式）
+let mainCampusTargetGrades = ['対象学年未設定'];
+if (mainCampusCourses && mainCampusCourses.length > 0) {
+  console.log('=== 令和6年度 メインキャンパスコース詳細 ===');
+  console.log('取得されたコース数:', mainCampusCourses.length);
+  
+  // 全コースのtargetGradesを収集して重複を除去
+  const allTargetGrades = mainCampusCourses
+    .map((course, index) => {
+      console.log(`コース${index + 1}:`, course.title);
+      console.log('  - year:', course.year);
+      console.log('  - targetGrades:', course.targetGrades);
+      console.log('  - targetGrades type:', typeof course.targetGrades);
+      console.log('  - targetGrades array?:', Array.isArray(course.targetGrades));
+      return course.targetGrades;
+    })
+    .flat()
+    // undefinedやnullを除去
+    .filter(grade => grade !== undefined && grade !== null)
+    .filter((grade, index, self) => self.indexOf(grade) === index);
+  
+  console.log('=== 収集結果 ===');
+  console.log('allTargetGrades:', allTargetGrades);
+  console.log('allTargetGrades length:', allTargetGrades.length);
+  
+  const formattedGrades = formatTargetGrades(allTargetGrades);
+  // 配列形式で対象学年と注記を分けて格納
+  mainCampusTargetGrades = [...formattedGrades.sortedGrades, '※2次募集は市外にお住まいの方も参加可'];
+  console.log('最終表示:', mainCampusTargetGrades);
+}
+
+// メインキャンパス設定から実施日を追加
+if (mainCampusSettings?.executedDate) {
+  mainCampusSettings.executedDate.forEach(item => {
+    const itemYear = Array.isArray(item.year) ? item.year[0] : item.year;
+    if (itemYear === yearCode && item.date) {
+      const executedDate = parseDate(item.date);
+      if (executedDate) {
+        const month = executedDate.getMonth() + 1;
+        const monthIndex = scheduleData.findIndex(scheduleItem => scheduleItem.month === month);
+        if (monthIndex !== -1) {
+          scheduleData[monthIndex].events.push({
+            date: formatDateForDisplay(executedDate),
+            course: 'メインキャンパス',
+            target: mainCampusTargetGrades // 既に配列形式
+          });
+        }
+      }
+    }
+  });
+}
+
+// 特設講座のスケジュール情報を追加
+if (specialCourses && specialCourses.length > 0) {
+  console.log('=== 特設講座データ ===');
+  console.log('取得された特設講座数:', specialCourses.length);
+  
+  specialCourses.forEach((course, index) => {
+    console.log(`特設講座${index + 1}:`, course.title);
+    console.log('  - year:', course.year);
+    console.log('  - targetGrades:', course.targetGrades);
+    console.log('  - executedDate:', course.executedDate);
+    
+    // 年度チェック
+    const courseYear = Array.isArray(course.year) ? course.year[0] : course.year;
+    if (courseYear === yearCode && course.executedDate) {
+      const courseDate = parseDate(course.executedDate);
+      if (courseDate) {
+        const month = courseDate.getMonth() + 1;
+        const monthIndex = scheduleData.findIndex(scheduleItem => scheduleItem.month === month);
+        if (monthIndex !== -1) {
+          // 対象学年の処理
+          const targetGrades = Array.isArray(course.targetGrades) ? course.targetGrades : [course.targetGrades];
+          
+          scheduleData[monthIndex].events.push({
+            date: formatDateForDisplay(courseDate),
+            course: `特設講座「${course.title}」`,
+            target: targetGrades
+          });
+        }
+      }
+    }
+  });
+}
+
+// むなかた子ども大学の日のスケジュール情報を追加
+if (mkuDays && mkuDays.length > 0) {
+  console.log('=== むなかた子ども大学の日データ ===');
+  console.log('取得されたむなかた子ども大学の日数:', mkuDays.length);
+  
+  // 日付ごとに学校をグループ化
+  const mkuDaysByDate = new Map<string, string[]>();
+  
+  mkuDays.forEach((mkuDay, index) => {
+    console.log(`むなかた子ども大学の日${index + 1}:`, mkuDay.schoolName?.name);
+    console.log('  - year:', mkuDay.year);
+    console.log('  - eventDates:', mkuDay.eventDates);
+    console.log('  - schoolName:', mkuDay.schoolName);
+    
+    // 年度チェック
+    const mkuDayYear = Array.isArray(mkuDay.year) ? mkuDay.year[0] : mkuDay.year;
+    if (mkuDayYear === yearCode && mkuDay.eventDates) {
+      // 各実施日に対して学校名をグループ化
+      mkuDay.eventDates.forEach(eventDate => {
+        if (eventDate.date) {
+          const dateKey = eventDate.date;
+          const schoolName = mkuDay.schoolName?.name || '学校名未設定';
+          
+          if (!mkuDaysByDate.has(dateKey)) {
+            mkuDaysByDate.set(dateKey, []);
+          }
+          mkuDaysByDate.get(dateKey)!.push(schoolName);
+        }
+      });
+    }
+  });
+  
+  // グループ化された日付でスケジュールエントリを作成
+  mkuDaysByDate.forEach((schools, dateKey) => {
+    const mkuDayDate = parseDate(dateKey);
+    if (mkuDayDate) {
+      const month = mkuDayDate.getMonth() + 1;
+      const monthIndex = scheduleData.findIndex(scheduleItem => scheduleItem.month === month);
+      if (monthIndex !== -1) {
+        scheduleData[monthIndex].events.push({
+          date: formatDateForDisplay(mkuDayDate),
+          course: 'むなかた子ども大学の日',
+          target: schools // 配列で学校名のリストを渡す
+        });
+      }
+    }
+  });
+}
+
+// 夏の課外授業のスケジュール情報を追加
+if (summerCourses && summerCourses.length > 0) {
+  // 当該年度のコースからすべての開催日を抽出
+  const allSummerDates: Date[] = [];
+  const allSummerTargetGrades = new Set<string>();
+  
+  summerCourses.forEach((course) => {
+    // 年度チェック
+    const courseYear = Array.isArray(course.year) ? course.year[0] : course.year;
+    if (courseYear === yearCode) {
+      // 対象学年を収集（すべての夏の課外授業講座から）
+      const targetGrades = Array.isArray(course.targetGrades) ? course.targetGrades : [course.targetGrades];
+      targetGrades.forEach(grade => {
+        if (grade) {
+          allSummerTargetGrades.add(grade);
+        }
+      });
+      
+      // スケジュールがある場合は日付を抽出、atAnyTimeの場合はスキップ
+      if (course.schedule && course.schedule.length > 0 && !course.atAnyTime) {
+        course.schedule.forEach(scheduleItem => {
+          if (scheduleItem.date) {
+            const scheduleDate = parseDate(scheduleItem.date);
+            if (scheduleDate) {
+              allSummerDates.push(scheduleDate);
+            }
+          }
+        });
+      }
+    }
+  });
+  
+  // 日付をソートして最早と最遅を取得
+  allSummerDates.sort((a, b) => a.getTime() - b.getTime());
+  
+  if (allSummerDates.length > 0) {
+    const earliestDate = allSummerDates[0];
+    const latestDate = allSummerDates[allSummerDates.length - 1];
+    
+    if (earliestDate && latestDate) {
+      // 重複なしの対象学年リストを作成し、ソート
+      const uniqueTargetGrades = Array.from(allSummerTargetGrades);
+      const formattedGrades = formatTargetGrades(uniqueTargetGrades);
+      // 配列形式で対象学年と注記を分けて格納
+      const targetDisplay = [...formattedGrades.sortedGrades, '※市外にお住まいの方も参加可'];
+      
+      // 最早日のスケジュール追加
+      const earliestMonth = earliestDate.getMonth() + 1;
+      const earliestMonthIndex = scheduleData.findIndex(scheduleItem => scheduleItem.month === earliestMonth);
+      if (earliestMonthIndex !== -1 && scheduleData[earliestMonthIndex]) {
+        scheduleData[earliestMonthIndex].events.push({
+          date: formatDateForDisplay(earliestDate),
+          course: '夏の課外授業　スタート',
+          target: targetDisplay
+        });
+      }
+      
+      // 最遅日が最早日と異なる場合のみ追加
+      if (latestDate.getTime() !== earliestDate.getTime()) {
+        const latestMonth = latestDate.getMonth() + 1;
+        const latestMonthIndex = scheduleData.findIndex(scheduleItem => scheduleItem.month === latestMonth);
+        if (latestMonthIndex !== -1 && scheduleData[latestMonthIndex]) {
+          scheduleData[latestMonthIndex].events.push({
+            date: formatDateForDisplay(latestDate),
+            course: '夏の課外授業　終了(最終日)',
+            target: targetDisplay
+          });
+        }
+      }
+      
+    }
+  }
+}
+
+// ページ情報
+const pageTitle = '年間スケジュール';
+const pageDescription = `${currentYear}のむなかた子ども大学の年間スケジュールをご確認いただけます。`;
+
+// パンくず情報
+const breadcrumbItems = [
+  { label: 'ホーム', href: '/' },
+  { label: '年間スケジュール', current: true }
+];
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <main>
+    <!-- ヒーローセクション -->
+    <HeroSection 
+      title="年間スケジュール"
+      subtitle="Annual Schedule"
+      imageSrc="/images/backgrounds/img_bg-hero_schedule-01.webp"
+      imageAlt="年間スケジュール"
+    />
+
+    <!-- パンくず -->
+    <Breadcrumb items={breadcrumbItems} />
+
+    <!-- 年間スケジュール Section -->
+    <section id="schedule" class="content-section">
+      <div class="content-section__container">
+        <ContentSectionHeader 
+          englishTitle=""
+          title={currentYear || '令和7年度'}
+          class="fade-up"
+        />
+        
+        <!-- スケジュール説明文 -->
+        {globalSettings.scheduleDescription && (
+          <div class="schedule-description fade-up fade-up--delay-1">
+            <p>{globalSettings.scheduleDescription}</p>
+          </div>
+        )}
+        
+        <!-- ここにスケジュールテーブルが入る -->
+        <!-- スマホ用スクロールヒント -->
+        <div class="table-scroll-hint">
+          👆 スクロールできます
+        </div>
+        <div class="schedule-table-wrapper fade-up fade-up--delay-1">
+          <table class="schedule-table">
+            <thead>
+              <tr>
+                <th>月</th>
+                <th>日(曜日)</th>
+                <th>講座</th>
+                <th>
+                  対象
+                  <span class="target-note">（7,8,9年：中1,2,3）</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {scheduleData.map(monthData => {
+                const hasEvents = monthData.events.length > 0;
+                
+                if (!hasEvents) {
+                  // 空の行にも同じ月ベースの背景色ロジックを適用
+                  let monthIndex;
+                  if (monthData.month >= 4) {
+                    monthIndex = monthData.month - 4;
+                  } else {
+                    monthIndex = monthData.month + 8;
+                  }
+                  const isEvenMonthIndex = monthIndex % 2 === 0;
+                  const bgClass = isEvenMonthIndex ? 'month-even' : 'month-odd';
+                  
+                  return (
+                    <tr key={monthData.month} class={`empty-row ${bgClass}`}>
+                      <td class="month-cell">{monthData.month}月</td>
+                      <td>-</td>
+                      <td>-</td>
+                      <td>-</td>
+                    </tr>
+                  );
+                }
+
+                // 日付ごとにイベントをグループ化
+                const groupedByDate: GroupedEvent[] = [];
+                monthData.events.forEach(event => {
+                  const existingGroup = groupedByDate.find(group => group.date === event.date);
+                  if (existingGroup) {
+                    existingGroup.events.push({
+                      course: event.course,
+                      target: event.target
+                    });
+                  } else {
+                    groupedByDate.push({
+                      date: event.date,
+                      events: [{
+                        course: event.course,
+                        target: event.target
+                      }]
+                    });
+                  }
+                });
+
+                // 日付順にソート（日付文字列から日数を抽出してソート）
+                groupedByDate.sort((a, b) => {
+                  const dayA = parseInt(a.date.match(/(\d+)日/)?.[1] || '0');
+                  const dayB = parseInt(b.date.match(/(\d+)日/)?.[1] || '0');
+                  return dayA - dayB;
+                });
+
+                // 全イベントの配列を作成（各日付の各イベント）
+                const allEvents: DisplayEvent[] = [];
+
+                let totalEvents = 0;
+                groupedByDate.forEach(group => {
+                  totalEvents += group.events.length;
+                });
+
+                let eventIndex = 0;
+                groupedByDate.forEach(group => {
+                  group.events.forEach((event, eventInDateIndex) => {
+                    allEvents.push({
+                      date: group.date,
+                      course: event.course,
+                      target: event.target,
+                      isFirstOfDate: eventInDateIndex === 0,
+                      isFirstOfMonth: eventIndex === 0,
+                      dateRowspan: group.events.length,
+                      monthRowspan: totalEvents
+                    });
+                    eventIndex++;
+                  });
+                });
+
+                // 月のインデックスに基づいて背景色クラスを決定
+                // 学年度順: 4月=0, 5月=1, 6月=2, 7月=3, 8月=4, 9月=5, 10月=6, 11月=7, 12月=8, 1月=9, 2月=10, 3月=11
+                let monthIndex;
+                if (monthData.month >= 4) {
+                  monthIndex = monthData.month - 4; // 4月=0, 5月=1, 6月=2, 7月=3, 8月=4...
+                } else {
+                  monthIndex = monthData.month + 8; // 1月=9, 2月=10, 3月=11
+                }
+                console.log(`月: ${monthData.month}, インデックス: ${monthIndex}, 偶数: ${monthIndex % 2 === 0}`);
+                const isEvenMonthIndex = monthIndex % 2 === 0;
+                const bgClass = isEvenMonthIndex ? 'month-even' : 'month-odd';
+
+                return allEvents.map((event, index) => (
+                  <tr key={`${monthData.month}-${index}`} class={bgClass}>
+                    {event.isFirstOfMonth && (
+                      <td rowspan={event.monthRowspan} class="month-cell">{monthData.month}月</td>
+                    )}
+                    {event.isFirstOfDate && (
+                      <td rowspan={event.dateRowspan} class="date-cell">{event.date}</td>
+                    )}
+                    <td>
+                      <span class={`course-name course-name--${getCourseClass(event.course)}`}>
+                        {event.course}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="target-grades">
+                        {Array.isArray(event.target) ? 
+                          event.target.map((grade, gradeIndex) => {
+                            // 注記（※で始まる文字列）は特別なクラスを適用
+                            if (grade.startsWith('※')) {
+                              return (
+                                <div key={gradeIndex} class="participation-note">
+                                  {grade}
+                                </div>
+                              );
+                            }
+                            return (
+                              <span key={gradeIndex} class={`target-grade target-grade--${getGradeColorClass(grade)}`}>
+                                {grade}
+                              </span>
+                            );
+                          }) :
+                          event.target.split('・').map((grade, gradeIndex) => (
+                            <span key={gradeIndex} class={`target-grade target-grade--${getGradeColorClass(grade.trim())}`}>
+                              {grade.trim()}
+                            </span>
+                          ))
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                ));
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<script>
+// スクロールアニメーション用のIntersection Observer
+document.addEventListener('DOMContentLoaded', function() {
+  const observerOptions = {
+    threshold: 0.1, // 要素の10%が見えたら発火
+    rootMargin: '0px 0px -50px 0px' // 下から50px余裕を持たせる
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        // 一度表示されたら監視を停止（パフォーマンス向上）
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  // fade-upクラスを持つ全ての要素を監視対象に追加
+  const fadeUpElements = document.querySelectorAll('.fade-up');
+  fadeUpElements.forEach(element => {
+    observer.observe(element);
+  });
+
+  // JavaScript削除 - 純粋CSSで制御
+});
+</script>
+
+<style lang="scss">
+@import '../../styles/_index';
+
+// スクロールヒント（sm画面以下のみ表示）
+.table-scroll-hint {
+  display: block;
+  text-align: left;
+  color: $text-dark-gray;
+  font-size: rem(16);
+  font-weight: 600;
+  margin-bottom: rem(8);
+  animation: shakeHorizontal 1s ease-in-out infinite alternate;
+  
+  // sm画面以下のみ表示
+  @include breakpoint-up(md) {
+    display: none;
+  }
+}
+
+// 左右に揺らすアニメーション
+@keyframes shakeHorizontal {
+  0% {
+    transform: translateX(rem(-3));
+  }
+  100% {
+    transform: translateX(rem(3));
+  }
+}
+
+.content-section {
+  padding: 0 0 rem(120);
+  background: $background-primary;
+  @include breakpoint-up(xl) {
+    padding: 0 0 rem(160);
+  }
+
+  &__container {
+    padding: 0 5%;
+    overflow: hidden;
+    @include breakpoint-up(xl) {
+      padding: 0 rem(50);
+    }
+  }
+}
+
+.schedule-description {
+  margin-top: rem(24);
+  margin-bottom: rem(32);
+  
+  @include breakpoint-up(md) {
+    margin-top: rem(32);
+    margin-bottom: rem(40);
+  }
+  
+  p {
+    @include font-ja-s;
+    color: $text-primary;
+    line-height: 1.7;
+    text-align: left;
+    white-space: pre-line; // 改行を反映
+  }
+}
+
+.schedule-table-wrapper {
+  position: relative;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; // iOS用のスムーズスクロール
+}
+
+
+.schedule-table {
+  width: 100%;
+  height: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: $background-primary;
+  border-radius: rem(8);
+  
+  @include breakpoint-up(md) {
+    table-layout: fixed; // md以降は固定レイアウト
+  }
+  
+  th, td {
+    text-align: left;
+    border-bottom: 1px solid $border-secondary;
+    border-right: 1px solid $border-secondary;
+    vertical-align: top;
+    
+    &:last-child {
+      border-right: none;
+    }
+  }
+  
+  th {
+    padding: rem(12) rem(8);
+    
+    @include breakpoint-up(md) {
+      padding: rem(16) rem(12);
+    }
+    
+    @include breakpoint-up(lg) {
+      padding: rem(16) rem(20);
+    }
+  }
+  
+  thead {
+    border-left: 1px solid $border-secondary;
+    border-right: 1px solid $border-secondary;
+    border-top: 1px solid $border-secondary;
+    border-top-left-radius: rem(8);
+    border-top-right-radius: rem(8);
+  }
+  
+  th {
+    background: $brand-primary;
+    color: $text-white;
+    @include font-ja-2s(semibold);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-right: 1px solid $border-secondary;
+    border-bottom: 1px solid $border-secondary;
+    
+    .target-note {
+      @include font-ja-3s(semibold);
+      opacity: 0.9;
+      display: block;
+      margin-top: rem(2);
+      
+      @include breakpoint-up(md) {
+        display: inline;
+        margin-top: 0;
+        margin-left: rem(4);
+      }
+    }
+    
+    &:first-child {
+      width: rem(60);
+      min-width: rem(60);
+      text-align: center;
+      border-top-left-radius: rem(8);
+      border-left: none;
+      white-space: nowrap; // 改行を防ぐ
+      
+      @include breakpoint-up(md) {
+        width: 10%; // md以降は比率で指定
+        min-width: auto;
+      }
+      
+      @include breakpoint-up(xl) {
+        width: 8%; // xl以降はさらに狭く
+      }
+    }
+    
+    &:nth-child(2) {
+      width: rem(100);
+      min-width: rem(100);
+      text-align: center;
+      white-space: nowrap; // 改行を防ぐ
+      
+      @include breakpoint-up(md) {
+        width: 15%; // md以降は比率で指定
+        min-width: auto;
+      }
+      
+      @include breakpoint-up(xl) {
+        width: 12%; // xl以降はさらに狭く
+      }
+    }
+    
+    &:nth-child(3) {
+      width: auto;
+      min-width: rem(200);
+      
+      @include breakpoint-up(md) {
+        width: 40%; // md以降は比率で指定
+        min-width: auto;
+      }
+      
+      @include breakpoint-up(xl) {
+        width: 45%; // xl以降は少し広く
+      }
+    }
+    
+    &:nth-child(4) {
+      width: auto;
+      min-width: rem(150);
+      border-top-right-radius: rem(8);
+      border-right: none;
+      
+      @include breakpoint-up(md) {
+        width: 35%; // md以降は比率で指定
+        min-width: auto;
+      }
+      
+      @include breakpoint-up(xl) {
+        width: 35%; // xl以降も同じ
+      }
+    }
+  }
+  
+  tbody {
+    tr {
+      // デフォルトの背景色（nth-childベース）
+      &:nth-child(odd) {
+        background: $background-primary;
+      }
+      
+      &:nth-child(even) {
+        background: $background-secondary;
+      }
+      
+      // 月ベースの背景色（rowspan対応）
+      &.month-even {
+        background: $background-primary !important;
+      }
+      
+      &.month-odd {
+        background: $background-secondary !important;
+      }
+      
+      // rowspan使用時の背景色を統一
+      td[rowspan] {
+        background: inherit;
+      }
+      
+      &:last-child {
+        td {
+          border-bottom: 1px solid $border-secondary;
+          
+          &:first-child {
+            border-left: 1px solid $border-secondary;
+            border-bottom-left-radius: rem(8);
+          }
+          
+          &:last-child {
+            border-right: 1px solid $border-secondary;
+            border-bottom-right-radius: rem(8);
+          }
+        }
+      }
+      
+      &:not(:last-child) {
+        td {
+          &:last-child {
+            border-right: 1px solid $border-secondary;
+          }
+        }
+      }
+    }
+  }
+  
+  td {
+    line-height: 1.6;
+    padding: rem(12) rem(8);
+    
+    @include breakpoint-up(md) {
+      padding: rem(16) rem(12);
+    }
+    
+    @include breakpoint-up(lg) {
+      padding: rem(16) rem(20);
+    }
+    
+    &:first-child {
+      border-left: none;
+    }
+    
+    &:last-child {
+      border-right: none;
+    }
+    
+    // 月列
+    &:nth-child(1) {
+      @include font-ja-s;
+      color: $text-primary;
+      text-align: center;
+      white-space: nowrap; // 改行を防ぐ
+      width: rem(60);
+      min-width: rem(60);
+      
+      @include breakpoint-up(md) {
+        width: 10%; // md以降は比率で指定
+        min-width: auto;
+      }
+      
+      @include breakpoint-up(xl) {
+        width: 8%; // xl以降はさらに狭く
+      }
+    }
+    
+    // 日(曜日)列（全て中央揃え）
+    &:nth-child(2) {
+      @include font-ja-s;
+      color: $text-primary;
+      text-align: center;
+      border-left: none !important; // 全ての日付セルでborder-leftを無効
+      white-space: nowrap; // 改行を防ぐ
+      width: rem(100);
+      min-width: rem(100);
+      
+      @include breakpoint-up(md) {
+        width: 15%; // md以降は比率で指定
+        min-width: auto;
+      }
+      
+      @include breakpoint-up(xl) {
+        width: 12%; // xl以降はさらに狭く
+      }
+      
+      // rowspanありの最初の日付セルは別途処理
+      &[rowspan] {
+        // 必要に応じてスタイル追加
+      }
+    }
+    
+    // 講座列のスタイリング（3列目のみ）
+    &:nth-child(3) {
+      text-align: left; // 明示的に左揃えを指定
+      word-wrap: break-word; // 長い単語も強制的に折り返し
+      word-break: break-all; // 必要に応じて文字の途中でも折り返し
+      overflow-wrap: break-word; // モダンブラウザ対応
+      white-space: normal; // 改行を許可
+      max-width: 0; // table-layout: fixed との組み合わせで幅制限を強制
+    }
+  }
+  
+  // 講座名のスタイリング（どの位置にあっても適用）
+  .course-name {
+    @include font-ja-s(semibold);
+    display: inline;
+    padding: rem(1) rem(2);
+    margin-bottom: rem(4);
+    border-radius: rem(2);
+    line-height: 1.6;
+    text-align: left; // 講座名自体も左揃え
+    box-decoration-break: clone; // 改行時も各行にスタイルを適用
+    -webkit-box-decoration-break: clone; // Safari対応
+    
+    &--main-campus {
+      background: linear-gradient(transparent 60%, $brand-sub-yellow-low 60%);
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+    }
+    
+    &--special-course {
+      background: linear-gradient(transparent 60%, $brand-sub-turquoise-low 60%);
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+    }
+    
+    &--mku-day {
+      background: linear-gradient(transparent 60%, $brand-sub-purple-low 60%);
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+    }
+    
+    &--summer-course {
+      background: linear-gradient(transparent 60%, $brand-sub-pink-low 60%);
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+    }
+  }
+  
+  // 講座名を含むセルの強制左揃え
+  td:has(.course-name) {
+    text-align: left !important;
+    border-left: none !important;
+    word-wrap: break-word !important; // 長い単語も強制的に折り返し
+    word-break: break-all !important; // 必要に応じて文字の途中でも折り返し
+    overflow-wrap: break-word !important; // モダンブラウザ対応
+    white-space: normal !important; // 改行を許可
+  }
+  
+  // 月セルのみにborder-leftを適用（強制）
+  tbody tr td.month-cell {
+    border-left: 1px solid $border-secondary !important;
+  }
+  
+  // 日付セルはborder-leftなし
+  .date-cell {
+    border-left: none !important;
+  }
+  
+  .course-detail {
+    @include font-ja-s;
+    color: $text-primary;
+  }
+  
+  td {
+    // セル内のテキストは基本的に左揃え（中央揃えの月・日列を除く）
+    &:not(:nth-child(1)):not(:nth-child(2)) {
+      text-align: left !important;
+    }
+    
+    // 講座セルを強制的に左揃えに
+    &:nth-child(3) {
+      text-align: left !important;
+      border-left: none !important;
+      word-wrap: break-word !important; // 長い単語も強制的に折り返し
+      word-break: break-all !important; // 必要に応じて文字の途中でも折り返し
+      overflow-wrap: break-word !important; // モダンブラウザ対応
+      white-space: normal !important; // 改行を許可
+      max-width: 0 !important; // table-layout: fixed との組み合わせで幅制限を強制
+    }
+    
+    // rowspanなしの2列目セルは既に上で定義済み（重複削除）
+    
+    // 全ての非rowspanセルのborder-leftを無効化
+    &:not([rowspan]) {
+      border-left: none !important;
+    }
+    
+    // 対象列（最後の列または4列目）
+    &:nth-child(4), 
+    &:last-child {
+      .target-grades {
+        display: flex;
+        flex-wrap: wrap;
+        gap: rem(6);
+        
+        .target-grade {
+          @include font-ja-2s(semibold);
+          padding: rem(4) rem(6);
+          border: 1px solid $brand-black;
+          border-radius: rem(10);
+          white-space: nowrap;
+          margin-bottom: rem(2);
+          
+          &--elementary-low {
+            background-color: $brand-sub-yellow-low;
+          }
+          
+          &--elementary-high {
+            background-color: $brand-sub-purple-low;
+          }
+          
+          &--junior {
+            background-color: $brand-sub-turquoise-low;
+          }
+          
+          &--special {
+            background-color: $brand-sub-pink-low;
+          }
+          
+          // むなかた子ども大学の日用（学校名表示）
+          &--mku-day {
+            background-color: $background-primary;
+            border: 1px solid $brand-black;
+          }
+        }
+        
+        // 市外参加可の注記用スタイル
+        .participation-note {
+          @include font-ja-2s(medium);
+          margin-top: rem(4);
+          width: 100%;
+        }
+      }
+    }
+  }
+  
+  tr:last-child td {
+    border-bottom: none;
+  }
+  
+  // 空データ行のスタイル
+  tr.empty-row td {
+    color: $text-disabled;
+    text-align: center;
+    
+    &:nth-child(1), &:nth-child(2) {
+      color: $text-primary;
+    }
+    
+    // 空の行の月セルにもborder-leftを適用
+    &.month-cell {
+      border-left: 1px solid $border-secondary !important;
+    }
+  }
+}
+</style>
