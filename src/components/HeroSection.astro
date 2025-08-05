@@ -176,6 +176,55 @@ const {
       }
     }
   }
+
+  // 講座タイプごとのカスタマイズ
+  .hero.hero--main-campus {
+    background: linear-gradient(to bottom, $brand-sub-yellow 0%, $background-primary 70%, $background-primary 100%);
+    
+    .hero__subtitle {
+      color: $brand-secondary;
+    }
+    
+    &::after {
+      background-color: $brand-secondary;
+    }
+  }
+
+  .hero.hero--special-course {
+    background: linear-gradient(to bottom, $brand-sub-turquoise 0%, $background-primary 70%, $background-primary 100%);
+    
+    .hero__subtitle {
+      color: $brand-turquoise;
+    }
+    
+    &::after {
+      background-color: $brand-turquoise;
+    }
+  }
+
+  .hero.hero--mku-day {
+    background: linear-gradient(to bottom, $brand-sub-purple 0%, $background-primary 70%, $background-primary 100%);
+    
+    .hero__subtitle {
+      color: $brand-purple;
+    }
+    
+    &::after {
+      background-color: $brand-purple;
+    }
+  }
+
+  .hero.hero--summer-course {
+    background: linear-gradient(to bottom, $brand-sub-pink 0%, $background-primary 70%, $background-primary 100%);
+    
+    .hero__subtitle {
+      color: $brand-pink;
+    }
+    
+    &::after {
+      background-color: $brand-pink;
+    }
+  }
 </style>
 
 <script>

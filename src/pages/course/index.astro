@@ -1,4 +1,399 @@
 ---
-// /course → /course/main-campus へ301リダイレクト
-return Astro.redirect('/course/main-campus', 301);
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import HeroSection from '../../components/HeroSection.astro';
+import Breadcrumb from '../../components/Breadcrumb.astro';
+
+// 講座データの配列（CoursePillarsと同じもの）
+const pillars = [
+  {
+    href: "/course/main-campus",
+    className: "pillar-card--main-campus",
+    english: "Main Campus",
+    imageSrc: "/images/content/img_course-menu-01.webp",
+    imageAlt: "メインキャンパス",
+    title: "メインキャンパス",
+    description: "興味のある職業を1つ選び、1日をとおしてじっくり学ぶ、年に1度の職業体験イベントです。<br>宗像市内に住む小・中学生が主な対象です。"
+  },
+  {
+    href: "/course/special-course",
+    className: "pillar-card--special-course",
+    english: "Special Course",
+    imageSrc: "/images/content/img_course-menu-02.webp",
+    imageAlt: "特設講座",
+    title: "特設講座",
+    description: "月に1〜2回、職業に関わる講座を中心に開催。企業の施設や大学の実習室など、よりリアルな環境で実施することも。"
+  },
+  {
+    href: "/course/mku-day",
+    className: "pillar-card--mku-day",
+    english: "MKU Day",
+    imageSrc: "/images/content/img_course-menu-03.webp",
+    imageAlt: "むなかた子ども大学の日",
+    title: "むなかた子ども大学の日",
+    description: "市内全ての小学校で開催。各校が1年に1回、キャリア教育の視点で地域や企業等との繋がりを活かした学習活動を、各学年のねらいに合わせて実施します。"
+  },
+  {
+    href: "/course/summer-course",
+    className: "pillar-card--summer-course",
+    english: "Summer Course",
+    imageSrc: "/images/content/img_course-menu-04.webp",
+    imageAlt: "夏の課外授業",
+    title: "夏の課外授業",
+    description: "市外に住む子どもたちも参加可能な講座を夏休みに多数展開。<br>本市の魅力にたくさん触れてください。"
+  }
+];
+
+// ページ情報
+const pageTitle = '講座内容';
+const pageDescription = 'むなかた子ども大学の4つの柱。メインキャンパス、特設講座、むなかた子ども大学の日、夏の課外授業の詳細をご確認いただけます。';
+
+// パンくず情報
+const breadcrumbItems = [
+  { label: 'ホーム', href: '/' },
+  { label: '講座内容', current: true }
+];
 ---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <main>
+    <!-- ヒーローセクション -->
+    <HeroSection 
+      title="講座内容"
+      subtitle="Course"
+      imageSrc="/images/backgrounds/img_bg-hero_course-01.webp"
+      imageAlt="講座内容"
+    />
+
+    <!-- パンくず -->
+    <Breadcrumb items={breadcrumbItems} />
+
+    <!-- 講座内容 Section -->
+    <section id="course-contents" class="content-section">
+      <div class="content-section__container">        
+        <div class="pillars__grid fade-up">
+          {pillars.map((pillar) => (
+            <a href={pillar.href} class={`pillar-card ${pillar.className}`}>
+              <div class="pillar-card__english">{pillar.english}</div>
+              <div class="pillar-card__image">
+                <img src={pillar.imageSrc} alt={pillar.imageAlt} class="pillar-card__img" />
+              </div>
+              <div class="pillar-card__content">
+                <h3 class="pillar-card__title">{pillar.title}</h3>
+                <p class="pillar-card__description" set:html={pillar.description}></p>
+                <div class="pillar-card__link">
+                  <span>VIEW MORE</span>
+                  <div class="pillar-card__arrow"></div>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<script>
+// スクロールアニメーション用のIntersection Observer
+document.addEventListener('DOMContentLoaded', function() {
+  const observerOptions = {
+    threshold: 0.1, // 要素の10%が見えたら発火
+    rootMargin: '0px 0px -50px 0px' // 下から50px余裕を持たせる
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        // 一度表示されたら監視を停止（パフォーマンス向上）
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  // fade-upクラスを持つ全ての要素を監視対象に追加
+  const fadeUpElements = document.querySelectorAll('.fade-up');
+  fadeUpElements.forEach(element => {
+    observer.observe(element);
+  });
+});
+</script>
+
+<style lang="scss">
+@import '../../styles/_index';
+
+.content-section {
+  padding: 0 0 rem(120);
+  background: $background-primary;
+  @include breakpoint-up(xl) {
+    padding: 0 0 rem(160);
+  }
+
+  &__container {
+    padding: 0 5%;
+    overflow: hidden;
+    @include breakpoint-up(xl) {
+      padding: 0 rem(50);
+    }
+  }
+}
+
+.pillars__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: rem(32);
+  position: relative;
+  z-index: 1;
+  padding: rem(20) 0; // 上下にパディングを追加
+  
+  @include breakpoint-up(md) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: rem(40);
+    padding: rem(24) 0; // より大きな画面でのパディング調整
+  }
+  
+  @include breakpoint-up(lg) {
+    grid-template-columns: 1fr;
+    gap: rem(48);
+    justify-items: center;
+    padding: rem(32) 0;
+  }
+  
+  @include breakpoint-up(xl) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: rem(48);
+    justify-items: center;
+    max-width: rem(1548); // カード幅750px × 2 + gap 48px
+    margin: 0 auto;
+    padding: rem(40) 0;
+  }
+}
+
+/* 柱カード */
+.pillar-card {
+  background: $background-primary;
+  border-radius: 0 rem(32) rem(32) rem(32);
+  padding: rem(15) rem(15) rem(50);
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  
+  @include breakpoint-up(lg) {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    text-align: left;
+    border-radius: rem(16) rem(150) rem(150) 0;
+    padding: rem(10) rem(10) rem(10) rem(30);
+    max-width: rem(750);
+  }
+  @include breakpoint-up(xl) {
+    border-radius: rem(16) rem(170) rem(170) 0;
+  }
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+  }
+
+  &__english {
+    position: absolute;
+    top: rem(-4);
+    left: 0;
+    line-height: 1;
+    @include font-en-l(semibold);
+    color: $text-tertiary;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    
+    @include breakpoint-up(lg) {
+      @include font-en-2l(semibold);
+      top: auto;
+      bottom: rem(-3);
+      left: rem(-3);
+      z-index: 0;
+    }
+  }
+
+  &__image {
+    width: 70%;
+    aspect-ratio: 1;
+    margin: 0 auto rem(16);
+    flex-shrink: 0;
+    
+    @include breakpoint-up(lg) {
+      width: rem(280);
+      height: rem(280);
+      margin: 0 0 0 rem(32);
+    }
+    @include breakpoint-up(xl) {
+      width: rem(320);
+      height: rem(320);
+    }
+  }
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  // 各カードの背景色とテキストカラー
+  &--main-campus {
+    background-color: $brand-sub-yellow-low;
+    
+    .pillar-card__english {
+      color: $brand-sub-yellow;
+    }
+  }
+
+  &--special-course {
+    background-color: $brand-sub-turquoise-low;
+    
+    .pillar-card__english {
+      color: $brand-sub-turquoise;
+    }
+  }
+
+  &--mku-day {
+    background-color: $brand-sub-purple-low;
+    
+    .pillar-card__english {
+      color: $brand-sub-purple;
+    }
+  }
+
+  &--summer-course {
+    background-color: $brand-sub-pink-low;
+    
+    .pillar-card__english {
+      color: $brand-sub-pink;
+    }
+  }
+
+  &__content {
+    text-align: center;
+    
+    @include breakpoint-up(lg) {
+      text-align: left;
+      flex: 1;
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  &__title {
+    @include font-ja-m(semibold);
+    color: $text-primary;
+    margin-bottom: rem(12);
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-l(semibold);
+      margin-bottom: rem(16);
+    }
+  }
+
+  &__description {
+    @include font-ja-s;
+    color: $text-primary;
+    line-height: 1.7;
+    margin-bottom: rem(20);
+    text-align: left;
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-s;
+      margin-bottom: rem(24);
+    }
+  }
+
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: rem(8);
+    @include font-en-2s(semibold);
+    color: $text-primary;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: gap 0.3s ease;
+    
+    // lg未満: absolute positioning で右下に配置
+    @include breakpoint-down(lg) {
+      position: absolute;
+      bottom: rem(15);
+      right: rem(15);
+    }
+    
+    // lg以降: static positioning で左揃え
+    @include breakpoint-up(lg) {
+      @include font-en-s(semibold);
+      gap: rem(12);
+      position: static;
+      align-self: flex-start;
+    }
+  }
+
+  &:hover &__link {
+    gap: rem(16);
+    
+    @include breakpoint-up(lg) {
+      gap: rem(20);
+    }
+  }
+
+  &__arrow {
+    width: rem(24);
+    height: rem(24);
+    background-color: $background-secondary;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    
+    &::after {
+      content: '';
+      width: rem(8);
+      height: rem(8);
+      border-right: 2px solid $text-white;
+      border-bottom: 2px solid $text-white;
+      transform: translateX(rem(-1)) rotate(-45deg);
+    }
+    
+    @include breakpoint-up(md) {
+      width: rem(28);
+      height: rem(28);
+      
+      &::after {
+        width: rem(10);
+        height: rem(10);
+        transform: translateX(rem(-2)) rotate(-45deg);
+      }
+    }
+  }
+
+  // カード種別ごとの矢印円の色設定
+  &--main-campus &__arrow {
+    background-color: $brand-secondary;
+  }
+
+  &--special-course &__arrow {
+    background-color: $brand-turquoise;
+  }
+
+  &--mku-day &__arrow {
+    background-color: $brand-purple;
+  }
+
+  &--summer-course &__arrow {
+    background-color: $brand-pink;
+  }
+}
+</style>

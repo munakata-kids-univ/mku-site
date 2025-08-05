@@ -7,6 +7,7 @@ export default defineConfig({
   adapter: vercel({
     webAnalytics: { enabled: true }
   }),
+  // trailingSlash: 'always',
   vite: {
     server: {
       watch: {

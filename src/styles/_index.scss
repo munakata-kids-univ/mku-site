@@ -22,6 +22,7 @@
 @use 'utilities/spacing';
 @use 'utilities/display';
 @use 'utilities/color' as color-utils;
+@use 'utilities/responsive';
 
 // 4. コンポーネントスタイル
 @use 'components/base-button';

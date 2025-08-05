@@ -4,13 +4,35 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "astro",
+  "redirects": [
+    {
+      "source": "/about",
+      "destination": "/about/",
+      "permanent": false
+    },
+    {
+      "source": "/schedule",
+      "destination": "/schedule/",
+      "permanent": false
+    },
+    {
+      "source": "/news",
+      "destination": "/news/",
+      "permanent": false
+    },
+    {
+      "source": "/report",
+      "destination": "/report/",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
-      "source": "/course/main-campus/:year(\\d{4})",
+      "source": "/course/main-campus/:year(R\\d{1,2})",
       "destination": "/course/main-campus/[year]"
     },
     {
-      "source": "/course/main-campus/:year(\\d{4})/:id",
+      "source": "/course/main-campus/:year(R\\d{1,2})/:id",
       "destination": "/course/main-campus/[year]/[id]"
     },
     {

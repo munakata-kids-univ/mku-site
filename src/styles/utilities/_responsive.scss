@@ -1,0 +1,42 @@
+@use '../tokens/breakpoints' as bp;
+
+/* レスポンシブ改行ユーティリティ */
+.u-br-sm {
+  display: block;
+  
+  @include bp.breakpoint-up(sm) {
+    display: none;
+  }
+}
+
+.u-br-md-up {
+  display: none;
+  
+  @include bp.breakpoint-up(sm) {
+    display: block;
+  }
+}
+
+.u-br-md {
+  display: none;
+  
+  @include bp.breakpoint-up(md) {
+    display: block;
+  }
+  
+  @include bp.breakpoint-up(lg) {
+    display: none;
+  }
+}
+
+.u-br-lg {
+  display: none;
+  
+  @include bp.breakpoint-up(lg) {
+    display: block;
+  }
+  
+  @include bp.breakpoint-up(xl) {
+    display: none;
+  }
+}
