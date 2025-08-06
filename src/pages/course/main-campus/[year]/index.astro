@@ -1,0 +1,82 @@
+---
+import { 
+  getGlobalSettings,
+  getMainCampusCourses
+} from '@/lib/microcms';
+import { convertYearToPath, convertPathToYear } from '@/utils/yearConverter';
+
+// 静的パス生成
+export async function getStaticPaths() {
+  try {
+    // 全ての講座データを取得
+    const allCourses = await getMainCampusCourses();
+    
+    if (!allCourses || allCourses.length === 0) {
+      return [];
+    }
+
+    // 各年度のユニークなパスを生成
+    const uniqueYears = [...new Set(allCourses.map(course => {
+      return Array.isArray(course.year) ? course.year[0] : course.year;
+    }))];
+
+    const paths = uniqueYears.map(originalYear => {
+      const pathYear = convertYearToPath(originalYear);
+      return {
+        params: { year: pathYear },
+        props: { originalYear, pathYear }
+      };
+    });
+
+    return paths;
+  } catch (error) {
+    console.error('Error generating static paths for year pages:', error);
+    return [];
+  }
+}
+
+// パラメータを取得
+const { year } = Astro.params;
+const { originalYear, pathYear } = Astro.props;
+
+if (!year) {
+  return Astro.redirect('/404');
+}
+
+// グローバル設定を取得
+const globalSettings = await getGlobalSettings();
+const currentYear = Array.isArray(globalSettings.currentYear) ? globalSettings.currentYear[0] : globalSettings.currentYear;
+const currentYearPath = convertYearToPath(currentYear);
+
+// パスから年度を復元
+const actualYear = originalYear || convertPathToYear(year);
+
+// 現在年度の場合は /course/main-campus へリダイレクト
+if (year === currentYearPath) {
+  return Astro.redirect('/course/main-campus', 301);
+}
+
+// 過去年度の講座一覧を取得
+const courses = await getMainCampusCourses(actualYear);
+
+// 該当年度の講座が存在しない場合は404
+if (!courses || courses.length === 0) {
+  return Astro.redirect('/404');
+}
+
+// ここで過去年度の講座一覧ページを実装
+// 現在は基本的なリダイレクト機能のみ実装
+---
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>過去年度講座一覧 - {actualYear}</title>
+</head>
+<body>
+  <h1>過去年度講座一覧: {actualYear}</h1>
+  <p>このページは後で実装されます。</p>
+  <p>講座数: {courses.length}件</p>
+  <a href="/course/main-campus">現在年度の講座一覧へ戻る</a>
+</body>
+</html>
