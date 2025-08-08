@@ -29,7 +29,8 @@
       "Bash(mv:*)",
       "Bash(timeout:*)",
       "Bash(gtimeout 15s npm run dev)",
-      "Bash(gtimeout:*)"
+      "Bash(gtimeout:*)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }

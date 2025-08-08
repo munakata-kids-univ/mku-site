@@ -12,7 +12,7 @@ import { convertYearToPath, convertPathToYear } from '@/utils/yearConverter';
 // 静的パス生成
 export async function getStaticPaths() {
   try {
-    // 全ての講座データを取得
+    // 全ての講座データを取得（年度フィルターなしで全件取得）
     const allCourses = await getMainCampusCourses();
     
     if (!allCourses || allCourses.length === 0) {

@@ -322,28 +322,51 @@ export async function getMainCampusSettings(): Promise<MainCampusSettings> {
 
 export async function getMainCampusCourses(yearValue?: string): Promise<MainCampusCourse[]> {
   try {
-    const queries: Record<string, any> = {};
-    
-    if (yearValue) {
-      queries.filters = `year[contains]${yearValue}`;
+    // 複数ページにわたってデータを取得するため、ページネーションで全件取得
+    const allCourses: MainCampusCourse[] = [];
+    let offset = 0;
+    const limit = 100; // microCMSの最大limit
+    let hasMore = true;
+
+    while (hasMore) {
+      const queries: Record<string, any> = {
+        limit,
+        offset
+      };
+      
+      if (yearValue) {
+        queries.filters = `year[contains]${yearValue}`;
+      }
+      
+      const data = await client.get({
+        endpoint: 'main-campus-course',
+        queries
+      });
+      
+      // 取得したコースを配列に追加
+      allCourses.push(...(data.contents as MainCampusCourse[]));
+      
+      // 次のページがあるかチェック
+      hasMore = data.contents.length === limit && (offset + limit) < data.totalCount;
+      offset += limit;
+      
+      // 無限ループ防止（最大500件まで）
+      if (offset >= 500) {
+        console.warn('Reached maximum fetch limit of 500 courses to prevent infinite loop');
+        break;
+      }
     }
     
-    console.log('getMainCampusCourses called with yearValue:', yearValue);
-    console.log('queries:', queries);
-    
-    const data = await client.get({
-      endpoint: 'main-campus-course',
-      queries: {
-        ...queries,
-        limit: 100 // 取得件数を100件に増加
-      },
-    });
-    
-    console.log('API response:', data);
-    console.log('All courses data:', JSON.stringify(data.contents, null, 2));
-    return data.contents as MainCampusCourse[];
+    return allCourses;
   } catch (error) {
     console.error('メインキャンパス講座の取得に失敗しました:', error);
+    
+    // APIエラーの詳細をログ出力
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+      console.error('Stack trace:', error.stack);
+    }
+    
     // 開発時のフォールバック（microCMSのvalueに基づく）
     return [
       {
