@@ -1,0 +1,120 @@
+---
+export interface Props {
+  images: any[];
+  class?: string;
+}
+
+const { images = [], class: className = '' } = Astro.props;
+
+// 画像が存在しない場合は何も表示しない
+if (!images || images.length === 0) {
+  return null;
+}
+---
+
+<section class={`after-images-slider-section ${className}`}>
+  <div class="after-images-slider">
+    <div class="after-images-slider__track">
+      <!-- 画像一覧（1セット目） -->
+      {images.map((image, index) => (
+        <div class="after-image" style={`animation-delay: ${index * 0.3}s`}>
+          <img 
+            src={image.url} 
+            alt={image.alt || '講座の様子'} 
+            class="after-image__picture" 
+          />
+        </div>
+      ))}
+      
+      <!-- 無限ループ用の複製（2セット目） -->
+      {images.map((image, index) => (
+        <div class="after-image" style={`animation-delay: ${(index + images.length) * 0.3}s`}>
+          <img 
+            src={image.url} 
+            alt={image.alt || '講座の様子'} 
+            class="after-image__picture" 
+          />
+        </div>
+      ))}
+      
+      <!-- 無限ループ用の複製（3セット目） -->
+      {images.map((image, index) => (
+        <div class="after-image" style={`animation-delay: ${(index + images.length * 2) * 0.3}s`}>
+          <img 
+            src={image.url} 
+            alt={image.alt || '講座の様子'} 
+            class="after-image__picture" 
+          />
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style lang="scss">
+  @import "../styles/index";
+
+  .after-images-slider-section {
+    background-color: $background-primary;
+    
+    @include breakpoint-up(md) {
+    }
+    
+    @include breakpoint-up(xl) {
+    }
+  }
+
+  .after-images-slider {
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: visible;
+    position: relative;
+    
+    &__track {
+      display: flex;
+      width: calc(300%); // 3倍の幅で無限ループ
+      animation: slideImagesRight 30s linear infinite; // 右から左へゆっくり
+    }
+  }
+
+  .after-image {
+    flex: 0 0 rem(160);
+    height: rem(120); // 3:4 aspect ratio (180 * 3/4 = 135)
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    
+    @include breakpoint-up(md) {
+      flex: 0 0 rem(200);
+      height: rem(160); // 3:4 aspect ratio (240 * 3/4 = 180)
+    }
+    
+    @include breakpoint-up(xl) {
+      flex: 0 0 rem(240);
+      height: rem(180); // 3:4 aspect ratio (320 * 3/4 = 240)
+    }
+    
+    &__picture {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    
+    &:hover &__picture {
+      transform: scale(1.05);
+    }
+  }
+
+  // 右から左へのスライダーアニメーション（ゆっくり）
+  @keyframes slideImagesRight {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-33.333%); // 1/3移動すると元の位置に戻る（無限ループ効果）
+    }
+  }
+</style>

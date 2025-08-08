@@ -4,6 +4,7 @@ import HeroSection from '@/components/HeroSection.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import ContentSectionHeader from '@/components/ContentSectionHeader.astro';
 import CourseCard from '@/components/CourseCard.astro';
+import AfterImagesSlider from '@/components/AfterImagesSlider.astro';
 import { 
   getGlobalSettings,
   getMainCampusCourses
@@ -94,6 +95,14 @@ const courseCards = courses.map(course => ({
   hasReport: !!(course.afterImages?.length || course.instructor || course.afterReport || course.afterMovieUrl)
 }));
 
+// 全講座のafterImagesを収集
+const allAfterImages = courses.reduce((acc, course) => {
+  if (course.afterImages && course.afterImages.length > 0) {
+    acc.push(...course.afterImages);
+  }
+  return acc;
+}, []);
+
 // サブ見出しの英語年度表示（例：「Reiwa 6」）
 const englishYear = actualYear.replace('令和', 'Reiwa ').replace('年度', '');
 
@@ -158,12 +167,17 @@ function getGradeColorClass(grade: string): string {
 
     <Breadcrumb items={breadcrumbItems} />
 
+    <!-- 講座の様子スライダー -->
+    {allAfterImages.length > 0 && (
+      <AfterImagesSlider images={allAfterImages} class="fade-up" />
+    )}
+
     <!-- 講座一覧 Section -->
     <section class="courses-section content-section">
       <div class="content-section__container">
         <ContentSectionHeader 
           englishTitle=""
-          title={`${actualYear} <br class="u-br-sm">講座一覧`}
+          title={`${actualYear} <br class="u-br-sm">開講コース`}
           customTitleWrapperStyle="courses-title-wrapper"
           customIconStyle="courses-icon"
           class="fade-up"
