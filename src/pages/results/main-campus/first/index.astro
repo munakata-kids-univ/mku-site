@@ -1,0 +1,1362 @@
+---
+import BaseLayout from "../../../../layouts/BaseLayout.astro";
+import Breadcrumb from "../../../../components/Breadcrumb.astro";
+import ContentSectionHeader from "../../../../components/ContentSectionHeader.astro";
+import { getMainCampusSettings } from "../../../../lib/microcms.ts";
+
+const breadcrumbItems = [
+  { href: "/", label: "ホーム" },
+  { href: "/results", label: "当選者発表" },
+  { href: "/course/main-campus", label: "メインキャンパス" },
+  { label: "1次申込当選者発表" }
+];
+
+// メインキャンパス設定から参加意向確認ボタンと1次当選者リストを取得
+const mainCampusSettings = await getMainCampusSettings();
+const intentionButtons = mainCampusSettings.buttons?.filter((button: any) => {
+  const buttonType = Array.isArray(button.type) ? button.type[0] : button.type;
+  return button.visible && buttonType === "参加意向確認";
+}) || [];
+const firstWinnersContent = mainCampusSettings.firstWinners;
+console.log('firstWinnersContent:', firstWinnersContent);
+---
+
+<BaseLayout 
+  title="メインキャンパス 1次申込当選者発表" 
+  description="むなかた子ども大学メインキャンパスの1次申込当選者発表ページです。当選番号をご確認ください。"
+>
+  <main>
+    <!-- Custom Hero Section -->
+    <section class="hero hero--main-campus">
+      <div class="hero__container">
+        <div class="hero__content">
+          <div class="hero__text fade-up">
+            <h1 class="hero__title">
+              <span class="hero__title-line1">メインキャンパス</span>
+              <span class="hero__title-line2">1次申込当選者発表</span>
+            </h1>
+            <p class="hero__subtitle">Results - Main Campus - First</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <Breadcrumb items={breadcrumbItems} />
+
+    <!-- Page Navigation -->
+    <section class="page-nav">
+      <div class="page-nav__container">
+        <nav class="page-nav__menu">
+          <a href="#procedures" class="page-nav__link">
+            <div class="page-nav__arrow"></div>
+            <span class="page-nav__text">今後の手順</span>
+          </a>
+          <a href="#winner-list" class="page-nav__link">
+            <div class="page-nav__arrow"></div>
+            <span class="page-nav__text">1次当選者一覧</span>
+          </a>
+        </nav>
+      </div>
+    </section>
+
+    <!-- 今後の手順 Section -->
+    <section id="procedures" class="content-section">
+      <div class="content-section__container">
+        <ContentSectionHeader 
+          englishTitle=""
+          title="今後の手順"
+          class="fade-up"
+        />
+        
+        <div class="section-content">
+          <!-- 当選された方 -->
+          <div class="procedure-box">
+            <h3 class="procedure-box__title">本結果で決定したコースへの参加をされる方</h3>
+            
+            <div class="procedure-box__content">
+              <div class="step">
+                <div class="step__header">
+                  <span class="step__label">step</span>
+                  <span class="step__number">01</span>
+                </div>
+                <h4 class="step__title">本ページ下部の「１次募集当選者一覧」から、申込時に発番された受付番号と、当選番号を照らし合わせてどちらのコースに当選したか確認する。</h4>
+                <p class="step__description"></p>
+              </div>
+              
+              <div class="step-connector"></div>
+              
+              <div class="step">
+                <div class="step__header">
+                  <span class="step__label">step</span>
+                  <span class="step__number">02</span>
+                </div>
+                <h4 class="step__title">下記の参加意向確認フォームリンクから参加意向を入力する。</h4>
+                <p class="step__description">10月3日（木）17時までに入力をお願いします。こちらのフォームへ回答いただくことで、当選コースへの参加が確定します。期日までに入力がない場合は、キャンセル扱いとなりますので、ご理解ください。</p>
+                
+                {intentionButtons.length > 0 && (
+                  <div class="step__button-wrapper">
+                    {intentionButtons.map((button) => {
+                      // 外部リンクかどうかを判定
+                      const isExternalLink = button.url.startsWith('http://') || button.url.startsWith('https://');
+                      
+                      return (
+                        <div class="step__button-item">
+                          {button.labelAbove && (
+                            <p class="step__button-label-above" set:html={button.labelAbove.replace(/\n/g, '<br>')}></p>
+                          )}
+                          <a 
+                            href={button.url} 
+                            class="step__button base-button base-button--blue"
+                            target={isExternalLink ? '_blank' : undefined}
+                            rel={isExternalLink ? 'noopener noreferrer' : undefined}
+                          >
+                            <span class="base-button__text" set:html={button.buttonText.replace(/\n/g, '<br>')}></span>
+                            <div class="base-button__icon">
+                              {isExternalLink ? (
+                                <div class="base-button__icon-external">
+                                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M18.2609 18.2609H1.73913V1.73913H6.95652V0H0.869565C0.389351 0 0 0.389351 0 0.869565V19.1304C0 19.6106 0.389351 20 0.869565 20H19.1304C19.6106 20 20 19.6106 20 19.1304V13.0435H18.2609V18.2609Z" fill="currentColor"/>
+                                    <path d="M19.1304 0H11.3043V1.73913H17.0311L7.21118 11.559L8.44097 12.7888L18.2609 2.96892V8.69565H20V0.869565C20 0.389351 19.6106 0 19.1304 0Z" fill="currentColor"/>
+                                  </svg>
+                                </div>
+                              ) : (
+                                <div class="base-button__icon-arrow"></div>
+                              )}
+                            </div>
+                          </a>
+                          {button.labelBelow && (
+                            <p class="step__button-label-below" set:html={button.labelBelow.replace(/\n/g, '<br>')}></p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          <!-- 落選・未応募の方 -->
+          <div class="procedure-box">
+            <h3 class="procedure-box__title">1次募集で落選となった方・1次募集に応募していないが参加を希望される方<br><span class="procedure-box__subtitle">（市外在住の方も可）</span></h3>
+            
+            <div class="procedure-box__content">
+              <div class="step">
+                <div class="step__header">
+                  <span class="step__label">step</span>
+                  <span class="step__number">01</span>
+                </div>
+                <h4 class="step__title">2次募集にてご希望講座を申し込む</h4>
+                <p class="step__description">まだ定員に余裕のあるコースにつきましては、10月7日（月）12時から2次募集（宗像市外在住の小中学生も応募可能）を行います。<br>先着順で応募を受け付けますので、1次募集で落選となった方、まだメインキャンパスにお申込みされていない方は、ご興味のあるコースがございましたら、ぜひお申込みください。<br>※1次募集で当選された方は、2次募集のコースへの変更はできません。</p>
+              </div>
+              
+              <div class="step-connector"></div>
+              
+              <div class="step">
+                <div class="step__header">
+                  <span class="step__label">step</span>
+                  <span class="step__number">02</span>
+                </div>
+                <h4 class="step__title">申し込み時に発番された番号をご確認</h4>
+                <p class="step__description">2次募集は1次募集と異なり、申込フォームへの入力が完了し、受付番号が発番された時点で、当該コースへの参加が確定します。当選番号の発表や、申込コースへの参加の意向確認は行いませんので、ご理解ください。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1次当選者一覧 Section -->
+    <section id="winner-list" class="content-section">
+      <div class="content-section__container">
+        <ContentSectionHeader 
+          englishTitle=""
+          title="1次当選者一覧"
+          class="fade-up"
+        />
+        
+        <div class="section-content">
+          <p class="winner-list-intro">下記より、当選コースをご確認ください。</p>
+          
+          {firstWinnersContent && (
+            <div class="rich-editor-content" set:html={firstWinnersContent}></div>
+          )}
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+  @import "../../../../styles/index";
+
+  .hero {
+    position: relative;
+    padding: 0;
+    background: linear-gradient(to bottom, $brand-sub-yellow 0%, $background-primary 70%, $background-primary 100%);
+    border-radius: 0 rem(120) 0 0;
+    
+    @include breakpoint-up(md) {
+      border-radius: 0 rem(240) 0 0;
+    }
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 0 0 5%;
+      overflow: hidden;
+      position: relative;
+      
+      @include breakpoint-up(xl) {
+        padding: 0 0 0 rem(50);
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        background-color: $brand-secondary;
+        z-index: -1;
+      }
+    }
+
+    &__content {
+      position: relative;
+      padding: rem(100) 0 0;
+
+      @include breakpoint-up(md) {
+        padding: rem(120) 0 0;
+      }
+      @include breakpoint-up(xl) {
+        padding: rem(160) 0 0;
+      }
+    }
+
+    &__text {
+      max-width: none;
+      margin: 0;
+      text-align: left;
+    }
+
+    &__title {
+      @include font-ja-2l(semibold);
+      font-weight: bold;
+      color: $text-primary;
+      margin: 0 0 rem(8) 0;
+      line-height: 1.4;
+
+      @include breakpoint-up(lg) {
+        @include font-ja-3l(semibold);
+        margin-bottom: rem(12);
+      }
+
+      .hero__title-line1 {
+        display: block;
+        @include font-ja-m(semibold);
+        margin-bottom: rem(8);
+
+        @include breakpoint-up(lg) {
+          @include font-ja-l(semibold);
+        }
+      }
+
+      .hero__title-line2 {
+        display: block;
+        @include font-ja-2l(semibold);
+        font-weight: bold;
+        line-height: 1.4;
+
+        @include breakpoint-up(lg) {
+          @include font-ja-3l(semibold);
+        }
+      }
+    }
+
+    &__subtitle {
+      @include font-en-s(semibold);
+      color: $brand-secondary;
+      margin: 0 0 rem(30) 0;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+
+      @include breakpoint-up(lg) {
+        @include font-en-m(semibold);
+        margin-bottom: 0;
+      }
+    }
+
+  }
+
+  .breadcrumb {
+    padding: rem(20) 0;
+    background: $background-primary;
+    @include breakpoint-up(lg) {
+      padding: rem(50) 0 rem(20);
+    }
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 0 0 5%;
+      @include breakpoint-up(xl) {
+        padding: 0 0 0 rem(50);
+      }
+    }
+
+    &__list {
+      display: flex;
+      align-items: center;
+      gap: rem(8);
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      @include font-ja-3s;
+    }
+
+    &__item {
+      display: flex;
+      align-items: center;
+
+      &:not(:last-child)::after {
+        content: '>';
+        margin-left: rem(8);
+        color: $text-secondary;
+      }
+
+      a {
+        @include font-ja-3s(semibold);
+        color: $text-link;
+        text-decoration: underline;
+
+        &:hover {
+          color: $text-link-hover;
+          text-decoration: underline;
+        }
+      }
+
+      &[aria-current="page"] {
+        @include font-ja-3s;
+        color: $text-primary;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .page-nav {
+    padding: rem(20) 0 0;
+    background: $background-primary;
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 5%;
+      @include breakpoint-up(xl) {
+        padding: 0 rem(50);
+      }
+    }
+
+    &__menu {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+
+      @include breakpoint-up(sm) {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+    }
+
+    &__link {
+      display: flex;
+      align-items: center;
+      gap: rem(5);
+      color: $text-primary;
+      text-decoration: none;
+      transition: color 0.3s ease;
+      padding: rem(6) rem(10);
+
+      @include breakpoint-up(sm) {
+        gap: rem(12);
+        padding: rem(6) rem(20);
+        border-right: 1px solid $border-secondary;
+      }
+
+      @include breakpoint-up(xl) {
+        padding: rem(6) rem(30);
+      }
+
+      &:first-child {
+        @include breakpoint-up(sm) {
+          padding-left: 0;
+        }
+      }
+
+      &:last-child {
+        border-right: none;
+      }
+
+      &:hover {
+        color: $brand-secondary;
+        text-decoration: none;
+
+        .page-nav__arrow {
+          transform: translateY(rem(6)) rotate(45deg);
+        }
+      }
+    }
+
+    &__text {
+      @include font-ja-s(semibold);
+    }
+
+    &__arrow {
+      width: rem(9);
+      height: rem(9);
+      border-right: 2px solid currentColor;
+      border-bottom: 2px solid currentColor;
+      transform: rotate(45deg);
+      transition: transform 0.3s ease;
+      flex-shrink: 0;
+      margin-right: rem(3);
+    }
+  }
+
+  .content-section {
+    padding: rem(40) 0 rem(60);
+    background: $background-primary;
+    @include breakpoint-up(xl) {
+      padding: rem(30) 0 rem(70);
+    }
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 5%;
+      overflow: hidden;
+      @include breakpoint-up(xl) {
+        padding: 0 rem(50);
+      }
+    }
+
+    &__header {
+      position: relative;
+      margin-bottom: rem(50);
+      margin-right: -5%;
+      overflow: hidden;
+      @include breakpoint-up(xl) {
+        margin-bottom: rem(70);
+        margin-right: 0;
+      }
+    }
+
+    &__title-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: rem(8);
+      z-index: 2;
+      margin-top: rem(40);
+      
+      @include breakpoint-up(lg) {
+        margin-top: rem(80);
+      }
+    }
+
+    &__icon {
+      width: rem(24);
+      height: rem(24);
+      flex-shrink: 0;
+      margin-top: rem(2);
+
+      @include breakpoint-up(lg) {
+        width: rem(36);
+        height: rem(36);
+        margin-top: rem(4);
+      }
+    }
+
+    &__title {
+      @include font-ja-l(semibold);
+      color: $text-primary;
+      margin: 0;
+      line-height: 1.4;
+
+      @include breakpoint-up(lg) {
+        @include font-ja-2l(semibold);
+      }
+    }
+  }
+
+  .section-content {
+    margin-top: rem(40);
+    
+    @include breakpoint-up(md) {
+      margin-top: rem(60);
+    }
+  }
+
+  .content-placeholder {
+    @include font-ja-s;
+    color: $text-secondary;
+    text-align: center;
+    padding: rem(60) rem(20);
+    background: $background-secondary;
+    border-radius: $radius-m;
+    margin: 0;
+  }
+
+  .procedure-box {
+    border-radius: $radius-m;
+    margin-bottom: rem(40);
+    overflow: hidden;
+    
+    @include breakpoint-up(md) {
+      border-radius: $radius-l;
+    }
+    
+    @include breakpoint-up(lg) {
+      margin-bottom: rem(60);
+    }
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    &__title {
+      @include font-ja-m(semibold);
+      color: $text-primary;
+      background-color: $brand-sub-yellow;
+      padding: rem(12) rem(16);
+      border-radius: rem(8) rem(8) 0 0;
+      line-height: 1.6;
+      
+      @include breakpoint-up(lg) {
+        @include font-ja-l(semibold);
+        padding: rem(16) rem(20);
+      }
+    }
+    
+    &__subtitle {
+      @include font-ja-m(semibold);
+      color: $text-primary;
+      
+      @include breakpoint-up(lg) {
+        @include font-ja-l(semibold);
+      }
+    }
+    
+    &__content {
+      border-left: 2px solid $brand-sub-yellow;
+      border-bottom: 2px solid $brand-sub-yellow;
+      border-right: 2px solid $brand-sub-yellow;
+      background-color: $background-primary !important;
+      background-image: radial-gradient(circle, #feecc5 1.5px, transparent 1.5px) !important;
+      background-position: 0 0 !important;
+      background-size: 13px 13px !important;
+      padding: rem(30);
+      border-radius: 0 0 $radius-m $radius-m;
+      
+      @include breakpoint-up(md) {
+        padding: rem(36) rem(20);
+        border-radius: 0 0 $radius-l $radius-l;
+      }
+      
+      @include breakpoint-up(lg) {
+        padding: rem(32) rem(30);
+      }
+      
+      @include breakpoint-up(xl) {
+        padding: rem(40) rem(40);
+      }
+    }
+  }
+
+  .step {
+    margin-bottom: rem(20);
+    
+    @include breakpoint-up(lg) {
+      margin-bottom: rem(25);
+    }
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    &__header {
+      display: flex;
+      align-items: baseline;
+      gap: rem(2);
+      
+      @include breakpoint-up(lg) {
+      }
+    }
+    
+    &__label {
+      @include font-en-3s(semibold);
+      color: $text-dark-gray;
+    }
+    
+    &__number {
+      @include font-en-s(semibold);
+      color: $text-dark-gray;
+    }
+    
+    &__title {
+      @include font-ja-s(semibold);
+      color: $text-secondary;
+      margin: 0 0 rem(12) 0;
+      line-height: 1.6;
+      
+      @include breakpoint-up(lg) {
+        @include font-ja-m(semibold);
+        margin-bottom: rem(16);
+      }
+    }
+    
+    &__description {
+      @include font-ja-s;
+      color: $text-primary;
+      margin: 0;
+      line-height: 1.7;
+      
+      &:empty {
+        display: none;
+      }
+    }
+    
+    &__button-wrapper {
+      margin-top: rem(20);
+      display: flex;
+      justify-content: center;
+      
+      @include breakpoint-up(md) {
+        margin-top: rem(24);
+      }
+    }
+    
+    &__button-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    
+    &__button-label-above {
+      @include font-ja-s(semibold);
+      color: $text-secondary;
+      margin: 0 0 rem(12) 0;
+      text-align: center;
+      line-height: 1.6;
+      
+      @include breakpoint-up(md) {
+        margin-bottom: rem(16);
+      }
+    }
+    
+    &__button-label-below {
+      @include font-ja-s(semibold);
+      color: $text-primary;
+      margin: rem(5) 0 0 0;
+      text-align: center;
+      line-height: 1.6;
+      
+      @include breakpoint-up(md) {
+        // margin-top: rem(12);
+      }
+    }
+    
+    &__button {
+      color: $text-white !important;
+      text-decoration: none !important;
+      
+      &:hover {
+        color: $text-white !important;
+        text-decoration: none !important;
+      }
+      
+      &:focus {
+        color: $text-white !important;
+        text-decoration: none !important;
+      }
+      
+      &:visited {
+        color: $text-white !important;
+        text-decoration: none !important;
+      }
+      
+      .base-button__text {
+        color: $text-white !important;
+      }
+    }
+  }
+
+  .step-connector {
+    display: flex;
+    align-items: center;
+    margin: rem(20) 0;
+    
+    @include breakpoint-up(lg) {
+      margin: rem(25) 0;
+    }
+    
+    &::after {
+      content: '';
+      width: rem(12);
+      height: rem(12);
+      border-right: 2px solid $brand-secondary;
+      border-bottom: 2px solid $brand-secondary;
+      transform: rotate(45deg);
+      
+      @include breakpoint-up(lg) {
+        width: rem(16);
+        height: rem(16);
+        border-right: 3px solid $brand-secondary;
+        border-bottom: 3px solid $brand-secondary;
+      }
+    }
+  }
+
+  /* 外部リンクアイコン（SVG） */
+  :global(.base-button__icon-external) {
+    width: rem(16);
+    height: rem(16);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.5s ease;
+    
+    svg {
+      width: 100%;
+      height: 100%;
+      transition: all 0.5s ease;
+    }
+  }
+
+  // ブルーボタン用の外部リンクアイコン
+  :global(.base-button--blue .base-button__icon-external) {
+    color: $brand-primary;
+  }
+
+  :global(.base-button--blue:hover .base-button__icon-external) {
+    color: $brand-secondary;
+    transform: rotate(360deg);
+  }
+
+  .winner-list-intro {
+    @include font-ja-s;
+    color: $text-primary;
+    margin: 0 0 rem(24) 0;
+    
+    @include breakpoint-up(md) {
+      margin-bottom: rem(32);
+    }
+  }
+
+  .rich-editor-content {
+    // 基本テキストはregular
+    @include font-ja-s;
+    
+    // コンテンツ幅制限
+    max-width: 100%;
+    overflow: hidden;
+    word-wrap: break-word;
+    
+    :global(h3), :global(h4), :global(h5) {
+      @include font-ja-s(semibold);
+      color: $text-primary;
+      margin: rem(16) 0 rem(8) 0;
+      font-weight: 600 !important; // semiboldを明示的に指定
+      font-size: inherit !important; // 統一されたフォントサイズを強制
+    }
+    
+    :global(p) {
+      @include font-ja-s; // regular
+      color: $text-primary;
+      margin: rem(8) 0;
+      font-weight: 400 !important; // regularを明示的に指定
+      
+      &:first-child {
+        margin-top: 0;
+      }
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+    
+    :global(strong), :global(b) {
+      font-weight: 600 !important; // semibold
+    }
+    
+    // どんな要素であっても最初の要素のmargin-topを0にする
+    :global(*:first-child) {
+      margin-top: 0 !important;
+    }
+    
+    // 最後の要素のmargin-bottomも0にして整える
+    :global(*:last-child) {
+      margin-bottom: 0 !important;
+    }
+    
+    :global(ul), :global(ol) {
+      margin: rem(8) 0;
+      padding-left: rem(20);
+    }
+    
+    :global(ul) {
+      list-style-type: disc;
+    }
+    
+    :global(ol) {
+      list-style-type: decimal;
+    }
+    
+    :global(li) {
+      @include font-ja-s; // regular
+      color: $text-primary;
+      margin-bottom: rem(4);
+      font-weight: 400 !important; // regularを明示的に指定
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+    
+    // 埋込コンテンツ用のスタイル
+    :global(iframe) {
+      max-width: 100%;
+      min-height: rem(400);
+      height: auto;
+      border: none;
+      border-radius: rem(8);
+      
+      @include breakpoint-up(md) {
+        min-height: rem(600);
+      }
+      
+      @include breakpoint-up(lg) {
+        min-height: rem(800);
+      }
+    }
+    
+    // PDF埋め込み用のスタイル
+    :global(embed[type="application/pdf"]) {
+      width: 100%;
+      min-height: rem(400);
+      border: 1px solid $border-primary;
+      border-radius: rem(8);
+      
+      @include breakpoint-up(md) {
+        min-height: rem(600);
+      }
+      
+      @include breakpoint-up(lg) {
+        min-height: rem(800);
+      }
+    }
+    
+    // 画像用のスタイル（コンテンツ幅いっぱい、縦横比保持）
+    :global(img) {
+      width: 100% !important;
+      height: auto !important;
+      border-radius: rem(4);
+      margin: rem(8) 0;
+      display: block;
+    }
+    
+    :global(figure) {
+      display: block;
+      margin: rem(8) 0 !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      width: 100% !important;
+      padding: 0;
+      
+      img {
+        margin: 0;
+        width: 100% !important;
+        height: auto !important;
+        display: block;
+      }
+    }
+    
+    :global(a) {
+      @include font-ja-s(semibold);
+      color: $text-link;
+      text-decoration: underline;
+      word-break: break-all;
+      
+      &:hover {
+        color: $text-link-hover;
+      }
+    }
+    
+    // テーブル用のスタイル
+    :global(table) {
+      width: 100%;
+      border-collapse: collapse;
+      margin: rem(16) 0;
+      
+      th, td {
+        @include font-ja-s;
+        color: $text-primary;
+        padding: rem(8) rem(12);
+        border: 1px solid $border-primary;
+        text-align: left;
+        font-weight: 400 !important;
+      }
+      
+      th {
+        background-color: $background-secondary;
+        font-weight: 600 !important;
+      }
+    }
+    
+    // PDF プレビューブロック用のスタイル
+    :global(.pdf-preview-block) {
+      border: 1px solid $border-primary;
+      border-radius: rem(8);
+      margin: rem(16) 0;
+      overflow: hidden;
+      background: $background-primary;
+    }
+    
+    :global(.pdf-preview-header) {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: rem(12) rem(16);
+      background: $background-secondary;
+      border-bottom: 1px solid $border-primary;
+      
+      h4 {
+        @include font-ja-s(semibold);
+        color: $text-primary;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: rem(8);
+      }
+      
+      a {
+        @include font-ja-2s(semibold);
+        color: $text-link;
+        text-decoration: none;
+        padding: rem(4) rem(8);
+        border: 1px solid $text-link;
+        border-radius: rem(4);
+        transition: all 0.3s ease;
+        
+        &:hover {
+          background: $text-link;
+          color: $text-white;
+        }
+      }
+    }
+    
+    :global(.pdf-preview-container) {
+      position: relative;
+      background: $background-primary;
+      
+      iframe {
+        width: 100%;
+        height: rem(400);
+        border: none;
+        
+        @include breakpoint-up(md) {
+          height: rem(600);
+        }
+        
+        @include breakpoint-up(lg) {
+          height: rem(800);
+        }
+      }
+    }
+    
+    // PDF Canvas表示用のスタイル
+    :global(.pdf-canvas-block) {
+      border: 1px solid $border-primary;
+      border-radius: rem(8);
+      margin: rem(16) 0;
+      overflow: hidden;
+      background: $background-primary;
+    }
+    
+    :global(.pdf-canvas-header) {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: rem(12) rem(16);
+      background: $background-secondary;
+      border-bottom: 1px solid $border-primary;
+      flex-wrap: wrap;
+      gap: rem(8);
+      
+      @include breakpoint-up(md) {
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: rem(16);
+        padding: rem(16) rem(20);
+      }
+      
+      h4 {
+        @include font-ja-2s(semibold);
+        color: $text-primary;
+        margin: 0;
+        flex: 1;
+        min-width: rem(200);
+        word-break: break-word;
+        
+        @include breakpoint-up(md) {
+          @include font-ja-s(semibold);
+          min-width: auto;
+        }
+      }
+      
+      .pdf-controls {
+        display: flex;
+        gap: rem(4);
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        
+        @include breakpoint-up(md) {
+          gap: rem(8);
+          flex-wrap: nowrap;
+        }
+        
+        button {
+          @include font-ja-3s(semibold);
+          color: $text-link;
+          background: transparent;
+          border: 1px solid $text-link;
+          border-radius: rem(4);
+          padding: rem(3) rem(6);
+          cursor: pointer;
+          transition: all 0.3s ease;
+          white-space: nowrap;
+          
+          @include breakpoint-up(md) {
+            @include font-ja-2s(semibold);
+            padding: rem(4) rem(8);
+          }
+          
+          &:hover {
+            background: $text-link;
+            color: $text-white;
+          }
+          
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        }
+        
+        a {
+          @include font-ja-3s(semibold);
+          color: $text-link;
+          text-decoration: none;
+          padding: rem(3) rem(6);
+          border: 1px solid $text-link;
+          border-radius: rem(4);
+          transition: all 0.3s ease;
+          white-space: nowrap;
+          
+          @include breakpoint-up(md) {
+            @include font-ja-2s(semibold);
+            padding: rem(4) rem(8);
+          }
+          
+          &:hover {
+            background: $text-link;
+            color: $text-white;
+          }
+        }
+        
+        span {
+          @include font-ja-3s;
+          color: $text-secondary;
+          white-space: nowrap;
+          
+          @include breakpoint-up(md) {
+            @include font-ja-2s;
+          }
+        }
+      }
+    }
+    
+    :global(.pdf-canvas-container) {
+      position: relative;
+      background: $brand-black;
+      padding: rem(8);
+      text-align: center;
+      min-height: rem(200);
+      
+      @include breakpoint-up(md) {
+        padding: rem(16);
+        min-height: rem(300);
+      }
+      
+      @include breakpoint-up(lg) {
+        padding: rem(20);
+        min-height: rem(400);
+      }
+      
+      canvas {
+        max-width: 100%;
+        height: auto;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-radius: rem(4);
+        display: block;
+        margin: 0 auto;
+        background: $text-white;
+      }
+      
+      .pdf-loading {
+        @include font-ja-2s;
+        color: $text-secondary;
+        padding: rem(20);
+        
+        @include breakpoint-up(md) {
+          @include font-ja-s;
+          padding: rem(40);
+        }
+      }
+    }
+  }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+// スムーススクロール
+document.addEventListener('DOMContentLoaded', function() {
+  const navLinks = document.querySelectorAll('.page-nav__link');
+  
+  navLinks.forEach(link => {
+    link.addEventListener('click', function(e: Event) {
+      e.preventDefault();
+      
+      const target = e.currentTarget as HTMLAnchorElement;
+      const href = target.getAttribute('href');
+      const targetId = href?.substring(1);
+      const targetElement = targetId ? document.getElementById(targetId) : null;
+      
+      if (targetElement) {
+        targetElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    });
+  });
+});
+
+// スクロールアニメーション用のIntersection Observer
+document.addEventListener('DOMContentLoaded', function() {
+  const observerOptions = {
+    threshold: 0.1, // 要素の10%が見えたら発火
+    rootMargin: '0px 0px -50px 0px' // 下から50px余裕を持たせる
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        // 一度表示されたら監視を停止（パフォーマンス向上）
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  // fade-upクラスを持つ全ての要素を監視対象に追加
+  const fadeUpElements = document.querySelectorAll('.fade-up');
+  fadeUpElements.forEach(element => {
+    observer.observe(element);
+  });
+});
+
+// PDF Canvas表示機能
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('PDF.js loaded:', typeof pdfjsLib !== 'undefined');
+  
+  // PDF.jsの設定
+  if (typeof pdfjsLib !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    
+    // PDFリンクを自動的にプレビューに変換
+    const pdfLinks = document.querySelectorAll('.rich-editor-content a[data-mime-type="application/pdf"]');
+    console.log('PDF links found:', pdfLinks.length);
+    
+    pdfLinks.forEach(link => {
+      const pdfUrl = link.href;
+      const fileName = link.textContent.trim();
+      
+      // PDFプレビューブロックを作成
+      const pdfBlock = document.createElement('div');
+      pdfBlock.className = 'pdf-canvas-block';
+      pdfBlock.dataset.pdfUrl = pdfUrl;
+      pdfBlock.innerHTML = `
+        <div class="pdf-canvas-header">
+          <h4>📄 ${fileName}</h4>
+          <div class="pdf-controls">
+            <button class="pdf-prev">◀ 前</button>
+            <span class="pdf-page-info">1 / 1</span>
+            <button class="pdf-next">次 ▶</button>
+            <a href="${pdfUrl}" target="_blank">PDFで開く</a>
+          </div>
+        </div>
+        <div class="pdf-canvas-container">
+          <div class="pdf-loading">PDFを読み込んでいます...</div>
+          <canvas></canvas>
+        </div>
+      `;
+      
+      // 元のリンクを置き換え
+      link.parentNode.replaceChild(pdfBlock, link);
+    });
+    
+    // PDF Canvas ブロックを処理
+    const pdfCanvasBlocks = document.querySelectorAll('.pdf-canvas-block');
+    
+    pdfCanvasBlocks.forEach(block => {
+      const url = block.dataset.pdfUrl;
+      const canvas = block.querySelector('canvas');
+      const prevBtn = block.querySelector('.pdf-prev');
+      const nextBtn = block.querySelector('.pdf-next');
+      const pageInfo = block.querySelector('.pdf-page-info');
+      const loadingDiv = block.querySelector('.pdf-loading');
+      
+      let pdfDoc = null;
+      let currentPage = 1;
+      let totalPages = 0;
+      
+      // PDFを読み込み
+      pdfjsLib.getDocument(url).promise.then(pdf => {
+        pdfDoc = pdf;
+        totalPages = pdf.numPages;
+        
+        // ローディング非表示
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        
+        // ページ情報更新
+        updatePageInfo();
+        
+        // 最初のページを描画
+        renderPage(1);
+        
+        // ボタンイベント設定
+        if (prevBtn) {
+          prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+              currentPage--;
+              renderPage(currentPage);
+              updatePageInfo();
+            }
+          });
+        }
+        
+        if (nextBtn) {
+          nextBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+              currentPage++;
+              renderPage(currentPage);
+              updatePageInfo();
+            }
+          });
+        }
+        
+      }).catch(error => {
+        console.error('PDF読み込みエラー:', error);
+        if (loadingDiv) {
+          loadingDiv.textContent = 'PDFの読み込みに失敗しました';
+        }
+      });
+      
+      // ページ描画関数
+      function renderPage(pageNum) {
+        pdfDoc.getPage(pageNum).then(page => {
+          // レスポンシブなスケール計算
+          const container = block.querySelector('.pdf-canvas-container');
+          const containerWidth = container.clientWidth - 32; // padding分を引く
+          
+          // 基本スケールを設定
+          let baseScale = 1.5;
+          if (window.innerWidth < 768) {
+            baseScale = 1.0; // モバイル
+          } else if (window.innerWidth < 1024) {
+            baseScale = 1.2; // タブレット
+          }
+          
+          const viewport = page.getViewport({ scale: baseScale });
+          
+          // コンテナ幅に合わせてスケール調整
+          let finalScale = baseScale;
+          if (viewport.width > containerWidth) {
+            finalScale = (containerWidth / viewport.width) * baseScale;
+          }
+          
+          const finalViewport = page.getViewport({ scale: finalScale });
+          
+          // キャンバスサイズ設定
+          canvas.width = finalViewport.width;
+          canvas.height = finalViewport.height;
+          
+          // 高DPI対応
+          const devicePixelRatio = window.devicePixelRatio || 1;
+          if (devicePixelRatio > 1) {
+            canvas.width = finalViewport.width * devicePixelRatio;
+            canvas.height = finalViewport.height * devicePixelRatio;
+            canvas.style.width = finalViewport.width + 'px';
+            canvas.style.height = finalViewport.height + 'px';
+            
+            const ctx = canvas.getContext('2d');
+            ctx.scale(devicePixelRatio, devicePixelRatio);
+            
+            page.render({
+              canvasContext: ctx,
+              viewport: finalViewport
+            });
+          } else {
+            // 通常の描画
+            const ctx = canvas.getContext('2d');
+            page.render({
+              canvasContext: ctx,
+              viewport: finalViewport
+            });
+          }
+          
+          updateButtons();
+        });
+      }
+      
+      // ページ情報更新
+      function updatePageInfo() {
+        if (pageInfo) {
+          pageInfo.textContent = `${currentPage} / ${totalPages}`;
+        }
+      }
+      
+      // ボタン状態更新
+      function updateButtons() {
+        if (prevBtn) {
+          prevBtn.disabled = currentPage <= 1;
+        }
+        if (nextBtn) {
+          nextBtn.disabled = currentPage >= totalPages;
+        }
+      }
+      
+      // ウィンドウリサイズ時の再描画
+      let resizeTimeout;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          if (pdfDoc && currentPage) {
+            renderPage(currentPage);
+          }
+        }, 300);
+      });
+    });
+  }
+});
+</script>

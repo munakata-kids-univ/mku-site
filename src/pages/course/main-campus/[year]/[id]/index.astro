@@ -79,7 +79,7 @@ const currentYearPath = convertYearToPath(currentYear);
 const breadcrumbItems = [
   { label: 'ホーム', href: '/' },
   { label: 'メインキャンパス', href: '/course/main-campus' },
-  { label: actualYear, href: year === currentYearPath ? '/course/main-campus' : `/course/main-campus/${year}` },
+  { label: actualYear, href: '/course/main-campus' },
   { label: course.title, current: true }
 ];
 

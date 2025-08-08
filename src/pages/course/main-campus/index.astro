@@ -37,9 +37,12 @@ const breadcrumbItems = [
   { label: 'メインキャンパス' }
 ];
 
-// 申込ボタン（メインキャンパス設定から取得、visibleのもののみ）
+// 申込ボタン（メインキャンパス設定から取得、visibleかつ参加意向確認以外）
 const buttons = mainCampusSettings.buttons
-  .filter(button => button.visible);
+  .filter(button => {
+    const buttonType = Array.isArray(button.type) ? button.type[0] : button.type;
+    return button.visible && buttonType !== "参加意向確認";
+  });
 
 // currentYearと一致する講座のみをフィルタリング
 const filteredCourses = courses.filter(course => {
@@ -1761,17 +1764,31 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   
   @include breakpoint-up(lg) {
     display: grid;
-    grid-template-columns: 1fr 1fr;
     gap: rem(24);
     max-width: rem(900);
     margin: 0 auto;
     justify-items: stretch;
     align-items: stretch;
+    
+    // 1つの場合：中央配置
+    &:has(.application-button-item:only-child) {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      max-width: rem(500);
+    }
+    
+    // 2つ以上の場合：2列グリッド
+    &:not(:has(.application-button-item:only-child)) {
+      grid-template-columns: 1fr 1fr;
+    }
   }
   
   @include breakpoint-up(xl) {
-    // gap: rem(32);
     max-width: rem(1000);
+    
+    &:has(.application-button-item:only-child) {
+      max-width: rem(550);
+    }
   }
 }
 
@@ -1798,13 +1815,31 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   }
   
   @include breakpoint-up(lg) {
-    max-width: none;
     padding: rem(32) rem(30);
+    
+    // 複数ボタンの場合：max-widthなし（stretch）
+    .application-buttons-grid:not(:has(.application-button-item:only-child)) & {
+      max-width: none;
+    }
+    
+    // 単体ボタンの場合：適切なmax-width維持
+    .application-buttons-grid:has(.application-button-item:only-child) & {
+      max-width: rem(480);
+    }
   }
   
   @include breakpoint-up(xl) {
-    max-width: none;
     padding: rem(40) rem(40) !important;
+    
+    // 複数ボタンの場合：max-widthなし（stretch）
+    .application-buttons-grid:not(:has(.application-button-item:only-child)) & {
+      max-width: none;
+    }
+    
+    // 単体ボタンの場合：適切なmax-width維持
+    .application-buttons-grid:has(.application-button-item:only-child) & {
+      max-width: rem(520);
+    }
   }
   
   &__label-above {
