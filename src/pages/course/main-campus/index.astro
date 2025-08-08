@@ -322,25 +322,45 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
         <!-- 申込ボタン Section -->
         {buttons.length > 0 && (
           <div class="application-buttons-section fade-up">
+            <div class="application-buttons-check-label">＼Check／</div>
             <div class="application-buttons-grid">
-              {buttons.map((button) => (
-                <div class="application-button-item">
-                  {button.labelAbove && (
-                    <p class="application-button-item__label-above">{button.labelAbove}</p>
-                  )}
-                  <div class="application-button-item__button-wrapper">
-                    <a href={button.url} class="application-button-item__button base-button base-button--blue">
-                      <span class="base-button__text">{button.buttonText}</span>
-                      <div class="base-button__icon">
-                        <div class="base-button__icon-arrow"></div>
-                      </div>
-                    </a>
-                    {button.labelBelow && (
-                      <p class="application-button-item__label-below">{button.labelBelow}</p>
+              {buttons.map((button) => {
+                // 外部リンクかどうかを判定
+                const isExternalLink = button.url.startsWith('http://') || button.url.startsWith('https://');
+                
+                return (
+                  <div class="application-button-item">
+                    {button.labelAbove && (
+                      <p class="application-button-item__label-above" set:html={button.labelAbove.replace(/\n/g, '<br>')}></p>
                     )}
+                    <div class="application-button-item__button-wrapper">
+                      <a 
+                        href={button.url} 
+                        class="application-button-item__button base-button base-button--blue"
+                        target={isExternalLink ? '_blank' : undefined}
+                        rel={isExternalLink ? 'noopener noreferrer' : undefined}
+                      >
+                        <span class="base-button__text" set:html={button.buttonText.replace(/\n/g, '<br>')}></span>
+                        <div class="base-button__icon">
+                          {isExternalLink ? (
+                            <div class="base-button__icon-external">
+                              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18.2609 18.2609H1.73913V1.73913H6.95652V0H0.869565C0.389351 0 0 0.389351 0 0.869565V19.1304C0 19.6106 0.389351 20 0.869565 20H19.1304C19.6106 20 20 19.6106 20 19.1304V13.0435H18.2609V18.2609Z" fill="currentColor"/>
+                                <path d="M19.1304 0H11.3043V1.73913H17.0311L7.21118 11.559L8.44097 12.7888L18.2609 2.96892V8.69565H20V0.869565C20 0.389351 19.6106 0 19.1304 0Z" fill="currentColor"/>
+                              </svg>
+                            </div>
+                          ) : (
+                            <div class="base-button__icon-arrow"></div>
+                          )}
+                        </div>
+                      </a>
+                      {button.labelBelow && (
+                        <p class="application-button-item__label-below" set:html={button.labelBelow.replace(/\n/g, '<br>')}></p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -1720,16 +1740,29 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   }
 }
 
+.application-buttons-check-label {
+  @include font-ja-l(semibold);
+  color: $brand-secondary;
+  text-align: center;
+  margin-bottom: rem(10);
+  animation: checkScale 2s ease-in-out infinite;
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-2l(semibold);
+    margin-bottom: rem(10);
+  }
+}
+
 .application-buttons-grid {
   display: flex;
   flex-direction: column;
-  gap: rem(32);
+  gap: rem(20);
   align-items: center;
   
   @include breakpoint-up(lg) {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: rem(32) rem(24);
+    gap: rem(24);
     max-width: rem(900);
     margin: 0 auto;
     justify-items: stretch;
@@ -1737,7 +1770,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   }
   
   @include breakpoint-up(xl) {
-    gap: rem(40) rem(32);
+    // gap: rem(32);
     max-width: rem(1000);
   }
 }
@@ -1749,32 +1782,36 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   text-align: center;
   width: 100%;
   max-width: rem(420);
-  padding: rem(28);
-  border: 2px solid $border-primary;
+  padding: rem(28) rem(18);
+  border: 2px solid $brand-secondary;
   border-radius: $radius-m;
-  background: $background-primary;
+  background-color: $background-primary !important;
+  background-image: radial-gradient(circle, #feecc5 1.5px, transparent 1.5px) !important;
+  background-position: 0 0 !important;
+  background-size: 13px 13px !important;
+  animation: buttonBoxScale 2.5s ease-in-out infinite;
   
   @include breakpoint-up(md) {
-    padding: rem(36);
+    padding: rem(36) rem(20) !important;
     border-radius: $radius-l;
     max-width: rem(480);
   }
   
   @include breakpoint-up(lg) {
-    max-width: rem(420);
-    padding: rem(32);
+    max-width: none;
+    padding: rem(32) rem(30);
   }
   
   @include breakpoint-up(xl) {
-    max-width: rem(450);
-    padding: rem(40);
+    max-width: none;
+    padding: rem(40) rem(40) !important;
   }
   
   &__label-above {
     @include font-ja-s(semibold);
     color: $text-secondary;
     margin: 0 0 rem(16) 0;
-    text-align: center;
+    text-align: left;
     line-height: 1.6;
     
     @include breakpoint-up(md) {
@@ -1829,6 +1866,74 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     @include breakpoint-up(md) {
       // margin-top: rem(20);
     }
+  }
+}
+
+/* 外部リンクアイコン（SVG） */
+:global(.base-button__icon-external) {
+  width: rem(16);
+  height: rem(16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.5s ease;
+  
+  svg {
+    width: 100%;
+    height: 100%;
+    transition: all 0.5s ease;
+  }
+}
+
+// ブルーボタン用の外部リンクアイコン
+:global(.base-button--blue .base-button__icon-external) {
+  color: $brand-primary;
+}
+
+:global(.base-button--blue:hover .base-button__icon-external) {
+  color: $brand-secondary;
+  transform: rotate(360deg);
+}
+
+// ホワイトボタン用の外部リンクアイコン
+:global(.base-button--white .base-button__icon-external) {
+  color: $background-primary;
+}
+
+:global(.base-button--white:hover .base-button__icon-external) {
+  color: $brand-secondary;
+  transform: rotate(360deg);
+}
+
+// ピンクボタン用の外部リンクアイコン
+:global(.base-button--pink .base-button__icon-external) {
+  color: $brand-pink;
+}
+
+:global(.base-button--pink:hover .base-button__icon-external) {
+  color: $brand-secondary;
+  transform: rotate(360deg);
+}
+
+/* スケールアニメーション */
+@keyframes checkScale {
+  0%, 100% { 
+    transform: scale(1); 
+  }
+  50% { 
+    transform: scale(1.08); 
+  }
+}
+
+@keyframes buttonBoxScale {
+  0%, 100% { 
+    transform: scale(1); 
+  }
+  40% { 
+    transform: scale(1.02); 
+  }
+  60% { 
+    transform: scale(1.02); 
   }
 }
 </style>
