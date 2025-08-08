@@ -4,7 +4,6 @@ import HeroSection from '@/components/HeroSection.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import ContentSectionHeader from '@/components/ContentSectionHeader.astro';
 import CourseCard from '@/components/CourseCard.astro';
-import ButtonList from '@/components/ButtonList.astro';
 import { 
   getGlobalSettings, 
   getMainCampusSettings, 
@@ -38,14 +37,9 @@ const breadcrumbItems = [
   { label: 'メインキャンパス' }
 ];
 
-// ボタンリスト（メインキャンパス設定から取得）
+// 申込ボタン（メインキャンパス設定から取得、visibleのもののみ）
 const buttons = mainCampusSettings.buttons
-  .filter(button => button.visible)
-  .map(button => ({
-    label: button.buttonText,
-    url: button.url,
-    type: 'primary' as const
-  }));
+  .filter(button => button.visible);
 
 // currentYearと一致する講座のみをフィルタリング
 const filteredCourses = courses.filter(course => {
@@ -261,9 +255,6 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
               <p>{phaseMessage}</p>
             </div>
           )}
-          <div class="intro-section__buttons">
-            <ButtonList buttons={buttons} />
-          </div>
           
           <!-- メインキャンパス 3つのポイント -->
           <div class="intro-section__points">
@@ -328,6 +319,32 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     <!-- ②{currentYear}年度 開講コース -->
     <section class="courses-section content-section">
       <div class="content-section__container">
+        <!-- 申込ボタン Section -->
+        {buttons.length > 0 && (
+          <div class="application-buttons-section fade-up">
+            <div class="application-buttons-grid">
+              {buttons.map((button) => (
+                <div class="application-button-item">
+                  {button.labelAbove && (
+                    <p class="application-button-item__label-above">{button.labelAbove}</p>
+                  )}
+                  <div class="application-button-item__button-wrapper">
+                    <a href={button.url} class="application-button-item__button base-button base-button--blue">
+                      <span class="base-button__text">{button.buttonText}</span>
+                      <div class="base-button__icon">
+                        <div class="base-button__icon-arrow"></div>
+                      </div>
+                    </a>
+                    {button.labelBelow && (
+                      <p class="application-button-item__label-below">{button.labelBelow}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <ContentSectionHeader 
           englishTitle=""
           title={`${currentYearValue} <br class="u-br-sm">開講コース`}
@@ -1686,6 +1703,131 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     &:hover {
       text-decoration: none;
       color: $text-primary;
+    }
+  }
+}
+
+/* 申込ボタンセクション */
+.application-buttons-section {
+  margin-top: rem(60);
+  
+  @include breakpoint-up(md) {
+    margin-top: rem(80);
+  }
+  
+  @include breakpoint-up(lg) {
+    margin-top: rem(100);
+  }
+}
+
+.application-buttons-grid {
+  display: flex;
+  flex-direction: column;
+  gap: rem(32);
+  align-items: center;
+  
+  @include breakpoint-up(lg) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: rem(32) rem(24);
+    max-width: rem(900);
+    margin: 0 auto;
+    justify-items: stretch;
+    align-items: stretch;
+  }
+  
+  @include breakpoint-up(xl) {
+    gap: rem(40) rem(32);
+    max-width: rem(1000);
+  }
+}
+
+.application-button-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  max-width: rem(420);
+  padding: rem(28);
+  border: 2px solid $border-primary;
+  border-radius: $radius-m;
+  background: $background-primary;
+  
+  @include breakpoint-up(md) {
+    padding: rem(36);
+    border-radius: $radius-l;
+    max-width: rem(480);
+  }
+  
+  @include breakpoint-up(lg) {
+    max-width: rem(420);
+    padding: rem(32);
+  }
+  
+  @include breakpoint-up(xl) {
+    max-width: rem(450);
+    padding: rem(40);
+  }
+  
+  &__label-above {
+    @include font-ja-s(semibold);
+    color: $text-secondary;
+    margin: 0 0 rem(16) 0;
+    text-align: center;
+    line-height: 1.6;
+    
+    @include breakpoint-up(md) {
+      margin-bottom: rem(20);
+    }
+  }
+  
+  &__button-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-grow: 1;
+    justify-content: center;
+    margin-top: rem(16);
+    
+    @include breakpoint-up(md) {
+      margin-top: rem(20);
+    }
+  }
+  
+  &__button {
+    color: $text-white !important;
+    text-decoration: none !important;
+    
+    &:hover {
+      color: $text-white !important;
+      text-decoration: none !important;
+    }
+    
+    &:focus {
+      color: $text-white !important;
+      text-decoration: none !important;
+    }
+    
+    &:visited {
+      color: $text-white !important;
+      text-decoration: none !important;
+    }
+    
+    .base-button__text {
+      color: $text-white !important;
+    }
+  }
+  
+  &__label-below {
+    @include font-ja-s(semibold);
+    color: $text-primary;
+    margin: rem(5) 0 0 0;
+    text-align: center;
+    line-height: 1.6;
+    
+    @include breakpoint-up(md) {
+      // margin-top: rem(20);
     }
   }
 }
