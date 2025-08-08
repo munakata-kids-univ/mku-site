@@ -488,10 +488,10 @@ console.log('firstWinnersContent:', firstWinnersContent);
   }
 
   .section-content {
-    margin-top: rem(40);
+    // margin-top: rem(40);
     
     @include breakpoint-up(md) {
-      margin-top: rem(60);
+      // margin-top: rem(60);
     }
   }
 
@@ -980,6 +980,7 @@ console.log('firstWinnersContent:', firstWinnersContent);
       margin: rem(16) 0;
       overflow: hidden;
       background: $background-primary;
+      max-width: rem(1200);
     }
     
     :global(.pdf-canvas-header) {
@@ -1090,16 +1091,17 @@ console.log('firstWinnersContent:', firstWinnersContent);
       background: $brand-black;
       padding: rem(8);
       text-align: center;
-      min-height: rem(200);
+      height: rem(400);
+      overflow-y: auto;
       
       @include breakpoint-up(md) {
         padding: rem(16);
-        min-height: rem(300);
+        height: rem(500);
       }
       
       @include breakpoint-up(lg) {
         padding: rem(20);
-        min-height: rem(400);
+        height: rem(600);
       }
       
       canvas {
@@ -1199,15 +1201,12 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="pdf-canvas-header">
           <h4>📄 ${fileName}</h4>
           <div class="pdf-controls">
-            <button class="pdf-prev">◀ 前</button>
-            <span class="pdf-page-info">1 / 1</span>
-            <button class="pdf-next">次 ▶</button>
             <a href="${pdfUrl}" target="_blank">PDFで開く</a>
           </div>
         </div>
         <div class="pdf-canvas-container">
           <div class="pdf-loading">PDFを読み込んでいます...</div>
-          <canvas></canvas>
+          <div class="pdf-pages-container"></div>
         </div>
       `;
       
@@ -1220,49 +1219,22 @@ document.addEventListener('DOMContentLoaded', function() {
     
     pdfCanvasBlocks.forEach(block => {
       const url = block.dataset.pdfUrl;
-      const canvas = block.querySelector('canvas');
-      const prevBtn = block.querySelector('.pdf-prev');
-      const nextBtn = block.querySelector('.pdf-next');
-      const pageInfo = block.querySelector('.pdf-page-info');
+      const pagesContainer = block.querySelector('.pdf-pages-container');
       const loadingDiv = block.querySelector('.pdf-loading');
       
       let pdfDoc = null;
-      let currentPage = 1;
-      let totalPages = 0;
       
       // PDFを読み込み
       pdfjsLib.getDocument(url).promise.then(pdf => {
         pdfDoc = pdf;
-        totalPages = pdf.numPages;
+        const totalPages = pdf.numPages;
         
         // ローディング非表示
         if (loadingDiv) loadingDiv.style.display = 'none';
         
-        // ページ情報更新
-        updatePageInfo();
-        
-        // 最初のページを描画
-        renderPage(1);
-        
-        // ボタンイベント設定
-        if (prevBtn) {
-          prevBtn.addEventListener('click', () => {
-            if (currentPage > 1) {
-              currentPage--;
-              renderPage(currentPage);
-              updatePageInfo();
-            }
-          });
-        }
-        
-        if (nextBtn) {
-          nextBtn.addEventListener('click', () => {
-            if (currentPage < totalPages) {
-              currentPage++;
-              renderPage(currentPage);
-              updatePageInfo();
-            }
-          });
+        // 全ページを順次描画
+        for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+          renderPage(pageNum, pagesContainer);
         }
         
       }).catch(error => {
@@ -1273,11 +1245,15 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       
       // ページ描画関数
-      function renderPage(pageNum) {
+      function renderPage(pageNum, container) {
         pdfDoc.getPage(pageNum).then(page => {
+          // 新しいキャンバスを作成
+          const canvas = document.createElement('canvas');
+          canvas.className = 'pdf-page-canvas';
+          container.appendChild(canvas);
+          
           // レスポンシブなスケール計算
-          const container = block.querySelector('.pdf-canvas-container');
-          const containerWidth = container.clientWidth - 32; // padding分を引く
+          const containerWidth = block.querySelector('.pdf-canvas-container').clientWidth - 32; // padding分を引く
           
           // 基本スケールを設定
           let baseScale = 1.5;
@@ -1324,26 +1300,7 @@ document.addEventListener('DOMContentLoaded', function() {
               viewport: finalViewport
             });
           }
-          
-          updateButtons();
         });
-      }
-      
-      // ページ情報更新
-      function updatePageInfo() {
-        if (pageInfo) {
-          pageInfo.textContent = `${currentPage} / ${totalPages}`;
-        }
-      }
-      
-      // ボタン状態更新
-      function updateButtons() {
-        if (prevBtn) {
-          prevBtn.disabled = currentPage <= 1;
-        }
-        if (nextBtn) {
-          nextBtn.disabled = currentPage >= totalPages;
-        }
       }
       
       // ウィンドウリサイズ時の再描画
@@ -1351,8 +1308,13 @@ document.addEventListener('DOMContentLoaded', function() {
       window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
-          if (pdfDoc && currentPage) {
-            renderPage(currentPage);
+          if (pdfDoc && pagesContainer) {
+            // 既存のキャンバスをクリアして再描画
+            pagesContainer.innerHTML = '';
+            const totalPages = pdfDoc.numPages;
+            for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+              renderPage(pageNum, pagesContainer);
+            }
           }
         }, 300);
       });
