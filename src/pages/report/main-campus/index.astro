@@ -1,0 +1,341 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { Image } from "astro:assets";
+import { 
+  getGlobalSettings,
+  getMainCampusCourses 
+} from '../../../lib/microcms';
+import { convertYearToPath } from '../../../utils/yearConverter';
+
+// データ取得
+const globalSettings = await getGlobalSettings();
+const currentYear = globalSettings.currentYear;
+
+// 過去の実績セクション用：全年度の講座データを取得
+const allCourses = await getMainCampusCourses();
+
+// 現行年度の数値を取得
+const currentYearValue = Array.isArray(currentYear) ? currentYear[0] : currentYear;
+---
+
+<BaseLayout title="過去の実績 - メインキャンパス" description="むなかた子ども大学メインキャンパスの過去の実績をご紹介します。年間を通じて開催された基幹講座で、様々な分野の専門家による講義や体験活動の記録をご覧ください。">
+  <main>
+    <!-- ヒーローセクション -->
+    <section class="hero hero--main-campus">
+      <div class="hero__container">
+        <div class="hero__content">
+          <div class="hero__text fade-up">
+            <h1 class="hero__title">
+              <span class="hero__title-line1">メインキャンパス</span>
+              <span class="hero__title-line2">過去の実績</span>
+            </h1>
+            <p class="hero__subtitle">Report - Main Campus</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="breadcrumb">
+      <div class="breadcrumb__container">
+        <nav aria-label="パンくずナビゲーション">
+          <ol class="breadcrumb__list">
+            <li class="breadcrumb__item">
+              <a href="/">ホーム</a>
+            </li>
+            <li class="breadcrumb__item">
+              <a href="/report">過去の実績</a>
+            </li>
+            <li class="breadcrumb__item" aria-current="page">
+              メインキャンパス
+            </li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+
+    <!-- 過去の実績 -->
+    <section class="past-results-section">
+      <div class="past-results-section__container">
+        <div class="past-results-section__content">
+          <div class="past-results-buttons">
+            {(() => {
+              // 全講座から年度を抽出し、重複を除去
+              const allYears = allCourses.map(course => {
+                const courseYear = Array.isArray(course.year) ? course.year[0] : course.year;
+                return courseYear;
+              }).filter((year, index, self) => self.indexOf(year) === index);
+              
+              // 現在年度の数字部分を取得（令和7年度 → 7）
+              const currentYearNum = parseInt(currentYearValue.replace('令和', '').replace('年度', ''));
+              
+              // 現在年度より小さい年度のみフィルタリングし、数字の降順でソート
+              const pastYears = allYears
+                .filter(year => year && typeof year === 'string') // undefinedと非文字列をフィルタリング
+                .map(year => {
+                  const yearNum = parseInt(year.replace('令和', '').replace('年度', ''));
+                  return { original: year, num: yearNum };
+                })
+                .filter(yearObj => yearObj.num < currentYearNum)
+                .sort((a, b) => b.num - a.num) // 降順ソート
+                .map(yearObj => yearObj.original);
+              
+              return pastYears.map(year => {
+                if (!year) return null;
+                const yearNum = parseInt(year.replace('令和', '').replace('年度', ''));
+                const urlYear = `r${yearNum.toString().padStart(2, '0')}`;
+                return (
+                  <a href={`/course/main-campus/${urlYear}`} class="base-button base-button--blue">
+                    <span class="base-button__text">{year}</span>
+                    <div class="base-button__icon">
+                      <div class="base-button__icon-arrow"></div>
+                    </div>
+                  </a>
+                );
+              });
+            })()}
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+  @import "../../../styles/index";
+
+  /* 共通セクションスタイル */
+  .content-section {
+    padding: 0 0 rem(120);
+    background: $background-primary;
+    position: relative;
+    
+    @include breakpoint-up(xl) {
+      padding: 0 0 rem(160);
+    }
+
+    &__container {
+      padding: 0 5%;
+      overflow: hidden;
+      @include breakpoint-up(xl) {
+        padding: 0 rem(50);
+      }
+    }
+  }
+
+  .hero {
+    position: relative;
+    padding: 0;
+    background: linear-gradient(to bottom, $brand-sub-yellow 0%, $background-primary 70%, $background-primary 100%);
+    border-radius: 0 rem(120) 0 0;
+    
+    @include breakpoint-up(md) {
+      border-radius: 0 rem(240) 0 0;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      background-color: $brand-secondary;
+      z-index: -1;
+    }
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 0 0 5%;
+      overflow: hidden;
+      @include breakpoint-up(xl) {
+        padding: 0 0 0 rem(50);
+      }
+    }
+
+    &__content {
+      position: relative;
+      padding: rem(100) 0 0;
+
+      @include breakpoint-up(md) {
+        padding: rem(120) 0 0;
+      }
+      @include breakpoint-up(xl) {
+        padding: rem(160) 0 0;
+      }
+    }
+
+    &__text {
+      max-width: none;
+      margin: 0;
+      text-align: left;
+    }
+
+    &__title {
+      color: $text-primary;
+      margin: 0 0 rem(8) 0;
+      line-height: 1.4;
+
+      @include breakpoint-up(lg) {
+        margin-bottom: rem(12);
+      }
+
+      .hero__title-line1 {
+        display: block;
+        @include font-ja-m(semibold);
+        margin-bottom: rem(8);
+
+        @include breakpoint-up(lg) {
+          @include font-ja-l(semibold);
+        }
+      }
+
+      .hero__title-line2 {
+        display: block;
+        @include font-ja-2l(semibold);
+        font-weight: bold;
+        line-height: 1.4;
+
+        @include breakpoint-up(lg) {
+          @include font-ja-3l(semibold);
+        }
+      }
+    }
+
+    &__subtitle {
+      @include font-en-s(semibold);
+      color: $brand-secondary;
+      margin: 0 0 rem(30) 0;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+
+      @include breakpoint-up(lg) {
+        @include font-en-m(semibold);
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .breadcrumb {
+    padding: rem(20) 0;
+    background: $background-primary;
+    @include breakpoint-up(lg) {
+      padding: rem(50) 0 rem(20);
+    }
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 0 0 5%;
+      @include breakpoint-up(xl) {
+        padding: 0 0 0 rem(50);
+      }
+    }
+
+    &__list {
+      display: flex;
+      align-items: center;
+      gap: rem(8);
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      @include font-ja-3s;
+    }
+
+    &__item {
+      display: flex;
+      align-items: center;
+
+      &:not(:last-child)::after {
+        content: '>';
+        margin-left: rem(8);
+        color: $text-secondary;
+      }
+
+      a {
+        @include font-ja-3s(semibold);
+        color: $text-link;
+        text-decoration: underline;
+
+        &:hover {
+          color: $text-link-hover;
+          text-decoration: underline;
+        }
+      }
+
+      &[aria-current="page"] {
+        @include font-ja-3s;
+        color: $text-primary;
+        font-weight: 500;
+      }
+    }
+  }
+
+  /* 過去の実績セクション */
+  .past-results-section {
+    background: $background-primary;
+    padding: rem(60) 0 rem(120);
+    
+    @include breakpoint-up(lg) {
+      padding: rem(80) 0 rem(160);
+    }
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 5%;
+      @include breakpoint-up(xl) {
+        padding: 0 rem(50);
+      }
+    }
+    
+    &__content {
+      text-align: center;
+    }
+  }
+
+  /* 過去の実績ボタン */
+  .past-results-buttons {
+    display: flex;
+    justify-content: center;
+    gap: rem(16);
+    flex-wrap: wrap;
+    
+    @include breakpoint-up(md) {
+      gap: rem(24);
+    }
+    
+    .base-button {
+      color: $text-white;
+      text-decoration: none;
+      
+      &:hover {
+        text-decoration: none;
+        color: $text-primary;
+      }
+    }
+  }
+</style>
+
+<script>
+  // スクロールアニメーション用のIntersection Observer
+  document.addEventListener('DOMContentLoaded', function() {
+    const observerOptions = {
+      threshold: 0.1, // 要素の10%が見えたら発火
+      rootMargin: '0px 0px -50px 0px' // 下から50px余裕を持たせる
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          // 一度表示されたら監視を停止（パフォーマンス向上）
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+
+    // fade-upクラスを持つ全ての要素を監視対象に追加
+    const fadeUpElements = document.querySelectorAll('.fade-up');
+    fadeUpElements.forEach(element => {
+      observer.observe(element);
+    });
+  });
+</script>

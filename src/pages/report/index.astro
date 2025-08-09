@@ -1,0 +1,332 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import BaseButton from "../../components/BaseButton.astro";
+import { Image } from "astro:assets";
+---
+
+<BaseLayout title="過去の実績" description="むなかた子ども大学の過去の実績をご紹介します。メインキャンパス、特設講座、むなかた子ども大学の日、夏の課外授業での子どもたちの学びと成長の記録をご覧ください。">
+  <main>
+    <section class="hero">
+      <div class="hero__container">
+        <div class="hero__content">
+          <div class="hero__text fade-up">
+            <h1 class="hero__title">過去の実績</h1>
+            <p class="hero__subtitle">Report</p>
+          </div>
+          <div class="hero__image">
+            <Image
+              src="/images/backgrounds/img_bg-hero_report-01.webp"
+              alt="過去の実績"
+              width={600}
+              height={400}
+              format="webp"
+              quality={85}
+              loading="eager"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="breadcrumb">
+      <div class="breadcrumb__container">
+        <nav aria-label="パンくずナビゲーション">
+          <ol class="breadcrumb__list">
+            <li class="breadcrumb__item">
+              <a href="/">ホーム</a>
+            </li>
+            <li class="breadcrumb__item" aria-current="page">
+              過去の実績
+            </li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Introduction Section -->
+    <section class="introduction">
+      <div class="introduction__container">
+        <p class="introduction__text">
+          本ページでは、子どもたちが様々な分野の"本物"に触れ、学びを深めた軌跡をまとめています。<br>
+          メインキャンパス・特設講座・むなかた子ども大学の日・夏の課外授業──<br>
+          むなかた子ども大学に参加した児童・生徒たちの挑戦の記録や、企業・団体のみなさまとの協働の様子を、ぜひご覧ください。
+        </p>
+      </div>
+    </section>
+
+    <!-- Navigation Buttons -->
+    <section class="report-nav">
+      <div class="report-nav__container">
+        <div class="report-nav__buttons">
+          <BaseButton href="/report/main-campus" variant="blue">
+            メインキャンパス
+          </BaseButton>
+          <BaseButton href="/report/special-course" variant="blue">
+            特設講座
+          </BaseButton>
+          <BaseButton href="/report/mku-day" variant="blue">
+            むなかた子ども大学の日
+          </BaseButton>
+          <BaseButton href="/report/summer-course" variant="blue">
+            夏の課外授業
+          </BaseButton>
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+  @import "../../styles/index";
+
+  .hero {
+    position: relative;
+    padding: rem(80) 0 rem(20);
+    background: linear-gradient(to bottom, $background-secondary 0%, $background-primary 70%, $background-primary 100%);
+    border-radius: 0 rem(120) 0 0;
+    
+    @include breakpoint-up(md) {
+      padding: 0;
+      border-radius: 0 rem(240) 0 0;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      background-color: $brand-primary;
+      z-index: -1;
+    }
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 0 0 5%;
+      overflow: hidden;
+      @include breakpoint-up(xl) {
+        padding: 0 0 0 rem(50);
+      }
+    }
+
+    &__content {
+      position: relative;
+      padding: rem(40) 0 0;
+
+      @include breakpoint-up(md) {
+        padding: 0;
+        display: flex;
+        align-items: stretch;
+        gap: rem(60);
+      }
+    }
+
+    &__text {
+      @include breakpoint-up(md) {
+        flex: 1;
+        padding: rem(120) 0 0;
+      }
+      @include breakpoint-up(xl) {
+        padding: rem(160) 0 0;
+      }
+    }
+
+    &__title {
+      @include font-ja-2l(semibold);
+      font-weight: bold;
+      color: $text-primary;
+      margin: 0 0 rem(8) 0;
+      line-height: 1.4;
+
+      @include breakpoint-up(lg) {
+        @include font-ja-3l(semibold);
+        margin-bottom: rem(12);
+      }
+    }
+
+    &__subtitle {
+      @include font-en-s(semibold);
+      color: $text-secondary;
+      margin: 0 0 rem(30) 0;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+
+      @include breakpoint-up(lg) {
+        @include font-en-m(semibold);
+        margin-bottom: 0;
+      }
+    }
+
+    &__image {
+      aspect-ratio: 16 / 9;
+      width: 100%;
+      @include breakpoint-up(md) {
+        flex: 0 0 auto;
+        width: 45%;
+        min-height: rem(100);
+      }
+      @include breakpoint-up(xl) {
+        max-width: rem(600);
+        min-height: rem(400);
+      }
+
+      img,
+      :global(img) {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: rem(8) 0 0 rem(8);
+        @include breakpoint-up(md) {
+          border-radius: 0 rem(240) 0 $radius-l;
+        }
+        @include breakpoint-up(xl) {
+          border-radius: 0 rem(240) 0 $radius-2l;
+        }
+      }
+    }
+  }
+
+  .breadcrumb {
+    padding: rem(20) 0;
+    background: $background-primary;
+    @include breakpoint-up(lg) {
+      padding: rem(50) 0 rem(20);
+    }
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 0 0 5%;
+      @include breakpoint-up(xl) {
+        padding: 0 0 0 rem(50);
+      }
+    }
+
+    &__list {
+      display: flex;
+      align-items: center;
+      gap: rem(8);
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      @include font-ja-3s;
+    }
+
+    &__item {
+      display: flex;
+      align-items: center;
+
+      &:not(:last-child)::after {
+        content: '>';
+        margin-left: rem(8);
+        color: $text-secondary;
+      }
+
+      a {
+        @include font-ja-3s(semibold);
+        color: $text-link;
+        text-decoration: underline;
+
+        &:hover {
+          color: $text-link-hover;
+          text-decoration: underline;
+        }
+      }
+
+      &[aria-current="page"] {
+        @include font-ja-3s;
+        color: $text-primary;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .introduction {
+    padding: rem(20) 0 rem(30);
+    background: $background-primary;
+    @include breakpoint-up(lg) {
+      padding: rem(80) 0 rem(30);
+    }
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 5%;
+      @include breakpoint-up(xl) {
+        padding: 0 rem(50);
+      }
+    }
+
+    &__text {
+      @include font-ja-s;
+      color: $text-primary;
+      line-height: 1.8;
+      margin: 0;
+      max-width: rem(1200);
+    }
+  }
+
+  .report-nav {
+    padding: rem(40) 0 rem(80);
+    background: $background-primary;
+    @include breakpoint-up(lg) {
+      padding: rem(60) 0 rem(120);
+    }
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 5%;
+      @include breakpoint-up(xl) {
+        padding: 0 rem(50);
+      }
+    }
+
+    &__buttons {
+      display: flex;
+      flex-direction: column;
+      gap: rem(20);
+      max-width: rem(800);
+      margin: 0 auto;
+
+      @include breakpoint-up(md) {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: rem(30);
+      }
+
+      :global(.base-button) {
+        width: 100%;
+        
+        @include breakpoint-up(md) {
+          min-width: auto;
+        }
+      }
+    }
+  }
+</style>
+
+<script>
+  // スムーススクロール
+  document.addEventListener('DOMContentLoaded', function() {
+    // スクロールアニメーション用のIntersection Observer
+    const observerOptions = {
+      threshold: 0.1, // 要素の10%が見えたら発火
+      rootMargin: '0px 0px -50px 0px' // 下から50px余裕を持たせる
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          // 一度表示されたら監視を停止（パフォーマンス向上）
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+
+    // fade-upクラスを持つ全ての要素を監視対象に追加
+    const fadeUpElements = document.querySelectorAll('.fade-up');
+    fadeUpElements.forEach(element => {
+      observer.observe(element);
+    });
+  });
+</script>
