@@ -1,0 +1,883 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import HeroSection from '@/components/HeroSection.astro';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import ContentSectionHeader from '@/components/ContentSectionHeader.astro';
+import CourseCard from '@/components/CourseCard.astro';
+import AfterImagesSlider from '@/components/AfterImagesSlider.astro';
+import { 
+  getGlobalSettings,
+  getSpecialCourses
+} from '@/lib/microcms';
+import { convertYearToPath, convertPathToYear } from '@/utils/yearConverter';
+
+// 静的パス生成
+export async function getStaticPaths() {
+  try {
+    // 全ての講座データを取得
+    const allCourses = await getSpecialCourses();
+    
+    if (!allCourses || allCourses.length === 0) {
+      return [];
+    }
+
+    // 各年度のユニークなパスを生成
+    const uniqueYears = [...new Set(allCourses.map(course => {
+      return Array.isArray(course.year) ? course.year[0] : course.year;
+    }))];
+
+    const paths = uniqueYears.map(originalYear => {
+      const pathYear = convertYearToPath(originalYear);
+      return {
+        params: { year: pathYear },
+        props: { originalYear, pathYear }
+      };
+    });
+
+    return paths;
+  } catch (error) {
+    console.error('Error generating static paths for special course year pages:', error);
+    return [];
+  }
+}
+
+// パラメータを取得
+const { year } = Astro.params;
+const { originalYear, pathYear } = Astro.props;
+
+if (!year) {
+  return Astro.redirect('/404');
+}
+
+// グローバル設定を取得
+const globalSettings = await getGlobalSettings();
+const currentYear = Array.isArray(globalSettings.currentYear) ? globalSettings.currentYear[0] : globalSettings.currentYear;
+const currentYearPath = convertYearToPath(currentYear);
+
+// パスから年度を復元
+const actualYear = originalYear || convertPathToYear(year);
+
+// 現在年度の場合は /course/special-course へリダイレクト
+if (year === currentYearPath) {
+  return Astro.redirect('/course/special-course', 301);
+}
+
+// 過去年度の講座一覧を取得
+const courses = await getSpecialCourses(actualYear);
+
+// 該当年度の講座が存在しない場合は404
+if (!courses || courses.length === 0) {
+  return Astro.redirect('/404');
+}
+
+// ページ情報
+const pageTitle = `過去の実績（${actualYear}）- 特設講座`;
+const pageDescription = `${actualYear}の特設講座実績。月に1〜2回開催される職業体験講座で、より現実に即した環境での学びを提供しました。`;
+
+// パンくずリスト
+const breadcrumbItems = [
+  { label: 'ホーム', href: '/' },
+  { label: '講座内容', href: '/course' },
+  { label: '特設講座', href: '/course/special-course' },
+  { label: `${actualYear}` }
+];
+
+// 講座カード用のデータ変換
+const courseCards = courses.map(course => ({
+  id: course.id,
+  title: course.title,
+  thumbImg: course.thumbImg,
+  status: '募集終了', // 過去年度は全て募集終了
+  year: course.year,
+  href: `/course/special-course/${year}/${course.id}`,
+  providerNames: course.providerInfo?.map(item => item.providerName).join('、') || '',
+  targetGrades: Array.isArray(course.targetGrades) ? course.targetGrades : (course.targetGrades ? [course.targetGrades] : []),
+  hasReport: !!(course.afterImages?.length || course.instructor || course.afterReport || course.afterMovieUrl)
+}));
+
+// 全講座のafterImagesを収集
+const allAfterImages = courses.reduce((acc, course) => {
+  if (course.afterImages && course.afterImages.length > 0) {
+    acc.push(...course.afterImages);
+  }
+  return acc;
+}, []);
+
+// サブ見出しの英語年度表示（例：「Reiwa 6」）
+const englishYear = actualYear.replace('令和', 'Reiwa ').replace('年度', '');
+
+// ヒーローセクション用のタイトル構築
+const heroTitle = `特設講座\n過去の実績(${actualYear})`;
+const heroSubtitle = `Report - Special Course - ${englishYear}`;
+
+// 学年の色分けクラス取得関数（scheduleページと同様）
+function getGradeColorClass(grade: string): string {
+  // むなかた子ども大学の日（学校名）の場合
+  if (grade.includes('小学校') || grade.includes('中学校') || grade.includes('学校') || grade.includes('学園')) {
+    return 'mku-day';
+  }
+  
+  // 特殊なケース
+  if (grade === '未就学児' || grade === 'だれでも' || grade.includes('その他')) {
+    return 'special';
+  }
+  
+  // 数字を抽出
+  const yearMatch = grade.match(/^(\d+)年$/);
+  if (yearMatch) {
+    const num = parseInt(yearMatch[1]);
+    if (num >= 1 && num <= 3) return 'elementary-low';    // 1~3年
+    if (num >= 4 && num <= 6) return 'elementary-high';   // 4~6年
+    if (num >= 7 && num <= 9) return 'junior';            // 7~9年
+  }
+  
+  // 高校生
+  if (grade.match(/^高\d+$/)) {
+    return 'junior'; // 高校生は中学生と同じ色
+  }
+  
+  // その他
+  return 'special';
+}
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <main>
+    <!-- ヒーローセクション -->
+    <section class="hero hero--special-course">
+      <div class="hero__container">
+        <div class="hero__content">
+          <div class="hero__text fade-up">
+            <h1 class="hero__title">
+              <span class="hero__title-line1">特設講座</span>
+              <span class="hero__title-line2">過去の実績({actualYear})</span>
+            </h1>
+            <p class="hero__subtitle">{heroSubtitle}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <Breadcrumb items={breadcrumbItems} />
+
+    <!-- 講座の様子スライダー -->
+    {allAfterImages.length > 0 && (
+      <AfterImagesSlider images={allAfterImages} class="fade-up" />
+    )}
+
+    <!-- 講座一覧セクション -->
+    <section class="courses-section content-section">
+      <div class="content-section__container">
+        <ContentSectionHeader 
+          englishTitle=""
+          title={`${actualYear} 開講コース`}
+          class="fade-up"
+        />
+        
+        {courseCards.length > 0 ? (
+          <div class="courses-grid">
+            {courseCards.map(course => (
+              <a href={course.href} class="course-card">
+                <div class="course-card__image">
+                  <img 
+                    src={course.thumbImg?.url || '/images/ui/img_course-no-image-01.webp'} 
+                    alt={course.title} 
+                  />
+                  <div class="course-card__status">
+                    <span class="status-badge status-badge--dark-gray">{course.status}</span>
+                  </div>
+                  {course.hasReport && (
+                    <div class="course-card__report-ribbon">
+                      <div class="report-ribbon__tail"></div>
+                      <div class="report-ribbon__circle">
+                        <div class="report-ribbon__text">
+                          <span class="report-ribbon__text-line1">実施</span><br>
+                          <span class="report-ribbon__text-line2">レポート</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div class="course-card__content">
+                  <div class="course-card__header">
+                    <h3 class="course-card__title">{course.title}</h3>
+                    <div class="course-card__arrow"></div>
+                  </div>
+                  {course.providerNames && (
+                    <p class="course-card__provider">{course.providerNames}</p>
+                  )}
+                  {course.targetGrades.length > 0 && (
+                    <div class="course-card__grades">
+                      {(() => {
+                        const sortedGrades = Array.isArray(course.targetGrades) ? course.targetGrades : [course.targetGrades];
+                        return sortedGrades.map(grade => (
+                          <span class={`target-grade target-grade--${getGradeColorClass(grade)}`}>{grade}</span>
+                        ));
+                      })()}
+                    </div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div class="empty-state">
+            <div class="empty-state__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+              </svg>
+            </div>
+            <p class="empty-state__description">
+              現在、{actualYear}の講座は登録されていません。<br>
+              講座が決まり次第、随時掲載いたしますので、<br class="u-br-sm">お待ちください。
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+  @import "../../../../styles/index";
+
+  .hero {
+    position: relative;
+    padding: 0;
+    background: linear-gradient(to bottom, $brand-sub-turquoise 0%, $background-primary 70%, $background-primary 100%);
+    border-radius: 0 rem(120) 0 0;
+    
+    @include breakpoint-up(md) {
+      border-radius: 0 rem(240) 0 0;
+    }
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 0 0 5%;
+      overflow: hidden;
+      position: relative;
+      
+      @include breakpoint-up(xl) {
+        padding: 0 0 0 rem(50);
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        background-color: $brand-turquoise;
+        z-index: -1;
+      }
+    }
+
+    &__content {
+      position: relative;
+      padding: rem(100) 0 0;
+
+      @include breakpoint-up(md) {
+        padding: rem(120) 0 0;
+      }
+      @include breakpoint-up(xl) {
+        padding: rem(160) 0 0;
+      }
+    }
+
+    &__text {
+      max-width: none;
+      margin: 0;
+      text-align: left;
+    }
+
+    &__title {
+      @include font-ja-2l(semibold);
+      font-weight: bold;
+      color: $text-primary;
+      margin: 0 0 rem(8) 0;
+      line-height: 1.4;
+
+      @include breakpoint-up(lg) {
+        @include font-ja-3l(semibold);
+        margin-bottom: rem(12);
+      }
+
+      .hero__title-line1 {
+        display: block;
+        @include font-ja-m(semibold);
+        margin-bottom: rem(8);
+
+        @include breakpoint-up(lg) {
+          @include font-ja-l(semibold);
+        }
+      }
+
+      .hero__title-line2 {
+        display: block;
+        @include font-ja-2l(semibold);
+        font-weight: bold;
+        line-height: 1.4;
+
+        @include breakpoint-up(lg) {
+          @include font-ja-3l(semibold);
+        }
+      }
+    }
+
+    &__subtitle {
+      @include font-en-s(semibold);
+      color: $brand-turquoise;
+      margin: 0 0 rem(30) 0;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+
+      @include breakpoint-up(lg) {
+        @include font-en-m(semibold);
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .breadcrumb {
+    padding: rem(20) 0;
+    background: $background-primary;
+    @include breakpoint-up(lg) {
+      padding: rem(50) 0 rem(20);
+    }
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 0 0 5%;
+      @include breakpoint-up(xl) {
+        padding: 0 0 0 rem(50);
+      }
+    }
+
+    &__list {
+      display: flex;
+      align-items: center;
+      gap: rem(8);
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      @include font-ja-3s;
+    }
+
+    &__item {
+      display: flex;
+      align-items: center;
+
+      &:not(:last-child)::after {
+        content: '>';
+        margin-left: rem(8);
+        color: $text-secondary;
+      }
+
+      a {
+        @include font-ja-3s(semibold);
+        color: $text-link;
+        text-decoration: underline;
+
+        &:hover {
+          color: $text-link-hover;
+          text-decoration: underline;
+        }
+      }
+
+      &[aria-current="page"] {
+        @include font-ja-3s;
+        color: $text-primary;
+        font-weight: 500;
+      }
+    }
+  }
+
+  /* 共通セクションスタイル */
+  .content-section {
+    padding: 0 0 rem(120);
+    background: $background-primary;
+    position: relative;
+    
+    @include breakpoint-up(xl) {
+      padding: 0 0 rem(160);
+    }
+
+    &__container {
+      padding: 0 5%;
+      overflow: hidden;
+      @include breakpoint-up(xl) {
+        padding: 0 rem(50);
+      }
+    }
+  }
+
+  /* 講座セクション */
+  .courses-section {
+    background: $brand-sub-turquoise-low;
+  }
+
+  /* 講座グリッド */
+  .courses-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: rem(12);
+    padding-bottom: rem(32);
+    
+    @include breakpoint-up(md) {
+      gap: rem(18);
+      padding-bottom: rem(40);
+    }
+    
+    @include breakpoint-up(lg) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    @include breakpoint-up(xl) {
+      max-width: rem(1400);
+      margin: 0 auto;
+      gap: rem(24);
+      padding-bottom: rem(48);
+    }
+  }
+
+  /* コースカード */
+  .course-card {
+    background: $background-primary;
+    border-radius: $radius-m;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    @include breakpoint-up(md) {
+      border-radius: $radius-l;
+    }
+    
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      text-decoration: none;
+    }
+    
+    &__image {
+      position: relative;
+      aspect-ratio: 4 / 3;
+      overflow: hidden;
+      border-radius: $radius-m;
+
+      @include breakpoint-up(md) {
+        border-radius: $radius-l;
+        aspect-ratio: 16 / 9;
+      }
+      
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 5%, transparent 100%);
+        pointer-events: none;
+        z-index: 1;
+      }
+      
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+      }
+    }
+    
+    &__status {
+      position: absolute;
+      top: rem(8);
+      left: rem(8);
+      z-index: 2;
+      @include breakpoint-up(md) {
+        top: rem(10);
+        left: rem(10);
+      }
+      @include breakpoint-up(lg) {
+        top: rem(12);
+        left: rem(12);
+      }
+      
+      img {
+        height: rem(24);
+        width: auto;
+        
+        @include breakpoint-up(md) {
+          height: rem(32);
+        }
+      }
+    }
+    
+    &__report-ribbon {
+      position: absolute;
+      bottom: rem(16);
+      right: rem(8);
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      
+      @include breakpoint-up(md) {
+        bottom: rem(20);
+        right: rem(10);
+      }
+      
+      @include breakpoint-up(lg) {
+        bottom: rem(24);
+        right: rem(12);
+      }
+      
+      @include breakpoint-up(xl) {
+        bottom: rem(32);
+      }
+    }
+    
+    &__content {
+      padding: rem(12) rem(12) rem(16);
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      
+      @include breakpoint-up(md) {
+        padding: rem(16) rem(16) rem(20);
+      }
+      
+      @include breakpoint-up(lg) {
+        padding: rem(20) rem(20) rem(30);
+      }
+    }
+    
+    &__header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: rem(8);
+      margin-bottom: rem(12);
+    }
+    
+    &__title {
+      @include font-ja-2s(semibold);
+      color: $text-primary;
+      margin: 0;
+      line-height: 1.4;
+      flex: 1;
+      
+      @include breakpoint-up(md) {
+        @include font-ja-s(semibold);
+      }
+      
+      @include breakpoint-up(lg) {
+        @include font-ja-m(semibold);
+      }
+    }
+    
+    &__arrow {
+      width: rem(20);
+      height: rem(20);
+      background-color: $brand-turquoise;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+      
+      @include breakpoint-up(md) {
+        width: rem(24);
+        height: rem(24);
+      }
+      
+      &::after {
+        content: '';
+        width: rem(6);
+        height: rem(6);
+        border-right: 2px solid $text-white;
+        border-bottom: 2px solid $text-white;
+        transform: translateX(rem(-1)) rotate(-45deg);
+        
+        @include breakpoint-up(md) {
+          width: rem(8);
+          height: rem(8);
+          transform: translateX(rem(-1)) rotate(-45deg);
+        }
+      }
+    }
+    
+    &:hover &__arrow {
+      transform: translateX(rem(2));
+    }
+    
+    &:hover &__image img {
+      transform: scale(1.1);
+    }
+    
+    &__provider {
+      @include font-ja-3s(semibold);
+      color: $text-secondary;
+      margin: 0 0 rem(12) 0;
+      line-height: 1.4;
+      flex-grow: 1;
+      
+      @include breakpoint-up(md) {
+        @include font-ja-2s(semibold);
+      }
+    }
+    
+    &__grades {
+      display: flex;
+      flex-wrap: wrap;
+      gap: rem(4);
+      margin-top: auto;
+      
+      @include breakpoint-up(md) {
+        gap: rem(6);
+      }
+    }
+  }
+
+  /* 実施レポートリボン */
+  .report-ribbon {
+    &__tail {
+      position: absolute;
+      left: 50%;
+      top: rem(30);
+      transform: translateX(-50%);
+      height: 0;
+      width: 0;
+      border-top: rem(12) solid $text-white;
+      border-left: rem(12) solid $text-white;
+      border-right: rem(12) solid $text-white;
+      border-bottom: rem(12) solid transparent;
+      border-radius: 0 0 rem(3) rem(3);
+      z-index: 1;
+      
+      @include breakpoint-up(md) {
+        top: rem(38);
+      }
+      @include breakpoint-up(lg) {
+        top: rem(44);
+      }
+      @include breakpoint-up(xl) {
+        top: rem(60);
+        border-top: rem(18) solid $text-white;
+        border-left: rem(18) solid $text-white;
+        border-right: rem(18) solid $text-white;
+        border-bottom: rem(18) solid transparent;
+        border-radius: 0 0 rem(5) rem(5);
+      }
+    }
+    
+    &__circle {
+      width: rem(40);
+      height: rem(40);
+      background-color: $brand-primary;
+      border: 2px solid $text-white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+      
+      @include breakpoint-up(md) {
+        width: rem(48);
+        height: rem(48);
+      }
+      @include breakpoint-up(lg) {
+        width: rem(52);
+        height: rem(52);
+      }
+      @include breakpoint-up(xl) {
+        width: rem(70);
+        height: rem(70);
+      }
+    }
+    
+    &__text {
+      color: $text-white;
+      text-align: center;
+      line-height: 0.6;
+      padding-bottom: rem(4);
+      @include breakpoint-up(md) {
+        line-height: 0.7;
+        padding-bottom: rem(4);
+      }
+      @include breakpoint-up(lg) {
+        padding-bottom: 0;
+      }
+      @include breakpoint-up(xl) {
+        line-height: 1;
+        padding-bottom: rem(2);
+      }
+    }
+    
+    &__text-line1 {
+      @include font-ja-3s(semibold);
+      
+      @include breakpoint-up(lg) {
+        @include font-ja-s(semibold);
+        margin-top: rem(-1);
+      }
+    }
+    
+    &__text-line2 {
+      @include font-ja-4s(semibold);
+      margin-top: rem(-2);
+      
+      @include breakpoint-up(xl) {
+        @include font-ja-3s(semibold);
+        margin-top: 0;
+      }
+    }
+  }
+
+  /* ステータスバッジ */
+  .status-badge {
+    @include font-ja-3s(semibold);
+    color: $text-white;
+    padding: rem(2) rem(4);
+    border-radius: $radius-xs;
+    white-space: nowrap;
+    
+    @include breakpoint-up(md) {
+      @include font-ja-2s(semibold);
+    }
+    
+    &--dark-gray {
+      background: $background-dark-gray;
+    }
+    
+    &--brand-secondary {
+      background: $brand-secondary;
+    }
+    
+    &--brand-turquoise {
+      background: $brand-turquoise;
+    }
+    
+    &--brand-pink {
+      background: $brand-pink;
+    }
+  }
+
+  /* 学年タグ */
+  .target-grade {
+    @include font-ja-3s(semibold);
+    padding: rem(2) rem(4);
+    border: 1px solid $brand-black;
+    border-radius: rem(8);
+    white-space: nowrap;
+    margin-bottom: rem(2);
+    color: $text-primary;
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-2s(semibold);
+      padding: rem(4) rem(6);
+      border-radius: rem(10);
+    }
+    
+    &--elementary-low {
+      background-color: $brand-sub-yellow-low;
+      color: $text-primary;
+    }
+    
+    &--elementary-high {
+      background-color: $brand-sub-purple-low;
+      color: $text-primary;
+    }
+    
+    &--junior {
+      background-color: $brand-sub-turquoise-low;
+      color: $text-primary;
+    }
+    
+    &--special {
+      background-color: $brand-sub-pink-low;
+      color: $text-primary;
+    }
+    
+    // むなかた子ども大学の日用（学校名表示）
+    &--mku-day {
+      background-color: $background-primary;
+      border: 1px solid $brand-black;
+      color: $text-primary;
+    }
+  }
+
+  /* 空状態 */
+  .empty-state {
+    text-align: center;
+    padding: rem(40) 0 0;
+    
+    @include breakpoint-up(md) {
+      // padding: rem(80);
+    }
+    
+    &__icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: rem(32);
+      
+      @include breakpoint-up(md) {
+        margin-bottom: rem(40);
+      }
+      
+      svg {
+        width: rem(60);
+        height: rem(60);
+        color: $brand-turquoise;
+        
+        @include breakpoint-up(md) {
+          width: rem(80);
+          height: rem(80);
+        }
+      }
+    }
+    
+    &__description {
+      @include font-ja-s;
+      color: $text-primary;
+      line-height: 1.7;
+      margin: 0;
+    }
+  }
+
+</style>
+
+<script>
+// スクロールアニメーション用のIntersection Observer
+document.addEventListener('DOMContentLoaded', function() {
+  const observerOptions = {
+    threshold: 0.1, // 要素の10%が見えたら発火
+    rootMargin: '0px 0px -50px 0px' // 下から50px余裕を持たせる
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        // 一度表示されたら監視を停止（パフォーマンス向上）
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  // fade-upクラスを持つ全ての要素を監視対象に追加
+  const fadeUpElements = document.querySelectorAll('.fade-up');
+  fadeUpElements.forEach(element => {
+    observer.observe(element);
+  });
+});
+</script>
