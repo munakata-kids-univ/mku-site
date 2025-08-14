@@ -137,3 +137,32 @@
   border-color: vars.$brand-secondary;
   transform: rotate(-45deg) rotate(360deg);
 }
+
+// ターコイズボタン用のスタイル
+:global(.base-button--turquoise) {
+  background-color: vars.$brand-turquoise;
+  color: vars.$text-white;
+}
+
+:global(.base-button--turquoise:hover) {
+  background-color: vars.$brand-secondary;
+  color: vars.$text-primary;
+}
+
+:global(.base-button--turquoise .base-button__icon) {
+  background-color: vars.$background-primary;
+}
+
+:global(.base-button--turquoise:hover .base-button__icon) {
+  background-color: vars.$brand-primary;
+  transform: rotate(360deg);
+}
+
+:global(.base-button--turquoise .base-button__icon-arrow) {
+  border-color: vars.$brand-turquoise;
+}
+
+:global(.base-button--turquoise:hover .base-button__icon-arrow) {
+  border-color: vars.$brand-secondary;
+  transform: rotate(-45deg) rotate(360deg);
+}

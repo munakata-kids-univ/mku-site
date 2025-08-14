@@ -2,40 +2,73 @@
 import BaseLayout from "../../../../layouts/BaseLayout.astro";
 import Breadcrumb from "../../../../components/Breadcrumb.astro";
 import ContentSectionHeader from "../../../../components/ContentSectionHeader.astro";
-import { getMainCampusSettings } from "../../../../lib/microcms.ts";
+import { getSpecialCourseById, getSpecialCourses } from "../../../../lib/microcms.ts";
+
+// 静的パス生成
+export async function getStaticPaths() {
+  try {
+    // 全ての特設講座データを取得（年度フィルターなしで全件取得）
+    const allCourses = await getSpecialCourses();
+    
+    if (!allCourses || allCourses.length === 0) {
+      return [];
+    }
+
+    // winnersフィールドが存在する講座のみページを生成
+    const coursesWithWinners = allCourses.filter(course => 
+      course.winners && course.winners.trim().length > 0
+    );
+
+    // 各講座のパスを生成
+    const paths = coursesWithWinners.map(course => ({
+      params: { id: course.id },
+      props: { course }
+    }));
+
+    return paths;
+  } catch (error) {
+    console.error('Error generating static paths for special course results:', error);
+    return [];
+  }
+}
+
+// パラメータを取得
+const { id } = Astro.params;
+const { course } = Astro.props;
+
+if (!id || !course) {
+  return Astro.redirect('/404');
+}
 
 const breadcrumbItems = [
   { href: "/", label: "ホーム" },
   { href: "/results", label: "当選者発表" },
-  { href: "/course/main-campus", label: "メインキャンパス" },
-  { label: "1次申込当選者発表" }
+  { href: "/course/special-course", label: "特設講座" },
+  { label: `${course.title} 当選者発表` }
 ];
 
-// メインキャンパス設定から参加意向確認ボタンと1次当選者リストを取得
-const mainCampusSettings = await getMainCampusSettings();
-const intentionButtons = mainCampusSettings.buttons?.filter((button: any) => {
+// 参加意向確認ボタンを取得
+const intentionButtons = course.buttons?.filter((button: any) => {
   const buttonType = Array.isArray(button.type) ? button.type[0] : button.type;
   return button.visible && buttonType === "参加意向確認";
 }) || [];
-const firstWinnersContent = mainCampusSettings.firstWinners;
-console.log('firstWinnersContent:', firstWinnersContent);
 ---
 
 <BaseLayout 
-  title="メインキャンパス 1次申込当選者発表" 
-  description="むなかた子ども大学メインキャンパスの1次申込当選者発表ページです。当選番号をご確認ください。"
+  title={`特設講座 ${course.title} 当選者発表`}
+  description={`むなかた子ども大学特設講座「${course.title}」の当選者発表ページです。当選番号をご確認ください。`}
 >
   <main>
     <!-- Custom Hero Section -->
-    <section class="hero hero--main-campus">
+    <section class="hero hero--special-course">
       <div class="hero__container">
         <div class="hero__content">
           <div class="hero__text fade-up">
             <h1 class="hero__title">
-              <span class="hero__title-line1">メインキャンパス</span>
-              <span class="hero__title-line2">1次申込当選者発表</span>
+              <span class="hero__title-line1">特設講座 {course.title}</span>
+              <span class="hero__title-line2">当選者発表</span>
             </h1>
-            <p class="hero__subtitle">Results - Main Campus - First</p>
+            <p class="hero__subtitle">Results - Special Course</p>
           </div>
         </div>
       </div>
@@ -53,7 +86,7 @@ console.log('firstWinnersContent:', firstWinnersContent);
           </a>
           <a href="#winner-list" class="page-nav__link">
             <div class="page-nav__arrow"></div>
-            <span class="page-nav__text">1次当選者一覧</span>
+            <span class="page-nav__text">当選者一覧</span>
           </a>
         </nav>
       </div>
@@ -69,7 +102,7 @@ console.log('firstWinnersContent:', firstWinnersContent);
         />
         
         <div class="section-content">
-          <!-- 当選された方 -->
+          <!-- 本結果で決定したコースへの参加をされる方 -->
           <div class="procedure-box">
             <h3 class="procedure-box__title">本結果で決定したコースへの参加をされる方</h3>
             
@@ -79,107 +112,82 @@ console.log('firstWinnersContent:', firstWinnersContent);
                   <span class="step__label">step</span>
                   <span class="step__number">01</span>
                 </div>
-                <h4 class="step__title">本ページ下部の「１次募集当選者一覧」から、申込時に発番された受付番号と、当選番号を照らし合わせてどちらのコースに当選したか確認する。</h4>
+                <h4 class="step__title">申込時に発番された受付番号と、本ページ下部の募集当選者一覧に記載されている当選番号を照らし合わせて確認する。</h4>
                 <p class="step__description"></p>
               </div>
               
-              <div class="step-connector"></div>
-              
-              <div class="step">
-                <div class="step__header">
-                  <span class="step__label">step</span>
-                  <span class="step__number">02</span>
-                </div>
-                <h4 class="step__title">下記の参加意向確認フォームリンクから参加意向を入力する。</h4>
-                <p class="step__description">10月3日（木）17時までに入力をお願いします。こちらのフォームへ回答いただくことで、当選コースへの参加が確定します。期日までに入力がない場合は、キャンセル扱いとなりますので、ご理解ください。</p>
-                
-                {intentionButtons.length > 0 && (
-                  <div class="step__button-wrapper">
-                    {intentionButtons.map((button) => {
-                      // 外部リンクかどうかを判定
-                      const isExternalLink = button.url.startsWith('http://') || button.url.startsWith('https://');
-                      
-                      return (
-                        <div class="step__button-item">
-                          {button.labelAbove && (
-                            <p class="step__button-label-above" set:html={button.labelAbove.replace(/\n/g, '<br>')}></p>
-                          )}
-                          <a 
-                            href={button.url} 
-                            class="step__button base-button base-button--blue"
-                            target={isExternalLink ? '_blank' : undefined}
-                            rel={isExternalLink ? 'noopener noreferrer' : undefined}
-                          >
-                            <span class="base-button__text" set:html={button.buttonText.replace(/\n/g, '<br>')}></span>
-                            <div class="base-button__icon">
-                              {isExternalLink ? (
-                                <div class="base-button__icon-external">
-                                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M18.2609 18.2609H1.73913V1.73913H6.95652V0H0.869565C0.389351 0 0 0.389351 0 0.869565V19.1304C0 19.6106 0.389351 20 0.869565 20H19.1304C19.6106 20 20 19.6106 20 19.1304V13.0435H18.2609V18.2609Z" fill="currentColor"/>
-                                    <path d="M19.1304 0H11.3043V1.73913H17.0311L7.21118 11.559L8.44097 12.7888L18.2609 2.96892V8.69565H20V0.869565C20 0.389351 19.6106 0 19.1304 0Z" fill="currentColor"/>
-                                  </svg>
-                                </div>
-                              ) : (
-                                <div class="base-button__icon-arrow"></div>
-                              )}
-                            </div>
-                          </a>
-                          {button.labelBelow && (
-                            <p class="step__button-label-below" set:html={button.labelBelow.replace(/\n/g, '<br>')}></p>
-                          )}
-                        </div>
-                      );
-                    })}
+              {intentionButtons.length > 0 && (
+                <>
+                  <div class="step-connector"></div>
+                  
+                  <div class="step">
+                    <div class="step__header">
+                      <span class="step__label">step</span>
+                      <span class="step__number">02</span>
+                    </div>
+                    <h4 class="step__title">下記の参加意向確認フォームリンク参加意向を入力する。</h4>
+                    <p class="step__description">こちらのフォームへ回答いただくことで、当選コースへの参加が確定します。期日までに入力がない場合は、キャンセル扱いとなりますので、ご理解ください。</p>
+                    
+                    <div class="step__button-wrapper">
+                      {intentionButtons.map((button) => {
+                        // 外部リンクかどうかを判定
+                        const isExternalLink = button.url.startsWith('http://') || button.url.startsWith('https://');
+                        
+                        return (
+                          <div class="step__button-item">
+                            {button.labelAbove && (
+                              <p class="step__button-label-above" set:html={button.labelAbove.replace(/\n/g, '<br>')}></p>
+                            )}
+                            <a 
+                              href={button.url} 
+                              class="step__button base-button base-button--blue"
+                              target={isExternalLink ? '_blank' : undefined}
+                              rel={isExternalLink ? 'noopener noreferrer' : undefined}
+                            >
+                              <span class="base-button__text" set:html={button.buttonText.replace(/\n/g, '<br>')}></span>
+                              <div class="base-button__icon">
+                                {isExternalLink ? (
+                                  <div class="base-button__icon-external">
+                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M18.2609 18.2609H1.73913V1.73913H6.95652V0H0.869565C0.389351 0 0 0.389351 0 0.869565V19.1304C0 19.6106 0.389351 20 0.869565 20H19.1304C19.6106 20 20 19.6106 20 19.1304V13.0435H18.2609V18.2609Z" fill="currentColor"/>
+                                      <path d="M19.1304 0H11.3043V1.73913H17.0311L7.21118 11.559L8.44097 12.7888L18.2609 2.96892V8.69565H20V0.869565C20 0.389351 19.6106 0 19.1304 0Z" fill="currentColor"/>
+                                    </svg>
+                                  </div>
+                                ) : (
+                                  <div class="base-button__icon-arrow"></div>
+                                )}
+                              </div>
+                            </a>
+                            {button.labelBelow && (
+                              <p class="step__button-label-below" set:html={button.labelBelow.replace(/\n/g, '<br>')}></p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          <!-- 落選・未応募の方 -->
-          <div class="procedure-box">
-            <h3 class="procedure-box__title">1次募集で落選となった方・1次募集に応募していないが参加を希望される方<br><span class="procedure-box__subtitle">（市外在住の方も可）</span></h3>
-            
-            <div class="procedure-box__content">
-              <div class="step">
-                <div class="step__header">
-                  <span class="step__label">step</span>
-                  <span class="step__number">01</span>
-                </div>
-                <h4 class="step__title">2次募集にてご希望講座を申し込む</h4>
-                <p class="step__description">まだ定員に余裕のあるコースにつきましては、10月7日（月）12時から2次募集（宗像市外在住の小中学生も応募可能）を行います。<br>先着順で応募を受け付けますので、1次募集で落選となった方、まだメインキャンパスにお申込みされていない方は、ご興味のあるコースがございましたら、ぜひお申込みください。<br>※1次募集で当選された方は、2次募集のコースへの変更はできません。</p>
-              </div>
-              
-              <div class="step-connector"></div>
-              
-              <div class="step">
-                <div class="step__header">
-                  <span class="step__label">step</span>
-                  <span class="step__number">02</span>
-                </div>
-                <h4 class="step__title">申し込み時に発番された番号をご確認</h4>
-                <p class="step__description">2次募集は1次募集と異なり、申込フォームへの入力が完了し、受付番号が発番された時点で、当該コースへの参加が確定します。当選番号の発表や、申込コースへの参加の意向確認は行いませんので、ご理解ください。</p>
-              </div>
+                </>
+              )}
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 1次当選者一覧 Section -->
+    <!-- 当選者一覧 Section -->
     <section id="winner-list" class="content-section">
       <div class="content-section__container">
         <ContentSectionHeader 
           englishTitle=""
-          title="1次当選者一覧"
+          title="当選者一覧"
           class="fade-up"
         />
         
         <div class="section-content">
-          <p class="winner-list-intro">下記より、当選コースをご確認ください。</p>
+          <p class="winner-list-intro">下記より、当選をご確認ください。</p>
           
-          {firstWinnersContent && (
-            <div class="rich-editor-content" set:html={firstWinnersContent}></div>
+          {course.winners && (
+            <div class="rich-editor-content" set:html={course.winners}></div>
           )}
         </div>
       </div>
@@ -193,7 +201,7 @@ console.log('firstWinnersContent:', firstWinnersContent);
   .hero {
     position: relative;
     padding: 0;
-    background: linear-gradient(to bottom, $brand-sub-yellow 0%, $background-primary 70%, $background-primary 100%);
+    background: linear-gradient(to bottom, $brand-sub-turquoise 0%, $background-primary 70%, $background-primary 100%);
     border-radius: 0 rem(120) 0 0;
     
     @include breakpoint-up(md) {
@@ -217,7 +225,7 @@ console.log('firstWinnersContent:', firstWinnersContent);
         right: 0;
         width: 100%;
         height: 100%;
-        background-color: $brand-secondary;
+        background-color: $brand-turquoise;
         z-index: -1;
       }
     }
@@ -276,7 +284,7 @@ console.log('firstWinnersContent:', firstWinnersContent);
 
     &__subtitle {
       @include font-en-s(semibold);
-      color: $brand-secondary;
+      color: $brand-turquoise;
       margin: 0 0 rem(30) 0;
       font-weight: 500;
       letter-spacing: 0.05em;
@@ -397,7 +405,7 @@ console.log('firstWinnersContent:', firstWinnersContent);
       }
 
       &:hover {
-        color: $brand-secondary;
+        color: $brand-turquoise;
         text-decoration: none;
 
         .page-nav__arrow {
@@ -525,7 +533,7 @@ console.log('firstWinnersContent:', firstWinnersContent);
     &__title {
       @include font-ja-m(semibold);
       color: $text-primary;
-      background-color: $brand-sub-yellow;
+      background-color: $brand-sub-turquoise;
       padding: rem(12) rem(16);
       border-radius: rem(8) rem(8) 0 0;
       line-height: 1.6;
@@ -546,13 +554,13 @@ console.log('firstWinnersContent:', firstWinnersContent);
     }
     
     &__content {
-      border-left: 2px solid $brand-sub-yellow;
-      border-bottom: 2px solid $brand-sub-yellow;
-      border-right: 2px solid $brand-sub-yellow;
+      border-left: 2px solid $brand-sub-turquoise;
+      border-bottom: 2px solid $brand-sub-turquoise;
+      border-right: 2px solid $brand-sub-turquoise;
       background-color: $background-primary !important;
       background-image: 
-        radial-gradient(circle, #feecc5 1px, transparent 1px),
-        radial-gradient(circle, #feecc5 1px, transparent 1px) !important;
+        radial-gradient(circle, $brand-sub-turquoise-low 1px, transparent 1px),
+        radial-gradient(circle, $brand-sub-turquoise-low 1px, transparent 1px) !important;
       background-position: 0 0, 6.5px 6.5px !important;
       background-size: 13px 13px !important;
       padding: rem(30);
@@ -705,15 +713,15 @@ console.log('firstWinnersContent:', firstWinnersContent);
       content: '';
       width: rem(12);
       height: rem(12);
-      border-right: 2px solid $brand-secondary;
-      border-bottom: 2px solid $brand-secondary;
+      border-right: 2px solid $brand-turquoise;
+      border-bottom: 2px solid $brand-turquoise;
       transform: rotate(45deg);
       
       @include breakpoint-up(lg) {
         width: rem(16);
         height: rem(16);
-        border-right: 3px solid $brand-secondary;
-        border-bottom: 3px solid $brand-secondary;
+        border-right: 3px solid $brand-turquoise;
+        border-bottom: 3px solid $brand-turquoise;
       }
     }
   }
@@ -914,67 +922,6 @@ console.log('firstWinnersContent:', firstWinnersContent);
       }
     }
     
-    // PDF プレビューブロック用のスタイル
-    :global(.pdf-preview-block) {
-      border: 1px solid $border-primary;
-      border-radius: rem(8);
-      margin: rem(16) 0;
-      overflow: hidden;
-      background: $background-primary;
-    }
-    
-    :global(.pdf-preview-header) {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: rem(12) rem(16);
-      background: $background-secondary;
-      border-bottom: 1px solid $border-primary;
-      
-      h4 {
-        @include font-ja-s(semibold);
-        color: $text-primary;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: rem(8);
-      }
-      
-      a {
-        @include font-ja-2s(semibold);
-        color: $text-link;
-        text-decoration: none;
-        padding: rem(4) rem(8);
-        border: 1px solid $text-link;
-        border-radius: rem(4);
-        transition: all 0.3s ease;
-        
-        &:hover {
-          background: $text-link;
-          color: $text-white;
-        }
-      }
-    }
-    
-    :global(.pdf-preview-container) {
-      position: relative;
-      background: $background-primary;
-      
-      iframe {
-        width: 100%;
-        height: rem(400);
-        border: none;
-        
-        @include breakpoint-up(md) {
-          height: rem(600);
-        }
-        
-        @include breakpoint-up(lg) {
-          height: rem(800);
-        }
-      }
-    }
-    
     // PDF Canvas表示用のスタイル
     :global(.pdf-canvas-block) {
       border: 1px solid $border-primary;
@@ -1095,6 +1042,7 @@ console.log('firstWinnersContent:', firstWinnersContent);
       text-align: center;
       height: rem(400);
       overflow-y: auto;
+      overflow-x: hidden;
       
       @include breakpoint-up(md) {
         padding: rem(16);
@@ -1106,7 +1054,14 @@ console.log('firstWinnersContent:', firstWinnersContent);
         height: rem(600);
       }
       
-      canvas {
+      .pdf-pages-container {
+        display: flex;
+        flex-direction: column;
+        gap: rem(8);
+        align-items: center;
+      }
+      
+      .pdf-page-canvas {
         max-width: 100%;
         height: auto;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);

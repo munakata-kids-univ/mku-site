@@ -2,18 +2,17 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import { 
-  getMainCampusCourseById,
-  getMainCampusCourses,
+  getSpecialCourseById,
+  getSpecialCourses,
   getGlobalSettings,
-  getMainCampusSettings
 } from '@/lib/microcms';
 import { convertYearToPath, convertPathToYear } from '@/utils/yearConverter';
 
 // 静的パス生成
 export async function getStaticPaths() {
   try {
-    // 全ての講座データを取得（年度フィルターなしで全件取得）
-    const allCourses = await getMainCampusCourses();
+    // 全ての特設講座データを取得（年度フィルターなしで全件取得）
+    const allCourses = await getSpecialCourses();
     
     if (!allCourses || allCourses.length === 0) {
       return [];
@@ -50,12 +49,10 @@ if (!year || !id) {
   return Astro.redirect('/404');
 }
 
-// グローバル設定とメインキャンパス設定を取得
+// グローバル設定を取得
 const globalSettings = await getGlobalSettings();
-const mainCampusSettings = await getMainCampusSettings();
 const currentYear = Array.isArray(globalSettings.currentYear) ? globalSettings.currentYear[0] : globalSettings.currentYear;
 const currentYearValue = currentYear; // currentYearValueとして定義
-const phase = Array.isArray(mainCampusSettings.phase) ? mainCampusSettings.phase[0] : mainCampusSettings.phase;
 
 // 講座データは既にpropsから取得済み
 if (!course) {
@@ -71,33 +68,31 @@ if (courseYear !== actualYear) {
 }
 
 // ページ情報
-const pageTitle = `${course.title} | メインキャンパス`;
+const pageTitle = `${course.title} | 特設講座`;
 const pageDescription = course.shortDescription || `${course.title}の詳細情報です。`;
 
 // パンくずリスト
 const currentYearPath = convertYearToPath(currentYear);
 const breadcrumbItems = [
   { label: 'ホーム', href: '/' },
-  { label: 'メインキャンパス', href: '/course/main-campus' },
-  { label: actualYear, href: '/course/main-campus' },
+  { label: '特設講座', href: '/course/special-course' },
+  { label: actualYear, href: '/course/special-course' },
   { label: course.title, current: true }
 ];
 
-// フェーズをステータス表示文字列に変換する関数
+// フェーズをステータス表示文字列に変換する関数（特設講座用に簡略化）
 function convertPhaseToStatus(phase: string): string {
   switch (phase) {
     case '募集前':
       return '募集前';
     case '募集締切':
       return '募集締切';
-    case '1次募集受付中':
-      return '1次募集受付中';
-    case '2次募集受付中':
-      return '2次募集受付中';
-    case '1次抽選作業中':
-      return '1次抽選作業中';
-    case '1次当選者発表':
-      return '1次当選者発表';
+    case '募集受付中':
+      return '募集受付中';
+    case '抽選作業中':
+      return '抽選作業中';
+    case '当選者発表':
+      return '当選者発表';
     case '開催中':
       return '開催中';
     case '終了':
@@ -108,7 +103,7 @@ function convertPhaseToStatus(phase: string): string {
 }
 
 // 講座のステータスを取得する関数（個別ステータス優先、フォールバックでフェーズ設定）
-function getCourseStatus(course: any, globalPhase: string, currentYearValue: string): string {
+function getCourseStatus(course: any, currentYearValue: string): string {
   // 講座の年度を取得
   const courseYearValue = Array.isArray(course.year) ? course.year[0] : course.year;
   
@@ -117,16 +112,13 @@ function getCourseStatus(course: any, globalPhase: string, currentYearValue: str
     return '募集終了';
   }
   
-  // 現在年度の講座の場合、既存のロジックを適用
-  // 個別の講座ステータスが設定されており、「フェーズ設定に従う」以外の場合はそれを使用
-  if (course.status && Array.isArray(course.status) && course.status.length > 0 && 
-      course.status[0] !== 'default' && course.status[0] !== 'フェーズ設定に従う') {
+  // 個別の講座ステータスが設定されている場合はそれを使用
+  if (course.status && Array.isArray(course.status) && course.status.length > 0) {
     return course.status[0];
   }
   
-  // 個別ステータスが未設定、default、または「フェーズ設定に従う」の場合、グローバルフェーズを変換して使用
-  const phaseValue = Array.isArray(globalPhase) ? globalPhase[0] : globalPhase;
-  return convertPhaseToStatus(phaseValue || '準備中');
+  // 特設講座はデフォルトで準備中
+  return '準備中';
 }
 
 // YouTubeまたはVimeoのURLから埋め込み用URLを生成する関数
@@ -155,20 +147,13 @@ function getStatusColorClass(status: string): string {
   switch (status) {
     case '募集前':
     case '募集締切':
-    case '募集終了':
-    case '準備中':
       return 'status-badge--dark-gray';
-    case '1次募集受付中':
-    case '2次募集受付中':
+    case '募集受付中':
       return 'status-badge--brand-secondary';
-    case '1次抽選作業中':
+    case '抽選作業中':
       return 'status-badge--brand-turquoise';
-    case '1次当選者発表':
+    case '当選者発表':
       return 'status-badge--brand-pink';
-    case '開催中':
-      return 'status-badge--brand-turquoise';
-    case '終了':
-      return 'status-badge--dark-gray';
     default:
       return 'status-badge--dark-gray';
   }
@@ -202,6 +187,17 @@ function getGradeColorClass(grade: string): string {
   
   // その他
   return 'special';
+}
+
+// executedDate から日本語フォーマットの日付を生成
+function formatJapaneseDate(dateString: string): string {
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const weekday = ['日', '月', '火', '水', '木', '金', '土'][date.getDay()];
+  
+  return `${year}年${month}月${day}日(${weekday})`;
 }
 ---
 
@@ -261,14 +257,14 @@ function getGradeColorClass(grade: string): string {
                   
                   {course.afterReport && (
                     <div class="after-report-section">
-                      <h3 class="after-report-section-title">参加者の感想</h3>
+                      <h4 class="after-report-section-title">参加者の感想</h4>
                       <div class="after-report-feedback rich-content" set:html={course.afterReport}></div>
                     </div>
                   )}
                   
                   {course.afterMovieUrl && (
                     <div class="after-report-section">
-                      <h3 class="after-report-section-title">動画</h3>
+                      <h4 class="after-report-section-title">動画</h4>
                       <div class="after-report-movie">
                         {(() => {
                           const embedUrl = getEmbedUrl(course.afterMovieUrl);
@@ -294,15 +290,15 @@ function getGradeColorClass(grade: string): string {
             </div>
           )}
           
-          <!-- 詳細情報と講座内容の横並びレイアウト -->
+          <!-- 詳細情報（1カラムレイアウト） -->
           <div class="course-info__content-wrapper">
-            <!-- 詳細情報セクション -->
+            <h2 class="course-info__section-title">講座詳細</h2>
             <div class="course-info__details">
               <div class="detail-item">
                 <div class="detail-item__label">募集状況：</div>
                 <div class="detail-item__value">
                   {(() => {
-                    const resolvedStatus = getCourseStatus(course, phase || '', currentYearValue);
+                    const resolvedStatus = getCourseStatus(course, currentYearValue);
                     return (
                       <span class={`status-badge ${getStatusColorClass(resolvedStatus || '準備中')}`}>
                         {resolvedStatus || '準備中'}
@@ -312,40 +308,31 @@ function getGradeColorClass(grade: string): string {
                 </div>
               </div>
               
-              {mainCampusSettings.executedDate && mainCampusSettings.executedDate.find(item => 
-                item.year === actualYear
-              ) && (
-                <>
-                  <div class="detail-item">
-                    <div class="detail-item__label">申込締切：</div>
-                    <div class="detail-item__value">
-                      {(() => {
-                        const executedItem = mainCampusSettings.executedDate.find(item => 
-                          item.year === actualYear
-                        );
-                        return executedItem ? `${executedItem.year} ${executedItem.date}` : '';
-                      })()}
-                    </div>
-                  </div>
-                  
-                  <div class="detail-item">
-                    <div class="detail-item__label">実施日：</div>
-                    <div class="detail-item__value">
-                      {(() => {
-                        const executedItem = mainCampusSettings.executedDate.find(item => 
-                          item.year === actualYear
-                        );
-                        return executedItem ? executedItem.date : '';
-                      })()}
-                    </div>
-                  </div>
-                </>
+              {course.applicationDeadline && (
+                <div class="detail-item">
+                  <div class="detail-item__label">申込締切：</div>
+                  <div class="detail-item__value">{formatJapaneseDate(course.applicationDeadline)}</div>
+                </div>
+              )}
+              
+              {course.executedDate && (
+                <div class="detail-item">
+                  <div class="detail-item__label">実施日：</div>
+                  <div class="detail-item__value">{formatJapaneseDate(course.executedDate)}</div>
+                </div>
+              )}
+              
+              {course.lectureTime && (
+                <div class="detail-item">
+                  <div class="detail-item__label">実施時間：</div>
+                  <div class="detail-item__value" set:html={course.lectureTime.replace(/\n/g, '<br>')}></div>
+                </div>
               )}
               
               {course.capacity && course.capacity > 0 && (
                 <div class="detail-item">
                   <div class="detail-item__label">定員：</div>
-                  <div class="detail-item__value">{course.capacity}</div>
+                  <div class="detail-item__value">{course.capacity}人</div>
                 </div>
               )}
               
@@ -353,7 +340,7 @@ function getGradeColorClass(grade: string): string {
                 <div class="detail-item">
                   <div class="detail-item__label">講座種別：</div>
                   <div class="detail-item__value">
-                    {Array.isArray(course.courseType) ? course.courseType.join(', ') : course.courseType}
+                    {Array.isArray(course.courseType) ? course.courseType.join('、') : course.courseType}
                   </div>
                 </div>
               )}
@@ -382,6 +369,9 @@ function getGradeColorClass(grade: string): string {
                 <div class="detail-item">
                   <div class="detail-item__label">対象：</div>
                   <div class="detail-item__value">
+                    <div class="target-description">
+                      {course.cityOutsideOk ? '市内在住、または市外にお住まいの' : '市内にお住まいの'}
+                    </div>
                     <div class="target-grades">
                       {(() => {
                         const grades = Array.isArray(course.targetGrades) ? course.targetGrades : [course.targetGrades];
@@ -395,23 +385,16 @@ function getGradeColorClass(grade: string): string {
               )}
               
               {course.venue && (
-                course.venue.openingMeeting || course.venue.lecture || course.venue.closingMeeting
-              ) && (
                 <div class="detail-item">
                   <div class="detail-item__label">会場：</div>
-                  <div class="detail-item__value">
-                    <div class="venue-group">
-                      {course.venue.openingMeeting && (
-                        <div>はじめの会：{course.venue.openingMeeting}</div>
-                      )}
-                      {course.venue.lecture && (
-                        <div>講座：{course.venue.lecture}</div>
-                      )}
-                      {course.venue.closingMeeting && (
-                        <div>終わりの会：{course.venue.closingMeeting}</div>
-                      )}
-                    </div>
-                  </div>
+                  <div class="detail-item__value" set:html={course.venue.replace(/\n/g, '<br>')}></div>
+                </div>
+              )}
+              
+              {course.participationFee && (
+                <div class="detail-item">
+                  <div class="detail-item__label">参加費：</div>
+                  <div class="detail-item__value" set:html={course.participationFee.replace(/\n/g, '<br>')}></div>
                 </div>
               )}
               
@@ -422,72 +405,80 @@ function getGradeColorClass(grade: string): string {
                 </div>
               )}
             </div>
-            
-            <!-- 講座内容セクション -->
-            <div class="course-info__schedule">
-              <h2 class="course-info__schedule-title">講座内容</h2>
-              {course.periods && course.periods.length > 0 && (
-                <div class="schedule-items">
-                  {course.periods.map((period, index) => (
-                    <div key={index} class="schedule-item">
-                      <div class="schedule-item__period">
-                        {(() => {
-                          // "1限" → "1" + "限目"、"1・2限" → "1・2" + "限目" のように分割
-                          const periodText = String(period.periodNo || ''); // 文字列に変換
-                          if (periodText && typeof periodText === 'string') {
-                            const match = periodText.match(/^(.+?)限$/);
-                            if (match) {
-                              const numberPart = match[1]; // "1" または "1・2"
-                              return (
-                                <>
-                                  <span class="period-number">{numberPart}</span>
-                                  <span class="period-suffix">限目</span>
-                                </>
-                              );
-                            }
-                          }
-                          // フォールバック：マッチしない場合はそのまま表示
-                          return `${periodText}目`;
-                        })()}
-                      </div>
-                      <div class="schedule-item__desc rich-content" set:html={period.periodDesc}></div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
+          
+          <!-- 申込・当選者発表ボタンセクション -->
+          {course.buttons && course.buttons.filter(button => {
+            const buttonType = Array.isArray(button.type) ? button.type[0] : button.type;
+            return button.visible && buttonType !== "参加意向確認";
+          }).length > 0 && (
+            <div class="application-buttons-section">
+              <div class="application-buttons-check-label">＼Check／</div>
+              <div class={`application-buttons-grid ${course.buttons.filter(button => {
+                const buttonType = Array.isArray(button.type) ? button.type[0] : button.type;
+                return button.visible && buttonType !== "参加意向確認";
+              }).length === 1 ? 'application-buttons-grid--single' : ''}`}>
+                {course.buttons.filter(button => {
+                  const buttonType = Array.isArray(button.type) ? button.type[0] : button.type;
+                  return button.visible && buttonType !== "参加意向確認";
+                }).map((button) => {
+                  // 外部リンクかどうかを判定
+                  const isExternalLink = button.url.startsWith('http://') || button.url.startsWith('https://');
+                  
+                  return (
+                    <div class="application-button-item">
+                      {button.labelAbove && (
+                        <p class="application-button-item__label-above" set:html={button.labelAbove.replace(/\n/g, '<br>')}></p>
+                      )}
+                      <div class="application-button-item__button-wrapper">
+                        <a 
+                          href={button.url} 
+                          class="application-button-item__button base-button base-button--blue"
+                          target={isExternalLink ? '_blank' : undefined}
+                          rel={isExternalLink ? 'noopener noreferrer' : undefined}
+                        >
+                          <span class="base-button__text" set:html={button.buttonText.replace(/\n/g, '<br>')}></span>
+                          <div class="base-button__icon">
+                            {isExternalLink ? (
+                              <div class="base-button__icon-external">
+                                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M18.2609 18.2609H1.73913V1.73913H6.95652V0H0.869565C0.389351 0 0 0.389351 0 0.869565V19.1304C0 19.6106 0.389351 20 0.869565 20H19.1304C19.6106 20 20 19.6106 20 19.1304V13.0435H18.2609V18.2609Z" fill="currentColor"/>
+                                  <path d="M19.1304 0H11.3043V1.73913H17.0311L7.21118 11.559L8.44097 12.7888L18.2609 2.96892V8.69565H20V0.869565C20 0.389351 19.6106 0 19.1304 0Z" fill="currentColor"/>
+                                </svg>
+                              </div>
+                            ) : (
+                              <div class="base-button__icon-arrow"></div>
+                            )}
+                          </div>
+                        </a>
+                        {button.labelBelow && (
+                          <p class="application-button-item__label-below" set:html={button.labelBelow.replace(/\n/g, '<br>')}></p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           
           <!-- 連絡事項セクション -->
           <div class="course-info__notices">
-            <h2 class="course-info__schedule-title">連絡事項</h2>
+            <h2 class="course-info__section-title">連絡事項</h2>
             <div class="notices-content">
-              <div class="notice-section">
-                <h3 class="notice-section__title">メインキャンパス全体連絡事項</h3>
-                <div class="notice-section__content rich-content">
-                  {mainCampusSettings.globalNotice ? (
-                    <div set:html={mainCampusSettings.globalNotice}></div>
-                  ) : (
-                    <p class="empty-notice">まだ連絡事項はありません。<br>開催日前日までにこまめに確認してください。</p>
-                  )}
-                </div>
-              </div>
-              <div class="notice-section">
-                <h3 class="notice-section__title">本講座向け連絡</h3>
-                <div class="notice-section__content rich-content">
-                  {course.noticeCourse ? (
-                    <div set:html={course.noticeCourse}></div>
-                  ) : (
-                    <p class="empty-notice">まだ連絡事項はありません。<br>開催日前日までにこまめに確認してください。</p>
-                  )}
-                </div>
+              <div class="notice-section__content rich-content">
+                {course.noticeCourse ? (
+                  <div set:html={course.noticeCourse}></div>
+                ) : (
+                  <p class="empty-notice">まだ連絡事項はありません。<br>開催日前日までにこまめに確認してください。</p>
+                )}
               </div>
             </div>
           </div>
           
           <!-- 準備物セクション -->
           <div class="course-info__preparation">
-            <h2 class="course-info__schedule-title">準備物</h2>
+            <h2 class="course-info__section-title">準備物</h2>
             <div class="preparation-content">
               <div class="rich-content">
                 {course.preparation ? (
@@ -501,7 +492,7 @@ function getGradeColorClass(grade: string): string {
           
           <!-- 受付・解散セクション -->
           <div class="course-info__reception">
-            <h2 class="course-info__schedule-title">受付・解散</h2>
+            <h2 class="course-info__section-title">受付・解散</h2>
             <div class="reception-content">
               <div class="rich-content">
                 {course.recpAndDism && typeof course.recpAndDism === 'string' ? (
@@ -523,12 +514,12 @@ function getGradeColorClass(grade: string): string {
 
 .course-detail {
   min-height: 100vh;
-  background-color: $brand-sub-yellow-low;
+  background-color: $brand-sub-turquoise-low;
   
   // ドット柄背景
   background-image: 
-    radial-gradient(circle, $brand-secondary 1.5px, transparent 1.5px),
-    radial-gradient(circle, $brand-secondary 1.5px, transparent 1.5px);
+    radial-gradient(circle, $brand-sub-turquoise 1.5px, transparent 1.5px),
+    radial-gradient(circle, $brand-sub-turquoise 1.5px, transparent 1.5px);
   background-position: 0 0, 6.5px 6.5px;
   background-size: 13px 13px;
 }
@@ -607,7 +598,7 @@ function getGradeColorClass(grade: string): string {
 }
 
 .stripe {
-  background-image: repeating-linear-gradient(135deg, $brand-secondary, $brand-secondary 10px, $brand-sub-yellow 10px, $brand-sub-yellow 30px);
+  background-image: repeating-linear-gradient(135deg, $brand-sub-turquoise, $brand-sub-turquoise 10px, $brand-sub-turquoise-low 10px, $brand-sub-turquoise-low 30px);
 }
 
 .course-info__year {
@@ -676,7 +667,7 @@ function getGradeColorClass(grade: string): string {
     left: rem(-10);
     width: rem(120);
     height: rem(120);
-    background-image: url('/images/ui/img_decoration-objects-yellow-01.svg');
+    background-image: url('/images/ui/img_decoration-objects-turquoise-01.svg');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: start;
@@ -712,7 +703,7 @@ function getGradeColorClass(grade: string): string {
     right: rem(-5);
     width: rem(160);
     height: rem(160);
-    background-image: url('/images/ui/img_decoration-dots-yellow-01.svg');
+    background-image: url('/images/ui/img_decoration-dots-turquoise-01.svg');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: bottom;
@@ -730,25 +721,10 @@ function getGradeColorClass(grade: string): string {
 .course-info__content-wrapper {
   display: flex;
   flex-direction: column;
-  gap: rem(32);
-  
-  @include breakpoint-up(lg) {
-    flex-direction: row;
-    gap: rem(48);
-  }
 }
 
 .course-info__details {
-  flex: 1;
-  padding-bottom: rem(20);
-
-  @include breakpoint-up(sm) {
-    padding-bottom: 0;
-  }
-}
-
-.course-info__schedule {
-  flex: 1;
+  width: 100%;
 }
 
 .detail-item {
@@ -958,6 +934,17 @@ function getGradeColorClass(grade: string): string {
   }
 }
 
+.course-info__section-title {
+  @include font-ja-m(semibold);
+  color: $text-secondary;
+  margin-bottom: rem(16);
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-l(semibold);
+    margin-bottom: rem(24);
+  }
+}
+
 .schedule-items {
   display: flex;
   flex-direction: column;
@@ -1144,6 +1131,14 @@ function getGradeColorClass(grade: string): string {
   }
 }
 
+// 対象学年エリアのスタイル
+.target-description {
+  @include font-ja-s;
+  color: $text-primary;
+  margin-bottom: rem(8);
+  line-height: 1.6;
+}
+
 // 学年タグのスタイル（scheduleページと同じ）
 .target-grades {
   display: flex;
@@ -1224,7 +1219,7 @@ function getGradeColorClass(grade: string): string {
   @include font-ja-s(semibold);
   color: $text-primary;
   margin-bottom: rem(8);
-  background: linear-gradient(transparent 60%, $brand-sub-yellow 60%);
+  background: linear-gradient(transparent 60%, $brand-sub-turquoise-low 60%);
   padding: rem(2) 0;
   display: inline-block;
 }
@@ -1735,7 +1730,7 @@ function getGradeColorClass(grade: string): string {
   @include font-ja-m(semibold);
   color: $text-primary;
   margin-bottom: rem(16);
-  background: linear-gradient(transparent 60%, $brand-sub-yellow 60%);
+  background: linear-gradient(transparent 60%, $brand-sub-turquoise-low 60%);
   padding: rem(2) 0;
   display: inline-block;
   
@@ -2124,6 +2119,280 @@ function getGradeColorClass(grade: string): string {
       @include font-ja-s;
       padding: rem(40);
     }
+  }
+}
+
+/* 申込ボタンセクション */
+.application-buttons-section {
+  margin-top: rem(40);
+  margin-bottom: rem(20);
+  
+  @include breakpoint-up(md) {
+    margin-top: rem(60);
+    margin-bottom: rem(30);
+  }
+}
+
+.application-buttons-check-label {
+  @include font-ja-l(semibold);
+  color: $brand-secondary;
+  text-align: center;
+  margin-bottom: rem(10);
+  animation: checkScale 2s ease-in-out infinite;
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-2l(semibold);
+    margin-bottom: rem(10);
+  }
+}
+
+.application-buttons-grid {
+  display: flex;
+  flex-direction: column;
+  gap: rem(20);
+  align-items: center;
+  
+  @include breakpoint-up(lg) {
+    display: grid;
+    gap: rem(24);
+    max-width: rem(900);
+    margin: 0 auto;
+    justify-items: stretch;
+    align-items: stretch;
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  @include breakpoint-up(xl) {
+    max-width: rem(1160);
+  }
+  
+  // 1つの場合の特別なスタイル
+  &.application-buttons-grid--single {
+    @include breakpoint-up(lg) {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      max-width: rem(720);
+    }
+    
+    @include breakpoint-up(xl) {
+      max-width: rem(850);
+    }
+  }
+}
+
+.application-button-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  max-width: rem(420);
+  padding: rem(28) rem(18);
+  border: 2px solid $brand-secondary;
+  border-radius: $radius-m;
+  background-color: $background-primary !important;
+  background-image: 
+    radial-gradient(circle, #feecc5 1px, transparent 1px),
+    radial-gradient(circle, #feecc5 1px, transparent 1px) !important;
+  background-position: 0 0, 6.5px 6.5px !important;
+  background-size: 13px 13px !important;
+  animation: buttonBoxScale 2.5s ease-in-out infinite;
+  
+  @include breakpoint-up(md) {
+    padding: rem(36) rem(20) !important;
+    border-radius: $radius-l;
+    max-width: rem(480);
+  }
+  
+  @include breakpoint-up(lg) {
+    padding: rem(32) rem(30);
+    
+    // 複数ボタンの場合：max-widthなし（stretch）
+    .application-buttons-grid:not(.application-buttons-grid--single) & {
+      max-width: none;
+    }
+    
+    // 単体ボタンの場合：適切なmax-width維持
+    .application-buttons-grid.application-buttons-grid--single & {
+      max-width: rem(720);
+    }
+  }
+  
+  @include breakpoint-up(xl) {
+    padding: rem(40) rem(40) !important;
+    
+    // 複数ボタンの場合：max-widthなし（stretch）
+    .application-buttons-grid:not(.application-buttons-grid--single) & {
+      max-width: none;
+    }
+    
+    // 単体ボタンの場合：適切なmax-width維持
+    .application-buttons-grid.application-buttons-grid--single & {
+      max-width: rem(850);
+    }
+  }
+  
+  &__label-above {
+    @include font-ja-s(semibold);
+    color: $text-secondary;
+    margin: 0 0 rem(16) 0;
+    text-align: left;
+    line-height: 1.6;
+    
+    @include breakpoint-up(md) {
+      margin-bottom: rem(20);
+    }
+  }
+  
+  &__button-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-grow: 1;
+    justify-content: center;
+    margin-top: rem(16);
+    
+    @include breakpoint-up(md) {
+      margin-top: rem(20);
+    }
+  }
+  
+  &__button {
+    color: $text-white !important;
+    text-decoration: none !important;
+    
+    &:hover {
+      color: $text-white !important;
+      text-decoration: none !important;
+    }
+    
+    &:focus {
+      color: $text-white !important;
+      text-decoration: none !important;
+    }
+    
+    &:visited {
+      color: $text-white !important;
+      text-decoration: none !important;
+    }
+    
+    .base-button__text {
+      color: $text-white !important;
+    }
+  }
+  
+  &__label-below {
+    @include font-ja-s(semibold);
+    color: $text-primary;
+    margin: rem(5) 0 0 0;
+    text-align: center;
+    line-height: 1.6;
+  }
+}
+
+// .course-info 内のボタンのsm未満時対応
+.course-info .application-button-item {
+  // sm未満のみボタンラッパーも幅いっぱいに
+  @include breakpoint-down(sm) {
+    max-width: 100%;
+    padding: rem(20) rem(12);
+    
+    // ボタンラッパーも幅いっぱいに
+    .application-button-item__button-wrapper {
+      width: 100% !important;
+      display: block !important;
+    }
+    
+    .base-button {
+      // sm未満時のみpadding内いっぱいの幅に（!importantで強制上書き）
+      width: 100% !important;
+      min-width: auto !important;
+      max-width: none !important;
+      display: inline-flex !important; // flexを維持してアライメントを保つ
+      padding: rem(10) rem(8) rem(10) rem(20) !important;
+      
+      .base-button__text {
+        padding-right: rem(6);
+        font-size: rem(14);
+        line-height: 1.4;
+      }
+      
+      .base-button__icon {
+        right: rem(6) !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: rem(50);
+        height: rem(50);
+      }
+    }
+  }
+}
+
+/* 外部リンクアイコン（SVG） */
+:global(.base-button__icon-external) {
+  width: rem(16);
+  height: rem(16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.5s ease;
+  
+  svg {
+    width: 100%;
+    height: 100%;
+    transition: all 0.5s ease;
+  }
+}
+
+// ブルーボタン用の外部リンクアイコン
+:global(.base-button--blue .base-button__icon-external) {
+  color: $brand-primary;
+}
+
+:global(.base-button--blue:hover .base-button__icon-external) {
+  color: $brand-secondary;
+  transform: rotate(360deg);
+}
+
+// ホワイトボタン用の外部リンクアイコン
+:global(.base-button--white .base-button__icon-external) {
+  color: $background-primary;
+}
+
+:global(.base-button--white:hover .base-button__icon-external) {
+  color: $brand-secondary;
+  transform: rotate(360deg);
+}
+
+// ピンクボタン用の外部リンクアイコン
+:global(.base-button--pink .base-button__icon-external) {
+  color: $brand-pink;
+}
+
+:global(.base-button--pink:hover .base-button__icon-external) {
+  color: $brand-secondary;
+  transform: rotate(360deg);
+}
+
+/* スケールアニメーション */
+@keyframes checkScale {
+  0%, 100% { 
+    transform: scale(1); 
+  }
+  50% { 
+    transform: scale(1.08); 
+  }
+}
+
+@keyframes buttonBoxScale {
+  0%, 100% { 
+    transform: scale(1); 
+  }
+  40% { 
+    transform: scale(1.02); 
+  }
+  60% { 
+    transform: scale(1.02); 
   }
 }
 

@@ -56,7 +56,7 @@ const courseCards = filteredCourses.map(course => ({
   href: `/course/special-course/${currentYearPath}/${course.id}`,
   providerNames: course.providerItem?.map(item => item.providerName).join('、') || '',
   targetGrades: Array.isArray(course.targetGrades) ? course.targetGrades : (course.targetGrades ? [course.targetGrades] : []),
-  hasReport: !!(course.afterImages?.length || course.afterReport || course.afterMovieUrl)
+  hasReport: !!(course.afterImages?.length || course.instructor || course.afterReport || course.afterMovieUrl)
 }));
 
 
@@ -84,20 +84,13 @@ function getStatusColorClass(status: string): string {
   switch (status) {
     case '募集前':
     case '募集締切':
-    case '募集終了':
-    case '準備中':
       return 'status-badge--dark-gray';
-    case '1次募集受付中':
-    case '2次募集受付中':
+    case '募集受付中':
       return 'status-badge--brand-secondary';
-    case '1次抽選作業中':
+    case '抽選作業中':
       return 'status-badge--brand-turquoise';
-    case '1次当選者発表':
+    case '当選者発表':
       return 'status-badge--brand-pink';
-    case '開催中':
-      return 'status-badge--brand-turquoise';
-    case '終了':
-      return 'status-badge--dark-gray';
     default:
       return 'status-badge--dark-gray';
   }
@@ -1650,8 +1643,10 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   border: 2px solid $brand-turquoise;
   border-radius: $radius-m;
   background-color: $background-primary !important;
-  background-image: radial-gradient(circle, #c5f3fe 1.5px, transparent 1.5px) !important;
-  background-position: 0 0 !important;
+  background-image: 
+    radial-gradient(circle, #c5f3fe 1px, transparent 1px),
+    radial-gradient(circle, #c5f3fe 1px, transparent 1px) !important;
+  background-position: 0 0, 6.5px 6.5px !important;
   background-size: 13px 13px !important;
   animation: buttonBoxScale 2.5s ease-in-out infinite;
   

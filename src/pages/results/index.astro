@@ -3,7 +3,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import HeroSection from "../../components/HeroSection.astro";
 import Breadcrumb from "../../components/Breadcrumb.astro";
 import ContentSectionHeader from "../../components/ContentSectionHeader.astro";
-import { getMainCampusSettings } from "../../lib/microcms.ts";
+import { getMainCampusSettings, getSpecialCourses } from "../../lib/microcms.ts";
 
 const breadcrumbItems = [
   { href: "/", label: "ホーム" },
@@ -16,6 +16,17 @@ const buttons = mainCampusSettings.buttons?.filter((button: any) => {
   const buttonType = Array.isArray(button.type) ? button.type[0] : button.type;
   return button.visible && buttonType !== "参加意向確認";
 }) || [];
+
+// 特設講座データを取得してボタンが存在するもののみフィルタリング
+const specialCourses = await getSpecialCourses();
+const specialCoursesWithButtons = specialCourses.filter((course: any) => {
+  if (!course.buttons) return false;
+  const filteredButtons = course.buttons.filter((button: any) => {
+    const buttonType = Array.isArray(button.type) ? button.type[0] : button.type;
+    return button.visible && buttonType !== "参加意向確認";
+  });
+  return filteredButtons.length > 0;
+});
 ---
 
 <BaseLayout title="当選者発表" description="むなかた子ども大学各講座の当選結果を掲載するページです。令和7年度メインキャンパスや特設講座にお申し込みいただいた皆さまの当選番号を一覧でご確認いただけます。">
@@ -68,7 +79,7 @@ const buttons = mainCampusSettings.buttons?.filter((button: any) => {
         <div class="results-content">
           {buttons.length > 0 ? (
             <div class="application-buttons-section">
-              <div class="application-buttons-grid">
+              <div class={`application-buttons-grid ${buttons.length === 1 ? 'application-buttons-grid--single' : ''}`}>
                 {buttons.map((button) => {
                   // 外部リンクかどうかを判定
                   const isExternalLink = button.url.startsWith('http://') || button.url.startsWith('https://');
@@ -116,7 +127,7 @@ const buttons = mainCampusSettings.buttons?.filter((button: any) => {
     </section>
 
     <!-- 特設講座 Section -->
-    <section id="special-course" class="content-section">
+    <section id="special-course" class="content-section content-section--special">
       <div class="content-section__container">
         <ContentSectionHeader 
           englishTitle=""
@@ -125,8 +136,63 @@ const buttons = mainCampusSettings.buttons?.filter((button: any) => {
         />
         
         <div class="results-content">
-          <!-- 内容は後ほど追加予定 -->
-          <p class="results-placeholder">当選結果の内容をこちらに掲載予定です。</p>
+          {specialCoursesWithButtons.length > 0 ? (
+            specialCoursesWithButtons.map((course) => {
+              const courseButtons = course.buttons.filter((button: any) => {
+                const buttonType = Array.isArray(button.type) ? button.type[0] : button.type;
+                return button.visible && buttonType !== "参加意向確認";
+              });
+              
+              return (
+                <div class="special-course-item">
+                  <h3 class="special-course-item__title">{course.title}</h3>
+                  <div class="application-buttons-section">
+                    <div class={`application-buttons-grid ${courseButtons.length === 1 ? 'application-buttons-grid--single' : ''}`}>
+                      {courseButtons.map((button) => {
+                        // 外部リンクかどうかを判定
+                        const isExternalLink = button.url.startsWith('http://') || button.url.startsWith('https://');
+                        
+                        return (
+                          <div class="application-button-item">
+                            {button.labelAbove && (
+                              <p class="application-button-item__label-above" set:html={button.labelAbove.replace(/\n/g, '<br>')}></p>
+                            )}
+                            <div class="application-button-item__button-wrapper">
+                              <a 
+                                href={button.url} 
+                                class="application-button-item__button base-button base-button--blue"
+                                target={isExternalLink ? '_blank' : undefined}
+                                rel={isExternalLink ? 'noopener noreferrer' : undefined}
+                              >
+                                <span class="base-button__text" set:html={button.buttonText.replace(/\n/g, '<br>')}></span>
+                                <div class="base-button__icon">
+                                  {isExternalLink ? (
+                                    <div class="base-button__icon-external">
+                                      <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M18.2609 18.2609H1.73913V1.73913H6.95652V0H0.869565C0.389351 0 0 0.389351 0 0.869565V19.1304C0 19.6106 0.389351 20 0.869565 20H19.1304C19.6106 20 20 19.6106 20 19.1304V13.0435H18.2609V18.2609Z" fill="currentColor"/>
+                                        <path d="M19.1304 0H11.3043V1.73913H17.0311L7.21118 11.559L8.44097 12.7888L18.2609 2.96892V8.69565H20V0.869565C20 0.389351 19.6106 0 19.1304 0Z" fill="currentColor"/>
+                                      </svg>
+                                    </div>
+                                  ) : (
+                                    <div class="base-button__icon-arrow"></div>
+                                  )}
+                                </div>
+                              </a>
+                              {button.labelBelow && (
+                                <p class="application-button-item__label-below" set:html={button.labelBelow.replace(/\n/g, '<br>')}></p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <p class="results-placeholder">当選結果の内容をこちらに掲載予定です。</p>
+          )}
         </div>
       </div>
     </section>
@@ -394,14 +460,19 @@ const buttons = mainCampusSettings.buttons?.filter((button: any) => {
   }
 
   .content-section {
-    padding: rem(80) 0 rem(120);
+    padding: rem(40) 0 rem(50);
     background: $background-primary;
     @include breakpoint-up(xl) {
-      padding: rem(90) 0 rem(160);
+      padding: rem(50) 0 rem(70);
     }
 
     &:nth-child(even) {
       background: $background-secondary;
+    }
+    
+    // 特設講座セクションは常にbackground-primary
+    &--special {
+      background: $background-primary !important;
     }
 
     &__container {
@@ -480,13 +551,45 @@ const buttons = mainCampusSettings.buttons?.filter((button: any) => {
     margin: 0;
   }
 
+  /* 特設講座関連スタイル */
+  .special-course-item {
+    margin-bottom: rem(60);
+    padding-bottom: rem(50);
+    
+    @include breakpoint-up(md) {
+      margin-bottom: rem(80);
+      padding-bottom: rem(60);
+    }
+    
+    &:not(:last-child) {
+      border-bottom: 2px solid $border-secondary;
+    }
+    
+    &:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    
+    &__title {
+      @include font-ja-m(semibold);
+      color: $text-secondary;
+      text-align: center;
+      margin: 0 0 rem(10) 0;
+      
+      @include breakpoint-up(lg) {
+        @include font-ja-l(semibold);
+        margin-bottom: rem(20);
+      }
+    }
+  }
+
   /* 申込ボタンセクション */
   .application-buttons-section {
-    margin-top: rem(40);
+    margin-top: rem(20);
     margin-bottom: rem(20);
     
     @include breakpoint-up(md) {
-      margin-top: rem(60);
+      margin-top: rem(30);
       margin-bottom: rem(30);
     }
   }
@@ -517,25 +620,23 @@ const buttons = mainCampusSettings.buttons?.filter((button: any) => {
       margin: 0 auto;
       justify-items: stretch;
       align-items: stretch;
-      
-      // 1つの場合：中央配置
-      &:has(.application-button-item:only-child) {
-        grid-template-columns: 1fr;
-        justify-items: center;
-        max-width: rem(500);
-      }
-      
-      // 2つ以上の場合：2列グリッド
-      &:not(:has(.application-button-item:only-child)) {
-        grid-template-columns: 1fr 1fr;
-      }
+      grid-template-columns: 1fr 1fr;
     }
     
     @include breakpoint-up(xl) {
-      max-width: rem(1000);
+      max-width: rem(1160);
+    }
+    
+    // 1つの場合の特別なスタイル
+    &.application-buttons-grid--single {
+      @include breakpoint-up(lg) {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        max-width: rem(720);
+      }
       
-      &:has(.application-button-item:only-child) {
-        max-width: rem(550);
+      @include breakpoint-up(xl) {
+        max-width: rem(850);
       }
     }
   }
@@ -551,10 +652,20 @@ const buttons = mainCampusSettings.buttons?.filter((button: any) => {
     border: 2px solid $brand-secondary;
     border-radius: $radius-m;
     background-color: $background-primary !important;
-    background-image: radial-gradient(circle, #feecc5 1.5px, transparent 1.5px) !important;
-    background-position: 0 0 !important;
+    background-image: 
+      radial-gradient(circle, #feecc5 1px, transparent 1px),
+      radial-gradient(circle, #feecc5 1px, transparent 1px) !important;
+    background-position: 0 0, 6.5px 6.5px !important;
     background-size: 13px 13px !important;
     animation: buttonBoxScale 2.5s ease-in-out infinite;
+    
+    // 特設講座セクション内のボタンも黄色テーマを維持
+    .content-section--special & {
+      border: 2px solid $brand-secondary;
+      background-image: 
+        radial-gradient(circle, #feecc5 1px, transparent 1px),
+        radial-gradient(circle, #feecc5 1px, transparent 1px) !important;
+    }
     
     @include breakpoint-up(md) {
       padding: rem(36) rem(20) !important;
@@ -566,13 +677,13 @@ const buttons = mainCampusSettings.buttons?.filter((button: any) => {
       padding: rem(32) rem(30);
       
       // 複数ボタンの場合：max-widthなし（stretch）
-      .application-buttons-grid:not(:has(.application-button-item:only-child)) & {
+      .application-buttons-grid:not(.application-buttons-grid--single) & {
         max-width: none;
       }
       
       // 単体ボタンの場合：適切なmax-width維持
-      .application-buttons-grid:has(.application-button-item:only-child) & {
-        max-width: rem(480);
+      .application-buttons-grid.application-buttons-grid--single & {
+        max-width: rem(720);
       }
     }
     
@@ -580,13 +691,13 @@ const buttons = mainCampusSettings.buttons?.filter((button: any) => {
       padding: rem(40) rem(40) !important;
       
       // 複数ボタンの場合：max-widthなし（stretch）
-      .application-buttons-grid:not(:has(.application-button-item:only-child)) & {
+      .application-buttons-grid:not(.application-buttons-grid--single) & {
         max-width: none;
       }
       
       // 単体ボタンの場合：適切なmax-width維持
-      .application-buttons-grid:has(.application-button-item:only-child) & {
-        max-width: rem(520);
+      .application-buttons-grid.application-buttons-grid--single & {
+        max-width: rem(850);
       }
     }
     
@@ -693,6 +804,7 @@ const buttons = mainCampusSettings.buttons?.filter((button: any) => {
     color: $brand-secondary;
     transform: rotate(360deg);
   }
+
 
   /* スケールアニメーション */
   @keyframes checkScale {

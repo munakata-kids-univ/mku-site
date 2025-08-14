@@ -1,6 +1,19 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
-import { Image } from "astro:assets";
+import { 
+  getGlobalSettings,
+  getSpecialCourses 
+} from '../../../lib/microcms';
+
+// データ取得
+const globalSettings = await getGlobalSettings();
+const currentYear = globalSettings.currentYear;
+
+// 過去の実績セクション用：全年度の講座データを取得
+const allCourses = await getSpecialCourses();
+
+// 現行年度の数値を取得
+const currentYearValue = Array.isArray(currentYear) ? currentYear[0] : currentYear;
 ---
 
 <BaseLayout title="過去の実績 - 特設講座" description="むなかた子ども大学特設講座の過去の実績をご紹介します。特別なテーマや季節に合わせて開催される講座で、子どもたちの新しい発見と学びの記録をご覧ください。">
@@ -38,12 +51,48 @@ import { Image } from "astro:assets";
       </div>
     </div>
 
-    <!-- コンテンツは後で追加 -->
-    <section class="content-placeholder">
-      <div class="content-placeholder__container">
-        <p class="content-placeholder__text">
-          特設講座の過去の実績コンテンツは/course/special-courseの制作完了後に追加予定です。
-        </p>
+    <!-- 過去の実績 -->
+    <section class="past-results-section">
+      <div class="past-results-section__container">
+        <div class="past-results-section__content">
+          <div class="past-results-buttons">
+            {(() => {
+              // 全講座から年度を抽出し、重複を除去
+              const allYears = allCourses.map(course => {
+                const courseYear = Array.isArray(course.year) ? course.year[0] : course.year;
+                return courseYear;
+              }).filter((year, index, self) => self.indexOf(year) === index);
+              
+              // 現在年度の数字部分を取得（令和7年度 → 7）
+              const currentYearNum = parseInt(currentYearValue.replace('令和', '').replace('年度', ''));
+              
+              // 現在年度より小さい年度のみフィルタリングし、数字の降順でソート
+              const pastYears = allYears
+                .filter(year => year && typeof year === 'string') // undefinedと非文字列をフィルタリング
+                .map(year => {
+                  const yearNum = parseInt(year.replace('令和', '').replace('年度', ''));
+                  return { original: year, num: yearNum };
+                })
+                .filter(yearObj => yearObj.num < currentYearNum)
+                .sort((a, b) => b.num - a.num) // 降順ソート
+                .map(yearObj => yearObj.original);
+              
+              return pastYears.map(year => {
+                if (!year) return null;
+                const yearNum = parseInt(year.replace('令和', '').replace('年度', ''));
+                const urlYear = `r${yearNum.toString().padStart(2, '0')}`;
+                return (
+                  <a href={`/course/special-course/${urlYear}`} class="base-button base-button--blue">
+                    <span class="base-button__text">{year}</span>
+                    <div class="base-button__icon">
+                      <div class="base-button__icon-arrow"></div>
+                    </div>
+                  </a>
+                );
+              });
+            })()}
+          </div>
+        </div>
       </div>
     </section>
   </main>
@@ -218,29 +267,83 @@ import { Image } from "astro:assets";
     }
   }
 
-  .content-placeholder {
-    padding: rem(60) 0 rem(120);
+  .past-results-section {
+    padding: rem(60) 0 rem(100);
     background: $background-primary;
+
     @include breakpoint-up(lg) {
-      padding: rem(80) 0 rem(160);
+      padding: rem(100) 0 rem(120);
     }
 
     &__container {
       margin: 0 auto;
       padding: 0 5%;
+
       @include breakpoint-up(xl) {
         padding: 0 rem(50);
       }
     }
 
-    &__text {
-      @include font-ja-s;
-      color: $text-primary;
-      line-height: 1.8;
-      margin: 0;
-      text-align: center;
+    &__content {
+      max-width: rem(1200);
+      margin: 0 auto;
+    }
+  }
+
+  .past-results-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: rem(16);
+    align-items: center;
+
+    @include breakpoint-up(sm) {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: rem(20);
       max-width: rem(600);
       margin: 0 auto;
+    }
+
+    @include breakpoint-up(md) {
+      grid-template-columns: repeat(3, 1fr);
+      max-width: rem(900);
+      gap: rem(24);
+    }
+
+    @include breakpoint-up(lg) {
+      grid-template-columns: repeat(4, 1fr);
+      max-width: rem(1200);
+      gap: rem(30);
+    }
+  }
+
+  .base-button {
+    width: 100%;
+    max-width: rem(280);
+    color: $text-white !important;
+    text-decoration: none !important;
+
+    @include breakpoint-up(sm) {
+      max-width: none;
+    }
+
+    &:hover {
+      color: $text-white !important;
+      text-decoration: none !important;
+    }
+
+    &:focus {
+      color: $text-white !important;
+      text-decoration: none !important;
+    }
+
+    &:visited {
+      color: $text-white !important;
+      text-decoration: none !important;
+    }
+
+    .base-button__text {
+      color: $text-white !important;
     }
   }
 </style>

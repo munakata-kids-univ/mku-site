@@ -348,7 +348,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
         {buttons.length > 0 && (
           <div class="application-buttons-section fade-up">
             <div class="application-buttons-check-label">＼Check／</div>
-            <div class="application-buttons-grid">
+            <div class={`application-buttons-grid ${buttons.length === 1 ? 'application-buttons-grid--single' : ''}`}>
               {buttons.map((button) => {
                 // 外部リンクかどうかを判定
                 const isExternalLink = button.url.startsWith('http://') || button.url.startsWith('https://');
@@ -1872,25 +1872,23 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     margin: 0 auto;
     justify-items: stretch;
     align-items: stretch;
-    
-    // 1つの場合：中央配置
-    &:has(.application-button-item:only-child) {
-      grid-template-columns: 1fr;
-      justify-items: center;
-      max-width: rem(500);
-    }
-    
-    // 2つ以上の場合：2列グリッド
-    &:not(:has(.application-button-item:only-child)) {
-      grid-template-columns: 1fr 1fr;
-    }
+    grid-template-columns: 1fr 1fr;
   }
   
   @include breakpoint-up(xl) {
-    max-width: rem(1000);
+    max-width: rem(1160);
+  }
+  
+  // 1つの場合の特別なスタイル
+  &.application-buttons-grid--single {
+    @include breakpoint-up(lg) {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      max-width: rem(720);
+    }
     
-    &:has(.application-button-item:only-child) {
-      max-width: rem(550);
+    @include breakpoint-up(xl) {
+      max-width: rem(850);
     }
   }
 }
@@ -1906,8 +1904,10 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   border: 2px solid $brand-secondary;
   border-radius: $radius-m;
   background-color: $background-primary !important;
-  background-image: radial-gradient(circle, #feecc5 1.5px, transparent 1.5px) !important;
-  background-position: 0 0 !important;
+  background-image: 
+    radial-gradient(circle, #feecc5 1px, transparent 1px),
+    radial-gradient(circle, #feecc5 1px, transparent 1px) !important;
+  background-position: 0 0, 6.5px 6.5px !important;
   background-size: 13px 13px !important;
   animation: buttonBoxScale 2.5s ease-in-out infinite;
   
@@ -1921,13 +1921,13 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     padding: rem(32) rem(30);
     
     // 複数ボタンの場合：max-widthなし（stretch）
-    .application-buttons-grid:not(:has(.application-button-item:only-child)) & {
+    .application-buttons-grid:not(.application-buttons-grid--single) & {
       max-width: none;
     }
     
     // 単体ボタンの場合：適切なmax-width維持
-    .application-buttons-grid:has(.application-button-item:only-child) & {
-      max-width: rem(480);
+    .application-buttons-grid.application-buttons-grid--single & {
+      max-width: rem(720);
     }
   }
   
@@ -1935,13 +1935,13 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     padding: rem(40) rem(40) !important;
     
     // 複数ボタンの場合：max-widthなし（stretch）
-    .application-buttons-grid:not(:has(.application-button-item:only-child)) & {
+    .application-buttons-grid:not(.application-buttons-grid--single) & {
       max-width: none;
     }
     
     // 単体ボタンの場合：適切なmax-width維持
-    .application-buttons-grid:has(.application-button-item:only-child) & {
-      max-width: rem(520);
+    .application-buttons-grid.application-buttons-grid--single & {
+      max-width: rem(850);
     }
   }
   
