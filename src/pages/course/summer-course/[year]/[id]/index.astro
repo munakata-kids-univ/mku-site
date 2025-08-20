@@ -1,0 +1,1733 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import { 
+  getSummerCourseById,
+  getSummerCourses,
+  getGlobalSettings,
+} from '@/lib/microcms';
+import { convertYearToPath, convertPathToYear } from '@/utils/yearConverter';
+
+// 静的パス生成
+export async function getStaticPaths() {
+  try {
+    // 全ての夏の課外授業データを取得（年度フィルターなしで全件取得）
+    const allCourses = await getSummerCourses();
+    
+    if (!allCourses || allCourses.length === 0) {
+      return [];
+    }
+
+    // 各講座のパスを生成
+    const paths = [];
+    
+    allCourses.forEach(course => {
+      const courseYear = Array.isArray(course.year) ? course.year[0] : course.year;
+      const pathYear = convertYearToPath(courseYear);
+      
+      // scheduleが存在し、複数の開催日がある場合は分割
+      if (course.schedule && course.schedule.length > 0) {
+        course.schedule.forEach((scheduleItem, index) => {
+          const scheduleIndex = index + 1;
+          const urlSuffix = course.schedule.length > 1 ? `-${scheduleIndex}` : '';
+          
+          paths.push({
+            params: { 
+              year: pathYear,
+              id: `${course.id}${urlSuffix}`
+            },
+            props: { 
+              course, 
+              originalYear: courseYear, 
+              scheduleIndex: scheduleIndex,
+              scheduleItem: scheduleItem
+            }
+          });
+        });
+      } else {
+        // scheduleが存在しない場合は従来通り
+        paths.push({
+          params: { 
+            year: pathYear,
+            id: course.id 
+          },
+          props: { 
+            course, 
+            originalYear: courseYear,
+            scheduleIndex: 1,
+            scheduleItem: null
+          }
+        });
+      }
+    });
+
+    return paths;
+  } catch (error) {
+    console.error('Error generating static paths:', error);
+    return [];
+  }
+}
+
+// パラメータを取得
+const { year, id } = Astro.params;
+const { course, originalYear, scheduleIndex, scheduleItem } = Astro.props;
+
+// IDから実際の講座IDと開催回を解析
+const [courseId, urlScheduleIndex] = id.includes('-') ? id.split('-') : [id, '1'];
+const actualScheduleIndex = parseInt(urlScheduleIndex);
+
+// パスから年度を復元
+const actualYear = originalYear || convertPathToYear(year);
+
+if (!year || !id) {
+  return Astro.redirect('/404');
+}
+
+// グローバル設定を取得
+const globalSettings = await getGlobalSettings();
+const currentYear = Array.isArray(globalSettings.currentYear) ? globalSettings.currentYear[0] : globalSettings.currentYear;
+const currentYearValue = currentYear;
+
+// 講座データは既にpropsから取得済み
+if (!course) {
+  return Astro.redirect('/404');
+}
+
+// 講座の年度を確認
+const courseYear = Array.isArray(course.year) ? course.year[0] : course.year;
+
+// URLの年度と講座の年度が一致しない場合は404
+if (courseYear !== actualYear) {
+  return Astro.redirect('/404');
+}
+
+// 該当する開催回のデータを取得
+let displayScheduleItem = scheduleItem;
+if (!displayScheduleItem && course.schedule && course.schedule.length > 0) {
+  displayScheduleItem = course.schedule[actualScheduleIndex - 1];
+}
+
+// ページ情報
+const scheduleText = displayScheduleItem && course.schedule && course.schedule.length > 1 
+  ? ` (第${actualScheduleIndex}回)` 
+  : '';
+const pageTitle = `${course.title}${scheduleText} | 夏の課外授業`;
+const pageDescription = course.subtitle || `${course.title}の詳細情報です。`;
+
+// パンくずリスト
+const currentYearPath = convertYearToPath(currentYear);
+const breadcrumbItems = [
+  { label: 'ホーム', href: '/' },
+  { label: '講座内容', href: '/course' },
+  { label: '夏の課外授業', href: '/course/summer-course' },
+  { label: actualYear, href: '/course/summer-course' },
+  { label: `${course.title}${scheduleText}`, current: true }
+];
+
+// フェーズをステータス表示文字列に変換する関数
+function convertPhaseToStatus(phase: string): string {
+  switch (phase) {
+    case '募集前':
+      return '募集前';
+    case '募集締切':
+      return '募集締切';
+    case '募集受付中':
+      return '募集受付中';
+    case '終了':
+      return '終了';
+    default:
+      return '準備中';
+  }
+}
+
+// 講座のステータスを取得する関数
+function getCourseStatus(course: any, scheduleItem: any, currentYearValue: string): string {
+  // 講座の年度を取得
+  const courseYearValue = Array.isArray(course.year) ? course.year[0] : course.year;
+  
+  // 現在年度以外の講座（過去の実績）は強制的に「募集終了」
+  if (courseYearValue !== currentYearValue) {
+    return '募集終了';
+  }
+  
+  // 開催日ごとのステータスが設定されている場合はそれを使用
+  if (scheduleItem && scheduleItem.subStatus) {
+    const subStatus = Array.isArray(scheduleItem.subStatus) ? scheduleItem.subStatus[0] : scheduleItem.subStatus;
+    return convertPhaseToStatus(subStatus);
+  }
+  
+  // 講座全体のステータスが設定されている場合はそれを使用
+  if (course.status && Array.isArray(course.status) && course.status.length > 0) {
+    return course.status[0];
+  }
+  
+  // デフォルトで準備中
+  return '準備中';
+}
+
+// YouTubeまたはVimeoのURLから埋め込み用URLを生成する関数
+function getEmbedUrl(url: string): string | null {
+  if (!url) return null;
+  
+  // YouTube
+  if (url.includes('youtube.com/watch?v=') || url.includes('youtu.be/')) {
+    const videoId = url.includes('youtu.be/') 
+      ? url.split('youtu.be/')[1].split('?')[0]
+      : url.split('v=')[1].split('&')[0];
+    return `https://www.youtube.com/embed/${videoId}`;
+  }
+  
+  // Vimeo
+  if (url.includes('vimeo.com/')) {
+    const videoId = url.split('vimeo.com/')[1].split('?')[0];
+    return `https://player.vimeo.com/video/${videoId}`;
+  }
+  
+  return null;
+}
+
+// ステータス別の背景色クラス取得関数
+function getStatusColorClass(status: string): string {
+  switch (status) {
+    case '募集前':
+    case '募集締切':
+    case '終了':
+      return 'status-badge--dark-gray';
+    case '募集受付中':
+      return 'status-badge--brand-secondary';
+    default:
+      return 'status-badge--dark-gray';
+  }
+}
+
+// 学年の色分けクラス取得関数
+function getGradeColorClass(grade: string): string {
+  // 特殊なケース
+  if (grade === '未就学児' || grade === 'だれでも' || grade.includes('その他')) {
+    return 'special';
+  }
+  
+  // 数字を抽出
+  const yearMatch = grade.match(/^(\d+)年$/);
+  if (yearMatch && yearMatch[1]) {
+    const num = parseInt(yearMatch[1]);
+    if (num >= 1 && num <= 3) return 'elementary-low';    // 1~3年
+    if (num >= 4 && num <= 6) return 'elementary-high';   // 4~6年
+    if (num >= 7 && num <= 9) return 'junior';            // 7~9年
+  }
+  
+  // 高校生
+  if (grade.match(/^高\d+$/)) {
+    return 'junior'; // 高校生は中学生と同じ色
+  }
+  
+  // その他
+  return 'special';
+}
+
+// 日付フォーマット関数
+function formatJapaneseDate(dateString: string): string {
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const weekday = ['日', '月', '火', '水', '木', '金', '土'][date.getDay()];
+  
+  return `${year}年${month}月${day}日(${weekday})`;
+}
+
+// parentJoin値の表示用変換
+const parentJoinMapping: Record<string, string> = {
+  'r0A1BukTIs': '保護者の方も参加できます',
+  '87MGdHzdV4': '保護者の方は参加できません',
+  'FEytb3Ezyt': '保護者の方の参加が必須です'
+};
+
+function getParentJoinText(parentJoin: any): string {
+  if (!parentJoin) return '';
+  
+  const parentJoinStr = typeof parentJoin === 'string' ? parentJoin : (Array.isArray(parentJoin) ? parentJoin[0] : '');
+  
+  if (parentJoinStr && parentJoinStr !== '選択してください' && parentJoinStr.trim() !== '') {
+    const displayText = parentJoinMapping[parentJoinStr] || parentJoinStr;
+    return displayText;
+  }
+  
+  return '';
+}
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <main class="course-detail">
+    <!-- パンくずリスト -->
+    <div class="course-detail__breadcrumb">
+      <Breadcrumb items={breadcrumbItems} />
+    </div>
+
+    <!-- 講座情報セクション -->
+    <section class="course-info-section">
+      <div class="content-section__container">
+        <div class="course-info">
+          <div class="course-info__title-wrapper stripe">
+            <div class="course-info__year">{actualYear}</div>
+            <h1 class="course-info__title">{course.title}{scheduleText}</h1>
+          </div>
+          
+          {course.subtitle && (
+            <div class="course-info__subtitle" set:html={course.subtitle.replace(/\n/g, '<br>')}></div>
+          )}
+          
+          <div class="course-info__image">
+            <img 
+              src={course.thumbImg?.url || '/images/ui/img_course-no-image-01.webp'} 
+              alt={course.title} 
+            />
+          </div>
+          
+          <!-- 実施レポートセクション -->
+          {((course.afterImages && course.afterImages.length > 0) || course.instructor || course.afterReport || course.participantCount) && (
+            <div class="course-info__after-report">
+              <div class="after-report-content">
+                <div class="after-report-inner">
+                  <h2 class="course-info__after-report-title">実施レポート</h2>
+                  {course.afterImages && course.afterImages.length > 0 && (
+                    <div class="after-report-section">
+                      <div class="after-report-images">
+                        {course.afterImages.map((image, index) => (
+                          <div key={index} class="after-report-image">
+                            <img src={image.url} alt={`実施レポート画像 ${index + 1}`} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {course.instructor && (
+                    <div class="after-report-section">
+                      <h3 class="after-report-section-title">講師</h3>
+                      <div class="after-report-instructor">
+                        {course.instructor}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {course.afterReport && (
+                    <div class="after-report-section">
+                      <h4 class="after-report-section-title">参加者の感想</h4>
+                      <div class="after-report-feedback rich-content" set:html={course.afterReport}></div>
+                    </div>
+                  )}
+                  
+                  {course.participantCount && (
+                    <div class="after-report-section">
+                      <h4 class="after-report-section-title">参加人数</h4>
+                      <div class="after-report-instructor">
+                        {course.participantCount}人
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <!-- 詳細情報（1カラムレイアウト） -->
+          <div class="course-info__content-wrapper">
+            <div class="course-info__details">
+              <div class="detail-item">
+                <div class="detail-item__label">募集状況：</div>
+                <div class="detail-item__value">
+                  {(() => {
+                    const resolvedStatus = getCourseStatus(course, displayScheduleItem, currentYearValue);
+                    return (
+                      <span class={`status-badge ${getStatusColorClass(resolvedStatus || '準備中')}`}>
+                        {resolvedStatus || '準備中'}
+                      </span>
+                    );
+                  })()}
+                </div>
+              </div>
+              
+              {(displayScheduleItem && displayScheduleItem.date && !course.atAnyTime) || course.atAnyTime ? (
+                <div class="detail-item">
+                  <div class="detail-item__label">実施日時：</div>
+                  <div class="detail-item__value">
+                    {course.atAnyTime ? '随時開催' : (
+                      <>
+                        {formatJapaneseDate(displayScheduleItem.date)}
+                        {displayScheduleItem && (displayScheduleItem.startTime || displayScheduleItem.endTime) && (
+                          <><br />{displayScheduleItem.startTime && displayScheduleItem.endTime ? 
+                            `${displayScheduleItem.startTime}～${displayScheduleItem.endTime}` :
+                            displayScheduleItem.startTime || displayScheduleItem.endTime
+                          }</>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+              
+              {course.capacity && course.capacity > 0 && (
+                <div class="detail-item">
+                  <div class="detail-item__label">定員：</div>
+                  <div class="detail-item__value">{course.capacity}人</div>
+                </div>
+              )}
+              
+              {(() => {
+                // 講座カードと同じロジックを使用
+                let category;
+                if (typeof course.category === 'object' && course.category !== null) {
+                  // オブジェクトの場合、categoryプロパティを確認
+                  category = course.category.category || String(course.category);
+                } else {
+                  // 文字列の場合はそのまま使用
+                  category = course.category || 'その他';
+                }
+                return category && category !== 'その他' && (
+                  <div class="detail-item">
+                    <div class="detail-item__label">カテゴリー：</div>
+                    <div class="detail-item__value">
+                      <span class="category-tag">#{category}</span>
+                    </div>
+                  </div>
+                );
+              })()}
+              
+              {course.courseType && course.courseType.length > 0 && (
+                <div class="detail-item">
+                  <div class="detail-item__label">講座種別：</div>
+                  <div class="detail-item__value">
+                    {Array.isArray(course.courseType) ? course.courseType.join('、') : course.courseType}
+                  </div>
+                </div>
+              )}
+              
+              {course.providerItem && course.providerItem.length > 0 && (
+                <div class="detail-item">
+                  <div class="detail-item__label">
+                    協力大学・<span class="u-br-sm-xl">企業・団体：</span>
+                  </div>
+                  <div class="detail-item__value">
+                    {course.providerItem.map((provider, index) => (
+                      <div key={index} class="provider-item">
+                        <div>{provider.providerName}</div>
+                        {provider.providerUrl && (
+                          <a href={provider.providerUrl} target="_blank" rel="noopener noreferrer" class="provider-link">
+                            {provider.providerUrl}
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {course.targetGrades && course.targetGrades.length > 0 && (
+                <div class="detail-item">
+                  <div class="detail-item__label">対象：</div>
+                  <div class="detail-item__value">
+                    <div class="target-description">
+                      {course.cityOutsideOk ? '市内在住、または市外にお住まいの' : '市内にお住まいの'}
+                    </div>
+                    <div class="target-grades">
+                      {(() => {
+                        const grades = Array.isArray(course.targetGrades) ? course.targetGrades : [course.targetGrades];
+                        return grades.map((grade, index) => (
+                          <span key={index} class={`target-grade target-grade--${getGradeColorClass(grade)}`}>{grade}</span>
+                        ));
+                      })()}
+                    </div>
+                    {getParentJoinText(course.parentJoin) && (
+                      <div class="parent-join-description">
+                        ※{getParentJoinText(course.parentJoin)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {course.participationFee && (
+                <div class="detail-item">
+                  <div class="detail-item__label">参加費：</div>
+                  <div class="detail-item__value" set:html={course.participationFee.replace(/\n/g, '<br>')}></div>
+                </div>
+              )}
+              
+              {course.venue && (
+                <div class="detail-item">
+                  <div class="detail-item__label">会場：</div>
+                  <div class="detail-item__value" set:html={course.venue.replace(/\n/g, '<br>')}></div>
+                </div>
+              )}
+              
+              {course.address && (
+                <div class="detail-item">
+                  <div class="detail-item__label">住所：</div>
+                  <div class="detail-item__value" set:html={course.address.replace(/\n/g, '<br>')}></div>
+                </div>
+              )}
+              
+              {course.applyMethod && (
+                <div class="detail-item detail-item--highlighted">
+                  <div class="detail-item__label">申込方法：</div>
+                  <div class="detail-item__value" set:html={course.applyMethod.replace(/\n/g, '<br>')}></div>
+                </div>
+              )}
+              
+              {displayScheduleItem && displayScheduleItem.entryDeadline && (
+                <div class="detail-item detail-item--highlighted">
+                  <div class="detail-item__label">申込締切：</div>
+                  <div class="detail-item__value" set:html={displayScheduleItem.entryDeadline.replace(/\n/g, '<br>')}></div>
+                </div>
+              )}
+              
+              {course.courseContact && (
+                <div class="detail-item detail-item--highlighted">
+                  <div class="detail-item__label">講座連絡先：</div>
+                  <div class="detail-item__value rich-content course-contact" set:html={course.courseContact}></div>
+                </div>
+              )}
+              
+              {course.preparation && (
+                <div class="detail-item">
+                  <div class="detail-item__label">準備物：</div>
+                  <div class="detail-item__value rich-content" set:html={course.preparation}></div>
+                </div>
+              )}
+              
+              {course.remarks && (
+                <div class="detail-item">
+                  <div class="detail-item__label">特記事項：</div>
+                  <div class="detail-item__value rich-content" set:html={course.remarks}></div>
+                </div>
+              )}
+              
+              {course.note && (
+                <div class="detail-item">
+                  <div class="detail-item__label">備考：</div>
+                  <div class="detail-item__value rich-content" set:html={course.note}></div>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <!-- 連絡事項セクション -->
+          <div class="course-info__notices">
+            <h2 class="course-info__section-title">連絡事項</h2>
+            <div class="notices-content">
+              <div class="notice-section__content rich-content">
+                {course.noticeCourse ? (
+                  <div set:html={course.noticeCourse}></div>
+                ) : (
+                  <p class="empty-notice">まだ連絡事項はありません。<br>開催日前日までにこまめに確認してください。</p>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          
+          <!-- 注意事項セクション -->
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+// PDF Canvas表示機能
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('PDF.js loaded:', typeof pdfjsLib !== 'undefined');
+  
+  // PDF.jsの設定
+  if (typeof pdfjsLib !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    
+    // PDFリンクを自動的にプレビューに変換
+    const pdfLinks = document.querySelectorAll('.rich-content a[data-mime-type="application/pdf"]');
+    console.log('PDF links found:', pdfLinks.length);
+    
+    pdfLinks.forEach(link => {
+      const pdfUrl = link.href;
+      const fileName = link.textContent.trim();
+      
+      // PDFプレビューブロックを作成
+      const pdfBlock = document.createElement('div');
+      pdfBlock.className = 'pdf-canvas-block';
+      pdfBlock.dataset.pdfUrl = pdfUrl;
+      pdfBlock.innerHTML = `
+        <div class="pdf-canvas-header">
+          <h4>📄 ${fileName}</h4>
+          <div class="pdf-controls">
+            <a href="${pdfUrl}" target="_blank">PDFで開く</a>
+          </div>
+        </div>
+        <div class="pdf-canvas-container">
+          <div class="pdf-loading">PDFを読み込んでいます...</div>
+          <div class="pdf-pages-container"></div>
+        </div>
+      `;
+      
+      // 元のリンクを置き換え
+      link.parentNode.replaceChild(pdfBlock, link);
+    });
+    
+    // PDF Canvas ブロックを処理
+    const pdfCanvasBlocks = document.querySelectorAll('.pdf-canvas-block');
+    
+    pdfCanvasBlocks.forEach(block => {
+      const url = block.dataset.pdfUrl;
+      const pagesContainer = block.querySelector('.pdf-pages-container');
+      const loadingDiv = block.querySelector('.pdf-loading');
+      
+      if (!url || !pagesContainer) return;
+      
+      console.log('Loading PDF:', url);
+      
+      pdfjsLib.getDocument(url).promise.then(pdf => {
+        console.log('PDF loaded. Pages:', pdf.numPages);
+        loadingDiv.style.display = 'none';
+        
+        // 全ページを表示
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          pdf.getPage(pageNum).then(page => {
+            const scale = 1.5;
+            const viewport = page.getViewport({ scale });
+            
+            const canvas = document.createElement('canvas');
+            canvas.className = 'pdf-page-canvas';
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            
+            pagesContainer.appendChild(canvas);
+            
+            const renderContext = {
+              canvasContext: context,
+              viewport: viewport
+            };
+            
+            page.render(renderContext).promise.then(() => {
+              console.log(`Page ${pageNum} rendered`);
+            }).catch(error => {
+              console.error(`Error rendering page ${pageNum}:`, error);
+            });
+          });
+        }
+      }).catch(error => {
+        console.error('Error loading PDF:', error);
+        loadingDiv.textContent = 'PDFの読み込みに失敗しました';
+        loadingDiv.style.color = '#ff0000';
+      });
+    });
+  } else {
+    console.error('PDF.js not loaded');
+  }
+});
+</script>
+
+<style lang="scss">
+@import '../../../../../styles/_index';
+
+.course-detail {
+  min-height: 100vh;
+  background-color: $brand-sub-pink-low;
+  
+  // ドット柄背景
+  background-image: 
+    radial-gradient(circle, $brand-sub-pink 1.5px, transparent 1.5px),
+    radial-gradient(circle, $brand-sub-pink 1.5px, transparent 1.5px);
+  background-position: 0 0, 6.5px 6.5px;
+  background-size: 13px 13px;
+}
+
+.course-detail__breadcrumb {
+  padding-top: rem(100);
+  background: transparent;
+  
+  @include breakpoint-up(lg) {
+    padding-top: rem(120);
+  }
+  
+  :global(.breadcrumb) {
+    background: transparent;
+  }
+  
+  :global(.breadcrumb__list) {
+    background: transparent;
+  }
+}
+
+.course-info-section {
+  padding: rem(40) 0 rem(80);
+  
+  @include breakpoint-up(lg) {
+    padding: rem(60) 0 rem(120);
+  }
+  
+  .content-section__container {
+    padding: 0 5%;
+    
+    @include breakpoint-up(xl) {
+      padding: 0 rem(50);
+    }
+  }
+}
+
+.course-info {
+  background: $background-primary;
+  border-radius: $radius-l;
+  padding: rem(25) rem(15) rem(30);
+  position: relative;
+  overflow: visible;
+  @include breakpoint-up(md) {
+    padding: rem(25) rem(25) rem(30);
+  }
+  
+  @include breakpoint-up(lg) {
+    padding: rem(48);
+    border-radius: $radius-2l;
+  }
+  @include breakpoint-up(xl) {
+    max-width: rem(1260);
+    margin: 0 auto;
+  }
+}
+
+.course-info__title-wrapper {
+  padding: rem(15);
+  margin-bottom: rem(24);
+  margin-left: calc(-1 * rem(15) - 2%);
+  border-radius: rem(12);
+
+  @include breakpoint-up(md) {
+    padding: rem(15) rem(20);
+    margin-left: calc(-1 * rem(25) - 2%);
+  }
+  
+  @include breakpoint-up(lg) {
+    padding: rem(24) rem(32);
+    margin-bottom: rem(32);
+    margin-left: calc(-1 * rem(48) - 2%);
+    border-radius: rem(16);
+  }
+}
+
+.stripe {
+  background-image: repeating-linear-gradient(135deg, $brand-sub-pink, $brand-sub-pink 10px, #FFD7EB 10px, #FFD7EB 30px);
+}
+
+.course-info__year {
+  @include font-ja-2s(semibold);
+  color: $text-primary;
+  margin-bottom: rem(3);
+  
+  @include breakpoint-up(sm) {
+    @include font-ja-s(semibold);
+  }
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-m(semibold);
+  }
+}
+
+.course-info__title {
+  @include font-ja-m(semibold);
+  color: $text-primary;
+  margin: 0;
+  
+  @include breakpoint-up(sm) {
+    @include font-ja-l(semibold);
+  }
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-2l(semibold);
+  }
+}
+
+.course-info__subtitle {
+  @include font-ja-s(semibold);
+  color: $text-primary;
+  margin-bottom: rem(24);
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-m(semibold);
+    margin-bottom: rem(32);
+  }
+}
+
+.course-info__image {
+  margin-bottom: rem(32);
+  position: relative;
+  
+  @include breakpoint-up(lg) {
+    margin-bottom: rem(48);
+  }
+  
+  img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    border-radius: $radius-m;
+    @include breakpoint-up(lg) {
+      border-radius: $radius-l;
+    }
+  }
+  
+  // 左上の装飾（objects）
+  &::before {
+    content: '';
+    position: absolute;
+    top: rem(-15);
+    left: rem(-10);
+    width: rem(120);
+    height: rem(120);
+    background-image: url('/images/ui/img_decoration-objects-pink-01.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: start;
+    z-index: 10;
+    
+    @include breakpoint-up(md) {
+      top: rem(-10);
+      left: rem(-20);
+      width: rem(160);
+      height: rem(160);
+    }
+    
+    @include breakpoint-up(lg) {
+      top: rem(-10);
+      left: rem(-20);
+      width: 25%;
+      height: rem(160);
+    }
+    
+    @include breakpoint-up(xl) {
+      top: rem(-10);
+      left: rem(-20);
+      width: 30%;
+      height: rem(200);
+    }
+  }
+  
+  // 右下の装飾（dots）
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: rem(-15);
+    right: rem(-5);
+    width: rem(160);
+    height: rem(160);
+    background-image: url('/images/ui/img_decoration-dots-pink-01.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: bottom;
+    z-index: 10;
+    
+    @include breakpoint-up(md) {
+      bottom: rem(-20);
+      right: rem(-20);
+      width: rem(200);
+      height: rem(200);
+    }
+  }
+}
+
+.course-info__content-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.course-info__details {
+  width: 100%;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  padding-top: rem(14);
+  padding-bottom: rem(18);
+  border-bottom: 1px solid $border-secondary;
+  
+  @include breakpoint-up(sm) {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+  
+  &--highlighted {
+    background-color: #FFE6F3;
+  }
+}
+
+.detail-item__label {
+  @include font-ja-2s;
+  color: $text-secondary;
+  margin-bottom: rem(4);
+  min-width: rem(120);
+  padding-left: rem(5);
+  
+  @include breakpoint-up(sm) {
+    margin-bottom: 0;
+    margin-right: rem(16);
+    width: rem(120);
+    flex-shrink: 0;
+  }
+  
+  @include breakpoint-up(lg) {
+    width: rem(180);
+    min-width: rem(180);
+  }
+}
+
+.detail-item__value {
+  @include font-ja-s(semibold);
+  color: $text-primary;
+  line-height: 1.6;
+  flex: 1;
+  padding-left: rem(15);
+  padding-right: rem(15);
+
+  @include breakpoint-up(sm) {
+    padding-left: 0;
+  }
+}
+
+// 保護者参加情報のスタイル
+.parent-join-description {
+  @include font-ja-s;
+  color: $text-primary;
+  margin-top: rem(6);
+  line-height: 1.6;
+}
+
+// リッチエディタコンテンツのスタイル（特設講座と同様）
+.detail-item__value.rich-content {
+  @include font-ja-s;
+  max-width: 100%;
+  overflow: hidden;
+  word-wrap: break-word;
+  
+  :global(h3), :global(h4), :global(h5) {
+    @include font-ja-s(semibold);
+    color: $text-primary;
+    margin: rem(16) 0 rem(8) 0;
+    font-weight: 600 !important;
+    font-size: inherit !important;
+  }
+  
+  :global(p) {
+    @include font-ja-s;
+    color: $text-primary;
+    margin: rem(8) 0;
+    font-weight: 400 !important;
+    
+    &:first-child {
+      margin-top: 0;
+    }
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  :global(strong), :global(b) {
+    font-weight: 600 !important;
+  }
+  
+  :global(*:first-child) {
+    margin-top: 0 !important;
+  }
+  
+  :global(*:last-child) {
+    margin-bottom: 0 !important;
+  }
+  
+  :global(ul), :global(ol) {
+    margin: rem(8) 0;
+    padding-left: rem(20);
+  }
+  
+  :global(ul) {
+    list-style-type: disc;
+  }
+  
+  :global(ol) {
+    list-style-type: decimal;
+  }
+  
+  :global(li) {
+    @include font-ja-s;
+    color: $text-primary;
+    margin-bottom: rem(4);
+    font-weight: 400 !important;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  :global(iframe) {
+    max-width: 100%;
+    height: auto;
+    border: none;
+    border-radius: rem(8);
+  }
+  
+  :global(img) {
+    max-width: 100%;
+    height: auto;
+    
+    @include breakpoint-up(lg) {
+      max-width: 50%;
+    }
+  }
+  
+  :global(img) {
+    width: 100% !important;
+    height: auto !important;
+    border-radius: rem(4);
+    margin: rem(8) 0;
+    display: block;
+  }
+  
+  :global(figure) {
+    display: block;
+    margin: rem(8) 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    padding: 0;
+    
+    img {
+      margin: 0;
+      width: 100% !important;
+      height: auto !important;
+      display: block;
+    }
+  }
+  
+  :global(a) {
+    @include font-ja-s(semibold);
+    color: $text-link;
+    text-decoration: underline;
+    word-break: break-all;
+    
+    &:hover {
+      color: $text-link-hover;
+    }
+  }
+}
+
+.provider-item {
+  margin-bottom: rem(8);
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.provider-link {
+  @include font-ja-s(semibold);
+  color: $text-link;
+  text-decoration: underline;
+  word-break: break-all;
+  
+  &:hover {
+    color: $text-link-hover;
+  }
+}
+
+// カテゴリータグのスタイル
+.category-tag {
+  @include font-ja-3s(semibold);
+  padding: rem(1) rem(3);
+  border: 1px solid $brand-black;
+  border-radius: rem(7);
+  white-space: nowrap;
+  color: $text-primary;
+  background-color: $background-primary;
+  display: inline-block;
+  
+  @include breakpoint-up(md) {
+    @include font-ja-2s(semibold);
+  }
+}
+
+// 講座連絡先内の画像のスタイル
+.course-contact {
+  :global(img) {
+    max-width: rem(180) !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  
+  :global(figure) {
+    max-width: rem(180) !important;
+    width: auto !important;
+    
+    img {
+      max-width: rem(180) !important;
+      width: auto !important;
+    }
+  }
+}
+
+.course-info__section-title {
+  @include font-ja-m(semibold);
+  color: $text-secondary;
+  margin-bottom: rem(16);
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-l(semibold);
+    margin-bottom: rem(24);
+  }
+}
+
+
+// ステータスバッジのスタイル（講座カードと同じ）
+.status-badge {
+  @include font-ja-3s(semibold);
+  color: $text-white;
+  padding: rem(2) rem(4);
+  border-radius: $radius-xs;
+  white-space: nowrap;
+  display: inline-block;
+  
+  @include breakpoint-up(md) {
+    @include font-ja-2s(semibold);
+  }
+
+  &--dark-gray {
+    background: $background-dark-gray;
+  }
+
+  &--brand-secondary {
+    background: $brand-secondary;
+  }
+
+  &--brand-turquoise {
+    background: $brand-turquoise;
+  }
+
+  &--brand-pink {
+    background: $brand-pink;
+  }
+}
+
+// 対象学年エリアのスタイル
+.target-description {
+  @include font-ja-s;
+  color: $text-primary;
+  margin-bottom: rem(8);
+  line-height: 1.6;
+}
+
+// 学年タグのスタイル
+.target-grades {
+  display: flex;
+  flex-wrap: wrap;
+  gap: rem(6);
+  margin-bottom: rem(6);
+}
+
+.target-grade {
+  @include font-ja-2s(semibold);
+  padding: rem(4) rem(6);
+  border: 1px solid $brand-black;
+  border-radius: rem(10);
+  white-space: nowrap;
+  margin-bottom: rem(2);
+
+  &--elementary-low {
+    background-color: $brand-sub-yellow-low;
+  }
+
+  &--elementary-high {
+    background-color: $brand-sub-purple-low;
+  }
+
+  &--junior {
+    background-color: $brand-sub-turquoise-low;
+  }
+
+  &--special {
+    background-color: $brand-sub-pink-low;
+  }
+}
+
+/* レスポンシブ改行ユーティリティ */
+:global(.u-br-sm-xl) {
+  display: inline;
+  
+  @include breakpoint-up(sm) {
+    display: block;
+  }
+  
+  @include breakpoint-up(xl) {
+    display: inline;
+  }
+}
+
+// 連絡事項セクション
+.course-info__notices {
+  margin-top: rem(32);
+  
+  @include breakpoint-up(lg) {
+    margin-top: rem(48);
+  }
+}
+
+.notices-content {
+  padding: rem(16);
+  background-color: #ffffff;
+  background-image: linear-gradient(90deg, #cccccc80 1px, transparent 1px), linear-gradient(#cccccc80 1px, transparent 1px);
+  background-position: 10px 10px;
+  background-size: 31px 31px;
+  border-radius: rem(8);
+  border: 1px solid $border-secondary;
+}
+
+.notice-section__content {
+  @include font-ja-s;
+  color: $text-primary;
+  line-height: 1.6;
+}
+
+// notices-content内のリッチコンテンツのスタイル
+.notices-content .rich-content {
+  @include font-ja-s;
+  max-width: 100%;
+  overflow: hidden;
+  word-wrap: break-word;
+  
+  :global(*:first-child) {
+    margin-top: 0 !important;
+  }
+  
+  :global(h3), :global(h4), :global(h5) {
+    @include font-ja-s(semibold);
+    color: $text-primary;
+    margin: rem(16) 0 rem(8) 0;
+    font-weight: 600 !important;
+    font-size: inherit !important;
+  }
+  
+  :global(p) {
+    @include font-ja-s;
+    color: $text-primary;
+    margin: rem(8) 0;
+    font-weight: 400 !important;
+    font-size: rem(16) !important;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  :global(img) {
+    max-width: 100%;
+    height: auto;
+    
+    @include breakpoint-up(lg) {
+      max-width: 50%;
+    }
+  }
+}
+
+// 空の状態メッセージのスタイル
+.notices-content .rich-content .empty-notice,
+.preparation-content .rich-content .empty-notice {
+  color: $text-primary !important;
+  font-weight: 400 !important;
+  margin: rem(8) 0 !important;
+  font-size: var(--font-size-ja-s) !important;
+  line-height: 1.6 !important;
+  
+  &:first-child {
+    margin-top: 0 !important;
+  }
+  
+  &:last-child {
+    margin-bottom: 0 !important;
+  }
+}
+
+// PDF プレビューブロック用のスタイル
+:global(.pdf-canvas-block) {
+  border: 1px solid $border-primary;
+  border-radius: rem(8);
+  margin: rem(16) 0;
+  overflow: hidden;
+  background: $background-primary;
+  max-width: rem(1200);
+}
+
+:global(.pdf-canvas-header) {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: rem(12) rem(16);
+  background: $background-secondary;
+  border-bottom: 1px solid $border-primary;
+  flex-wrap: wrap;
+  gap: rem(8);
+  
+  @include breakpoint-up(md) {
+    flex-wrap: nowrap;
+    gap: rem(16);
+  }
+  
+  h4 {
+    @include font-ja-2s(semibold);
+    color: $text-primary;
+    margin: 0;
+    flex: 1;
+    min-width: rem(200);
+    word-break: break-word;
+    
+    @include breakpoint-up(md) {
+      @include font-ja-s(semibold);
+      min-width: auto;
+    }
+  }
+  
+  .pdf-controls {
+    display: flex;
+    gap: rem(4);
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    
+    @include breakpoint-up(md) {
+      gap: rem(8);
+      flex-wrap: nowrap;
+    }
+    
+    a {
+      @include font-ja-3s(semibold);
+      color: $text-link;
+      text-decoration: underline;
+      padding: rem(4) rem(8);
+      border-radius: $radius-xs;
+      white-space: nowrap;
+      
+      &:hover {
+        color: $text-link-hover;
+        background: $background-tertiary;
+      }
+      
+      @include breakpoint-up(md) {
+        @include font-ja-2s(semibold);
+        padding: rem(6) rem(12);
+      }
+    }
+    
+    .page-info {
+      @include font-ja-3s;
+      color: $text-secondary;
+      white-space: nowrap;
+      
+      @include breakpoint-up(md) {
+        @include font-ja-2s;
+      }
+    }
+  }
+}
+
+:global(.pdf-canvas-container) {
+  position: relative;
+  background: $brand-black;
+  padding: rem(8);
+  text-align: center;
+  height: rem(300);
+  overflow-y: auto;
+  overflow-x: hidden;
+  
+  @include breakpoint-up(md) {
+    padding: rem(16);
+    height: rem(400);
+  }
+  
+  @include breakpoint-up(lg) {
+    padding: rem(20);
+    height: rem(450);
+  }
+  
+  .pdf-pages-container {
+    display: flex;
+    flex-direction: column;
+    gap: rem(8);
+    align-items: center;
+  }
+  
+  .pdf-page-canvas {
+    max-width: 100%;
+    height: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: rem(4);
+    display: block;
+    margin: 0 auto;
+    background: $text-white;
+  }
+  
+  .pdf-loading {
+    @include font-ja-2s;
+    color: $text-secondary;
+    padding: rem(20);
+    
+    @include breakpoint-up(md) {
+      @include font-ja-s;
+      padding: rem(40);
+    }
+  }
+}
+
+// 準備物セクション
+.course-info__preparation {
+  margin-top: rem(32);
+  
+  @include breakpoint-up(lg) {
+    margin-top: rem(48);
+  }
+}
+
+.preparation-content {
+  padding: rem(16);
+  background-color: #ffffff;
+  background-image: linear-gradient(90deg, #cccccc80 1px, transparent 1px), linear-gradient(#cccccc80 1px, transparent 1px);
+  background-position: 10px 10px;
+  background-size: 31px 31px;
+  border-radius: rem(8);
+  border: 1px solid $border-secondary;
+}
+
+// preparation-content内のリッチコンテンツのスタイル
+.preparation-content .rich-content {
+  @include font-ja-s;
+  max-width: 100%;
+  overflow: hidden;
+  word-wrap: break-word;
+  
+  :global(*:first-child) {
+    margin-top: 0 !important;
+  }
+  
+  :global(h3), :global(h4), :global(h5) {
+    @include font-ja-s(semibold);
+    color: $text-primary;
+    margin: rem(16) 0 rem(8) 0;
+    font-weight: 600 !important;
+    font-size: inherit !important;
+  }
+  
+  :global(p) {
+    @include font-ja-s;
+    color: $text-primary;
+    margin: rem(8) 0;
+    font-weight: 400 !important;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  :global(strong), :global(b) {
+    font-weight: 600 !important;
+  }
+  
+  :global(*:last-child) {
+    margin-bottom: 0 !important;
+  }
+  
+  :global(ul), :global(ol) {
+    margin: rem(8) 0;
+    padding-left: rem(20);
+  }
+  
+  :global(ul) {
+    list-style-type: disc;
+  }
+  
+  :global(ol) {
+    list-style-type: decimal;
+  }
+  
+  :global(li) {
+    @include font-ja-s;
+    color: $text-primary;
+    margin-bottom: rem(4);
+    font-weight: 400 !important;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  :global(iframe) {
+    max-width: 100%;
+    height: auto;
+    border: none;
+    border-radius: rem(8);
+  }
+  
+  :global(img) {
+    width: 100% !important;
+    height: auto !important;
+    border-radius: rem(4);
+    margin: rem(8) 0;
+    display: block;
+  }
+  
+  :global(figure) {
+    display: block;
+    margin: rem(8) 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    padding: 0;
+    
+    img {
+      margin: 0;
+      width: 100% !important;
+      height: auto !important;
+      display: block;
+    }
+  }
+  
+  :global(a) {
+    @include font-ja-s(semibold);
+    color: $text-link;
+    text-decoration: underline;
+    word-break: break-all;
+    
+    &:hover {
+      color: $text-link-hover;
+    }
+  }
+}
+
+// 実施レポートセクション
+.course-info__after-report {
+  margin-bottom: rem(32);
+  
+  @include breakpoint-up(lg) {
+    margin-bottom: rem(48);
+  }
+}
+
+.course-info__after-report-title {
+  @include font-ja-m(semibold);
+  color: $text-primary;
+  margin-bottom: rem(16);
+  background: linear-gradient(transparent 60%, $brand-sub-pink-low 60%);
+  padding: rem(2) 0;
+  display: inline-block;
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-l(semibold);
+    margin-bottom: rem(24);
+  }
+}
+
+.after-report-content {
+  background-color: $brand-primary;
+  border-radius: $radius-xs;
+  padding: rem(6);
+}
+
+.after-report-inner {
+  background-color: #ffffff;
+  background-image: linear-gradient(90deg, #cccccc80 1px, transparent 1px), linear-gradient(#cccccc80 1px, transparent 1px);
+  background-position: 10px 10px;
+  background-size: 31px 31px;
+  border-radius: $radius-m;
+  padding: rem(16) rem(16) rem(30);
+
+  @include breakpoint-up(md) {
+    padding: rem(24) rem(24) rem(40);
+  }
+
+  @include breakpoint-up(lg) {
+    padding: rem(30) rem(30) rem(50);
+  }
+  
+  @include breakpoint-up(lg) {
+    border-radius: $radius-l;
+    padding: rem(40) rem(40) rem(60);
+  }
+}
+
+.after-report-section {
+  &:not(:last-child) {
+    margin-bottom: rem(24);
+    
+    @include breakpoint-up(lg) {
+      margin-bottom: rem(32);
+    }
+  }
+}
+
+.after-report-section-title {
+  font-size: rem(16);
+  font-weight: 600;
+  color: $text-secondary;
+  margin-bottom: rem(12);
+  
+  @include breakpoint-up(lg) {
+    margin-bottom: rem(16);
+    font-size: rem(20);
+  }
+}
+
+.after-report-instructor {
+  @include font-ja-s;
+  color: $text-primary;
+  line-height: 1.6;
+}
+
+// afterImagesのレスポンシブレイアウト
+.after-report-images {
+  display: flex;
+  flex-direction: column;
+  gap: rem(16);
+  
+  @include breakpoint-up(sm) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: rem(16);
+  }
+  
+  @include breakpoint-up(lg) {
+    gap: rem(24);
+  }
+}
+
+.after-report-image {
+  img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    border-radius: rem(8);
+    
+    @include breakpoint-up(lg) {
+      border-radius: rem(12);
+    }
+  }
+}
+
+// 参加者の感想のリッチエディタスタイル
+.after-report-feedback.rich-content {
+  max-width: 100%;
+  overflow: hidden;
+  word-wrap: break-word;
+  
+  :global(h3), :global(h4), :global(h5) {
+    font-size: var(--font-size-ja-s) !important;
+    font-weight: 600 !important;
+    color: $text-primary;
+    margin: rem(16) 0 rem(8) 0;
+  }
+  
+  :global(p) {
+    font-size: var(--font-size-ja-s) !important;
+    color: $text-primary !important;
+    margin: rem(8) 0 !important;
+    font-weight: 400 !important;
+    line-height: 1.6 !important;
+    
+    &:first-child {
+      margin-top: 0 !important;
+    }
+    
+    &:last-child {
+      margin-bottom: 0 !important;
+    }
+  }
+  
+  :global(strong), :global(b) {
+    font-weight: 600 !important;
+  }
+  
+  :global(*:first-child) {
+    margin-top: 0 !important;
+  }
+  
+  :global(*:last-child) {
+    margin-bottom: 0 !important;
+  }
+  
+  :global(ul), :global(ol) {
+    margin: rem(8) 0;
+    padding-left: rem(20);
+  }
+  
+  :global(ul) {
+    list-style-type: disc;
+  }
+  
+  :global(ol) {
+    list-style-type: decimal;
+  }
+  
+  :global(li) {
+    font-size: var(--font-size-ja-s) !important;
+    color: $text-primary;
+    margin-bottom: rem(4);
+    font-weight: 400 !important;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  :global(iframe) {
+    max-width: 100%;
+    height: auto;
+    border: none;
+    border-radius: rem(8);
+  }
+  
+  :global(img) {
+    width: 100% !important;
+    height: auto !important;
+    border-radius: rem(4);
+    margin: rem(8) 0;
+    display: block;
+  }
+  
+  :global(figure) {
+    display: block;
+    margin: rem(8) 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    padding: 0;
+    
+    img {
+      margin: 0;
+      width: 100% !important;
+      height: auto !important;
+      display: block;
+    }
+  }
+  
+  :global(a) {
+    font-size: var(--font-size-ja-s) !important;
+    font-weight: 600 !important;
+    color: $text-link;
+    text-decoration: underline;
+    word-break: break-all;
+    
+    &:hover {
+      color: $text-link-hover;
+    }
+  }
+}
+</style>

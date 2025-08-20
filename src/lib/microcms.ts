@@ -983,3 +983,61 @@ export async function getCategoriesWithLabels() {
     };
   }
 }
+
+// 夏課外カテゴリー型定義
+export interface SummerCategory {
+  id: string;
+  category: string;
+  slug: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  revisedAt: string;
+}
+
+// 夏課外カテゴリー取得関数
+export async function getSummerCategories(): Promise<SummerCategory[]> {
+  try {
+    const data = await client.get({
+      endpoint: 'summer-category',
+      queries: {
+        limit: 100
+      },
+    });
+    
+    return data.contents as SummerCategory[];
+  } catch (error) {
+    console.error('夏課外カテゴリーの取得に失敗しました:', error);
+    
+    // 開発時のフォールバック
+    return [
+      {
+        id: '8xt7plkerd',
+        category: 'ものづくり',
+        slug: 'craft',
+        createdAt: '2025-06-17T23:51:08.276Z',
+        updatedAt: '2025-06-17T23:53:06.77Z',
+        publishedAt: '2025-06-17T23:51:08.276Z',
+        revisedAt: '2025-06-17T23:51:08.276Z'
+      },
+      {
+        id: 'okrwxl_u07p',
+        category: '自然体験',
+        slug: 'nature',
+        createdAt: '2025-06-17T23:51:22.996Z',
+        updatedAt: '2025-06-17T23:53:13.346Z',
+        publishedAt: '2025-06-17T23:51:22.996Z',
+        revisedAt: '2025-06-17T23:51:22.996Z'
+      },
+      {
+        id: 'kduvt_1sxpvz',
+        category: 'スポーツ・遊び',
+        slug: 'sports-play',
+        createdAt: '2025-06-17T23:51:48.395Z',
+        updatedAt: '2025-06-17T23:52:01.699Z',
+        publishedAt: '2025-06-17T23:51:48.395Z',
+        revisedAt: '2025-06-17T23:52:01.699Z'
+      }
+    ];
+  }
+}

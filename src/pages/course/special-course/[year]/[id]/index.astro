@@ -219,7 +219,7 @@ function formatJapaneseDate(dateString: string): string {
           </div>
           
           {course.subtitle && (
-            <div class="course-info__subtitle">{course.subtitle}</div>
+            <div class="course-info__subtitle" set:html={course.subtitle.replace(/\n/g, '<br>')}></div>
           )}
           
           <div class="course-info__image">
@@ -293,8 +293,14 @@ function formatJapaneseDate(dateString: string): string {
           
           <!-- 詳細情報（1カラムレイアウト） -->
           <div class="course-info__content-wrapper">
-            <h2 class="course-info__section-title">講座詳細</h2>
             <div class="course-info__details">
+              {course.outline && (
+                <div class="detail-item">
+                  <div class="detail-item__label">講座概要：</div>
+                  <div class="detail-item__value" set:html={course.outline.replace(/\n/g, '<br>')}></div>
+                </div>
+              )}
+              
               <div class="detail-item">
                 <div class="detail-item__label">募集状況：</div>
                 <div class="detail-item__value">
@@ -750,12 +756,18 @@ function formatJapaneseDate(dateString: string): string {
   color: $text-secondary;
   margin-bottom: rem(4);
   min-width: rem(120);
+  padding-left: rem(5);
   
   @include breakpoint-up(sm) {
     margin-bottom: 0;
     margin-right: rem(16);
     width: rem(120);
     flex-shrink: 0;
+  }
+  
+  @include breakpoint-up(lg) {
+    width: rem(180);
+    min-width: rem(180);
   }
 }
 
@@ -764,7 +776,8 @@ function formatJapaneseDate(dateString: string): string {
   color: $text-primary;
   line-height: 1.6;
   flex: 1;
-  padding-left: rem(10);
+  padding-left: rem(15);
+  padding-right: rem(15);
 
   @include breakpoint-up(sm) {
     padding-left: 0;
@@ -935,16 +948,6 @@ function formatJapaneseDate(dateString: string): string {
   }
 }
 
-.course-info__section-title {
-  @include font-ja-m(semibold);
-  color: $text-secondary;
-  margin-bottom: rem(16);
-  
-  @include breakpoint-up(lg) {
-    @include font-ja-l(semibold);
-    margin-bottom: rem(24);
-  }
-}
 
 .schedule-items {
   display: flex;
@@ -1188,6 +1191,17 @@ function formatJapaneseDate(dateString: string): string {
   
   @include breakpoint-up(xl) {
     display: inline;
+  }
+}
+
+.course-info__section-title {
+  @include font-ja-m(semibold);
+  color: $text-secondary;
+  margin-bottom: rem(16);
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-l(semibold);
+    margin-bottom: rem(24);
   }
 }
 
@@ -1445,6 +1459,7 @@ function formatJapaneseDate(dateString: string): string {
 
 // 空の状態メッセージのスタイル
 .notices-content .notice-section .notice-section__content.rich-content .empty-notice,
+.notices-content .rich-content .empty-notice,
 .preparation-content .rich-content .empty-notice,
 .reception-content .rich-content .empty-notice {
   color: $text-primary !important;

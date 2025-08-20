@@ -31,7 +31,8 @@
       "Bash(gtimeout 15s npm run dev)",
       "Bash(gtimeout:*)",
       "Bash(git push:*)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "WebFetch(domain:localhost)"
     ],
     "deny": []
   }

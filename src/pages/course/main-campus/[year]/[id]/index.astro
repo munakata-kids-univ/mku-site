@@ -641,11 +641,12 @@ function getGradeColorClass(grade: string): string {
 }
 
 .course-info__subtitle {
-  @include font-ja-m(semibold);
+  @include font-ja-s(semibold);
   color: $text-primary;
   margin-bottom: rem(24);
   
   @include breakpoint-up(lg) {
+    @include font-ja-m(semibold);
     margin-bottom: rem(32);
   }
 }
@@ -774,6 +775,7 @@ function getGradeColorClass(grade: string): string {
   color: $text-secondary;
   margin-bottom: rem(4);
   min-width: rem(120);
+  padding-left: rem(5);
   
   @include breakpoint-up(sm) {
     margin-bottom: 0;
@@ -788,7 +790,8 @@ function getGradeColorClass(grade: string): string {
   color: $text-primary;
   line-height: 1.6;
   flex: 1;
-  padding-left: rem(10);
+  padding-left: rem(15);
+  padding-right: rem(15);
 
   @include breakpoint-up(sm) {
     padding-left: 0;
