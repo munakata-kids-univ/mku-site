@@ -1,0 +1,360 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import HeroSection from '@/components/HeroSection.astro';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import ContentSectionHeader from '@/components/ContentSectionHeader.astro';
+import CourseCard from '@/components/CourseCard.astro';
+import AfterImagesSlider from '@/components/AfterImagesSlider.astro';
+import { 
+  getGlobalSettings,
+  getSummerCourses
+} from '@/lib/microcms';
+import { convertYearToPath, convertPathToYear } from '@/utils/yearConverter';
+
+// 静的パス生成
+export async function getStaticPaths() {
+  try {
+    // 全ての講座データを取得
+    const allCourses = await getSummerCourses();
+    
+    if (!allCourses || allCourses.length === 0) {
+      return [];
+    }
+
+    // 各年度のユニークなパスを生成
+    const uniqueYears = [...new Set(allCourses.map(course => {
+      return Array.isArray(course.year) ? course.year[0] : course.year;
+    }))];
+
+    const paths = uniqueYears.map(originalYear => {
+      const pathYear = convertYearToPath(originalYear);
+      return {
+        params: { year: pathYear },
+        props: { originalYear, pathYear }
+      };
+    });
+
+    return paths;
+  } catch (error) {
+    console.error('Error generating static paths for summer course year pages:', error);
+    return [];
+  }
+}
+
+// パラメータを取得
+const { year } = Astro.params;
+const { originalYear, pathYear } = Astro.props;
+
+if (!year) {
+  return Astro.redirect('/404');
+}
+
+// グローバル設定を取得
+const globalSettings = await getGlobalSettings();
+const currentYear = Array.isArray(globalSettings.currentYear) ? globalSettings.currentYear[0] : globalSettings.currentYear;
+const currentYearPath = convertYearToPath(currentYear);
+
+// パスから年度を復元
+const actualYear = originalYear || convertPathToYear(year);
+
+// 現在年度の場合は /course/summer-course へリダイレクト
+if (year === currentYearPath) {
+  return Astro.redirect('/course/summer-course', 301);
+}
+
+// 過去年度の講座一覧を取得
+const courses = await getSummerCourses(actualYear);
+
+// 該当年度の講座が存在しない場合は404
+if (!courses || courses.length === 0) {
+  return Astro.redirect('/404');
+}
+
+// 年度表示用（令和○年度から○部分を抽出）
+const reiwaYear = actualYear.replace('令和', '').replace('年度', '');
+
+// ページ情報
+const pageTitle = `過去の実績（${actualYear}）- 夏の課外授業`;
+const pageDescription = `${actualYear}の夏の課外授業実績。市内外問わず、幅広い年齢の子どもたちが参加できる体験活動で、夏休み期間中に多数開催しました。`;
+
+// パンくずリスト
+const breadcrumbItems = [
+  { label: 'ホーム', href: '/' },
+  { label: '講座内容', href: '/course' },
+  { label: '夏の課外授業', href: '/course/summer-course' },
+  { label: `${actualYear}` }
+];
+
+// 講座カード用のデータ変換（開催日ごとに分割対応）
+const courseCards = [];
+let cardIndex = 0;
+
+courses.forEach(course => {
+  const courseYearPath = convertYearToPath(Array.isArray(course.year) ? course.year[0] : course.year);
+  
+  // scheduleが存在し、複数の開催日がある場合は分割
+  if (course.schedule && course.schedule.length > 0) {
+    course.schedule.forEach((scheduleItem, index) => {
+      const urlSuffix = course.schedule.length > 1 ? `-${index + 1}` : '';
+      const scheduleTitle = course.schedule.length > 1 ? 
+        `${course.title} (${index + 1}回目)` : course.title;
+      
+      courseCards.push({
+        id: `${course.id}${urlSuffix}`,
+        title: scheduleTitle,
+        subtitle: course.subtitle,
+        thumbImg: course.thumbImg,
+        status: '募集終了', // 過去年度は全て募集終了
+        year: course.year,
+        href: `/course/summer-course/${courseYearPath}/${course.id}${urlSuffix}`,
+        providerNames: course.providerInfo?.map(item => item.providerName).join('、') || '',
+        targetGrades: Array.isArray(course.targetGrades) ? course.targetGrades : (course.targetGrades ? [course.targetGrades] : []),
+        category: (typeof course.category === 'object' && course.category?.category) ? course.category.category : (course.category || 'その他'),
+        courseType: (Array.isArray(course.courseType) ? course.courseType[0] : course.courseType)?.toString().trim() || 'undefined',
+        hasReport: !!(course.afterImages?.length || course.instructor || course.afterReport || course.afterMovieUrl)
+      });
+    });
+  } else {
+    // scheduleが存在しない場合は1つのカードとして追加
+    courseCards.push({
+      id: course.id,
+      title: course.title,
+      subtitle: course.subtitle,
+      thumbImg: course.thumbImg,
+      status: '募集終了', // 過去年度は全て募集終了
+      year: course.year,
+      href: `/course/summer-course/${courseYearPath}/${course.id}`,
+      providerNames: course.providerInfo?.map(item => item.providerName).join('、') || '',
+      targetGrades: Array.isArray(course.targetGrades) ? course.targetGrades : (course.targetGrades ? [course.targetGrades] : []),
+      category: (typeof course.category === 'object' && course.category?.category) ? course.category.category : (course.category || 'その他'),
+      courseType: (Array.isArray(course.courseType) ? course.courseType[0] : course.courseType)?.toString().trim() || 'undefined',
+      hasReport: !!(course.afterImages?.length || course.instructor || course.afterReport || course.afterMovieUrl)
+    });
+  }
+});
+
+// 全講座のafterImagesを収集
+const allAfterImages = courses.reduce((acc, course) => {
+  if (course.afterImages && course.afterImages.length > 0) {
+    acc.push(...course.afterImages);
+  }
+  return acc;
+}, []);
+
+// 年度表示用のフォーマット
+function formatYear(year) {
+  return year.replace('令和', '').replace('年度', '');
+}
+
+// ヒーローセクションの年度表示用の英語表記
+const reiwaNumber = reiwaYear;
+---
+
+<BaseLayout 
+  title={pageTitle} 
+  description={pageDescription}
+  noIndex={false}
+>
+  <!-- カスタムヒーローセクション -->
+  <section class="hero">
+    <div class="hero__container">
+      <h1 class="hero__title">
+        夏の課外授業<br>
+        過去の実績（{actualYear}）
+      </h1>
+      <div class="hero__subtitle">
+        Report - Summer Course - Reiwa {reiwaNumber}
+      </div>
+    </div>
+  </section>
+
+  <!-- パンくずリスト -->
+  <Breadcrumb items={breadcrumbItems} />
+
+  <!-- 過去実績一覧 -->
+  <section class="past-results">
+    <div class="past-results__container">
+      <ContentSectionHeader
+        tag="Past Results"
+        title={`${actualYear}の実績`}
+        description={`${actualYear}に開催された夏の課外授業の一覧です。多くの子どもたちが参加し、貴重な体験をしました。`}
+      />
+      
+      <!-- 講座カード一覧 -->
+      <div class="courses-grid">
+        {courseCards.map(course => (
+          <CourseCard 
+            key={course.id}
+            id={course.id}
+            title={course.title}
+            subtitle={course.subtitle}
+            thumbImg={course.thumbImg}
+            status={course.status}
+            year={course.year}
+            href={course.href}
+            providerNames={course.providerNames}
+            targetGrades={course.targetGrades}
+            category={course.category}
+            courseType={course.courseType}
+            hasReport={course.hasReport}
+          />
+        ))}
+      </div>
+
+      {/* 過去実績画像スライダー */}
+      {allAfterImages.length > 0 && (
+        <div class="after-images-section">
+          <h2 class="after-images-section__title">活動の様子</h2>
+          <AfterImagesSlider images={allAfterImages} />
+        </div>
+      )}
+    </div>
+  </section>
+</BaseLayout>
+
+<style lang="scss">
+@import "../../../../styles/index";
+
+// ヒーローセクション（ピンク色バージョン）
+.hero {
+  background: linear-gradient(135deg, $brand-pink 0%, $brand-sub-pink-low 100%);
+  padding: rem(60) 0;
+  position: relative;
+  overflow: hidden;
+
+  @include breakpoint-up(md) {
+    padding: rem(80) 0;
+  }
+
+  @include breakpoint-up(lg) {
+    padding: rem(100) 0;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    background: url('/images/hero-pattern.svg') no-repeat right center;
+    background-size: contain;
+    opacity: 0.1;
+    z-index: 1;
+  }
+
+  &__container {
+    max-width: rem(1200);
+    margin: 0 auto;
+    padding: 0 5%;
+    position: relative;
+    z-index: 2;
+
+    @include breakpoint-up(lg) {
+      padding: 0 rem(24);
+    }
+  }
+
+  &__title {
+    @include font-ja-2l(semibold);
+    font-weight: bold;
+    color: $text-white;
+    margin-bottom: rem(16);
+    line-height: 1.3;
+    text-align: center;
+
+    @include breakpoint-up(md) {
+      @include font-ja-3l(semibold);
+      margin-bottom: rem(20);
+    }
+
+    @include breakpoint-up(lg) {
+      @include font-ja-3l(semibold);
+      margin-bottom: rem(24);
+    }
+  }
+
+  &__subtitle {
+    @include font-ja-s(semibold);
+    color: $brand-pink;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+
+    @include breakpoint-up(md) {
+      @include font-ja-m(semibold);
+    }
+
+    @include breakpoint-up(lg) {
+      @include font-ja-l(semibold);
+    }
+  }
+}
+
+// 過去実績セクション
+.past-results {
+  padding: rem(40) 0 rem(60);
+
+  @include breakpoint-up(md) {
+    padding: rem(60) 0 rem(80);
+  }
+
+  @include breakpoint-up(lg) {
+    padding: rem(80) 0 rem(100);
+  }
+
+  &__container {
+    max-width: rem(1200);
+    margin: 0 auto;
+    padding: 0 5%;
+
+    @include breakpoint-up(lg) {
+      padding: 0 rem(24);
+    }
+  }
+}
+
+// 講座カード一覧
+.courses-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: rem(20);
+  margin-top: rem(40);
+
+  @include breakpoint-up(sm) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: rem(24);
+  }
+
+  @include breakpoint-up(md) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: rem(30);
+  }
+
+  @include breakpoint-up(lg) {
+    margin-top: rem(60);
+    gap: rem(32);
+  }
+}
+
+// 活動の様子セクション
+.after-images-section {
+  margin-top: rem(60);
+
+  @include breakpoint-up(lg) {
+    margin-top: rem(80);
+  }
+
+  &__title {
+    @include font-ja-m(semibold);
+    color: $text-primary;
+    text-align: center;
+    margin-bottom: rem(30);
+
+    @include breakpoint-up(lg) {
+      @include font-ja-l(semibold);
+      margin-bottom: rem(40);
+    }
+  }
+}
+</style>
