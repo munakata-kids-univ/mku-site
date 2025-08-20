@@ -133,9 +133,14 @@ const {
     
     &.courses-title-wrapper {
       align-items: flex-start;
+      padding-left: 3%;
       
       @include breakpoint-up(sm) {
         align-items: center;
+      }
+      
+      @include breakpoint-up(xl) {
+        padding-left: 0;
       }
     }
   }

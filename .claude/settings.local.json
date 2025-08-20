@@ -30,7 +30,8 @@
       "Bash(timeout:*)",
       "Bash(gtimeout 15s npm run dev)",
       "Bash(gtimeout:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": []
   }

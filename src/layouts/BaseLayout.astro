@@ -1,5 +1,6 @@
 ---
 import DefaultHead from './DefaultHead.astro';
+import ScrollToTopButton from '@/components/ScrollToTopButton.astro';
 
 interface Props {
   title: string;
@@ -301,6 +302,9 @@ const currentPath = Astro.url.pathname;
       });
     });
   </script>
+
+  <!-- スクロールトップボタン -->
+  <ScrollToTopButton />
 </body>
 </html>
 

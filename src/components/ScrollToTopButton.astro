@@ -1,0 +1,193 @@
+---
+// ScrollToTopButton - ページトップに戻るスクロールボタン
+---
+
+<button
+  id="scroll-to-top"
+  class="scroll-to-top-btn"
+  aria-label="ページの先頭に戻る"
+  type="button"
+>
+  <div class="scroll-to-top-btn__arrow"></div>
+</button>
+
+<style lang="scss">
+@use '../styles/tokens/breakpoints' as bp;
+@use '../styles/tokens/variables' as vars;
+
+.scroll-to-top-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 1000;
+  
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: 2px solid vars.$background-primary;
+  background-color: vars.$brand-primary;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  // モバイルでのタップハイライトを完全に無効化
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  
+  // iOS Safariでのタップ時の背景色変化を防ぐ
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  
+  // 初期状態は非表示
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+  
+  &.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  
+  &:hover {
+    background-color: vars.$brand-secondary;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  // すべての状態で背景色を強制的に制御
+  &:focus,
+  &:focus-visible,
+  &:focus-within,
+  &:active,
+  &:visited,
+  &.focus,
+  &.active {
+    background-color: vars.$brand-primary !important;
+    outline: none !important;
+    border: 2px solid vars.$background-primary !important;
+  }
+  
+  // ホバー以外のすべての状態で元の色を保持
+  &:not(:hover) {
+    background-color: vars.$brand-primary !important;
+  }
+  
+  // Webkit系でのハイライト色を完全に無効化
+  &::-moz-focus-inner {
+    border: 0;
+    padding: 0;
+  }
+  
+  &__arrow {
+    position: relative;
+    
+    &::after {
+      content: '';
+      width: 0.5rem;
+      height: 0.5rem;
+      border-right: 2px solid vars.$background-primary;
+      border-bottom: 2px solid vars.$background-primary;
+      transform: translateY(2px) rotate(-135deg); // 上向きにするため -135度回転、少し下に移動
+      display: block;
+    }
+  }
+  
+  // レスポンシブ対応
+  @include bp.breakpoint-down(md) {
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    
+    &__arrow::after {
+      width: 0.4rem;
+      height: 0.4rem;
+    }
+  }
+  
+  @include bp.breakpoint-down(sm) {
+    bottom: 1rem;
+    right: 1rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    
+    &__arrow::after {
+      width: 0.375rem;
+      height: 0.375rem;
+    }
+  }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const scrollToTopBtn = document.getElementById('scroll-to-top');
+  
+  if (!scrollToTopBtn) return;
+  
+  // スクロール位置に応じてボタンの表示/非表示を制御
+  const toggleButton = () => {
+    if (window.scrollY > 300) {
+      scrollToTopBtn.classList.add('show');
+    } else {
+      scrollToTopBtn.classList.remove('show');
+    }
+  };
+  
+  // スクロールイベントリスナー
+  window.addEventListener('scroll', toggleButton);
+  
+  // ボタンクリック時の処理
+  scrollToTopBtn.addEventListener('click', () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+    
+    // フォーカスを即座に外す
+    scrollToTopBtn.blur();
+    
+    // 追加の処理で確実にスタイルをリセット
+    scrollToTopBtn.style.backgroundColor = 'var(--color-brand-primary, #1c0083)';
+    
+    setTimeout(() => {
+      scrollToTopBtn.blur();
+      // CSSクラスを一旦削除して再追加
+      scrollToTopBtn.classList.remove('scroll-to-top-btn');
+      scrollToTopBtn.offsetHeight; // リフローを強制
+      scrollToTopBtn.classList.add('scroll-to-top-btn');
+    }, 50);
+  });
+  
+  // タッチイベントでのスタイル制御
+  scrollToTopBtn.addEventListener('touchstart', () => {
+    // タッチ開始時も背景色を固定
+    scrollToTopBtn.style.backgroundColor = '#1c0083';
+  }, { passive: true });
+  
+  scrollToTopBtn.addEventListener('touchend', () => {
+    setTimeout(() => {
+      scrollToTopBtn.blur();
+      scrollToTopBtn.style.backgroundColor = '#1c0083';
+    }, 100);
+  }, { passive: true });
+  
+  // 初期状態の設定
+  toggleButton();
+});
+</script>

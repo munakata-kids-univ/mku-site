@@ -251,6 +251,7 @@ export interface SummerCourse extends MicroCMSBase {
   category?: any;
   courseType?: string;
   providerInfo?: any[];
+  providerItem?: { providerName?: string; providerUrl?: string; }[];
   targetGrades: string[];
   cityOutsideOk: boolean;
   parentJoin?: string;

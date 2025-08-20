@@ -794,6 +794,10 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     @include breakpoint-up(md) {
       margin-bottom: rem(48);
     }
+    
+    @include breakpoint-up(xl) {
+      max-width: rem(1200);
+    }
   }
   
   &__message {
@@ -883,12 +887,12 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   &__point-image {
     flex-shrink: 0;
     width: rem(130);
-    height: rem(130);
+    aspect-ratio: 4/3;
+    overflow: hidden;
     
     @include breakpoint-up(lg) {
       width: 100%;
       aspect-ratio: 4/3;
-      height: auto;
       margin: 0 auto;
     }
     
@@ -896,6 +900,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
       width: 100%;
       height: 100%;
       object-fit: cover;
+      object-position: center;
       border-radius: $radius-l;
       @include breakpoint-up(lg) {
         border-radius: $radius-2l;

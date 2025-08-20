@@ -6,7 +6,7 @@ import ContentSectionHeader from '@/components/ContentSectionHeader.astro';
 import CourseCard from '@/components/CourseCard.astro';
 import { 
   getGlobalSettings, 
-  getSpecialCourses 
+  getSummerCourses 
 } from '../../../lib/microcms';
 import { convertYearToPath } from '../../../utils/yearConverter';
 
@@ -19,23 +19,23 @@ const currentYearValue = Array.isArray(currentYear) ? currentYear[0] : currentYe
 if (!currentYearValue) {
   throw new Error('Current year is not defined');
 }
-const courses = await getSpecialCourses(currentYearValue.toString());
+const courses = await getSummerCourses(currentYearValue.toString());
 
 // 過去の実績セクション用：全年度の講座データを取得
-const allCourses = await getSpecialCourses();
+const allCourses = await getSummerCourses();
 
 // ページ情報
-const pageTitle = `特設講座（${currentYearValue}）`;
-const pageDescription = `${currentYearValue}の特設講座一覧。月に1〜2回開催される職業体験講座で、より現実に即した環境での学びを提供します。`;
+const pageTitle = `夏の課外授業（${currentYearValue}）`;
+const pageDescription = `${currentYearValue}の夏の課外授業一覧。市内外問わず、幅広い年齢の子どもたちが参加できる体験活動で、夏休み期間中に多数開催しています。`;
 
 // パンくずリスト
 const breadcrumbItems = [
   { label: 'ホーム', href: '/' },
   { label: '講座', href: '/course' },
-  { label: '特設講座' }
+  { label: '夏の課外授業' }
 ];
 
-// 申込ボタン（特設講座設定から取得、後で実装）
+// 申込ボタン（夏の課外授業設定から取得、後で実装）
 const buttons = [];
 
 // currentYearと一致する講座のみをフィルタリング
@@ -44,20 +44,108 @@ const filteredCourses = courses.filter(course => {
   return courseYearValue === currentYearValue;
 });
 
-// 講座カード用のデータ変換
+// 講座カード用のデータ変換（開催日ごとに分割）
 const currentYearPath = convertYearToPath(currentYearValue.toString());
-const courseCards = filteredCourses.map(course => ({
-  id: course.id,
-  title: course.title,
-  thumbImg: course.thumbImg,
-  status: course.status,
-  year: course.year,
-  executedDate: course.executedDate,
-  href: `/course/special-course/${currentYearPath}/${course.id}`,
-  providerNames: course.providerItem?.map(item => item.providerName).join('、') || '',
-  targetGrades: Array.isArray(course.targetGrades) ? course.targetGrades : (course.targetGrades ? [course.targetGrades] : []),
-  hasReport: !!(course.afterImages?.length || course.instructor || course.afterReport || course.afterMovieUrl)
-}));
+let courseIndex = 0;
+const courseCards = filteredCourses.flatMap(course => {
+  courseIndex++;
+  // scheduleが存在し、複数の開催日がある場合は分割
+  if (course.schedule && course.schedule.length > 0) {
+    return course.schedule.map((scheduleItem, index) => {
+      const scheduleIndex = index + 1;
+      const urlSuffix = course.schedule.length > 1 ? `-${scheduleIndex}` : '';
+      
+      // cityOutsideOkに基づく文言設定
+      const residencyText = course.cityOutsideOk ? '市内・市外在住の' : '市内在住の';
+      
+      // parentJoin値の表示用変換
+      // microCMSのselectフィールドはID値で返されるため、表示用テキストにマッピング
+      const parentJoinMapping: Record<string, string> = {
+        'r0A1BukTIs': '保護者の方も参加できます',
+        '87MGdHzdV4': '保護者の方は参加できません',
+        'FEytb3Ezyt': '保護者の方の参加が必須です'
+      };
+      
+      const parentJoinValue = course.parentJoin;
+      let parentJoinText = '';
+      
+      // 安全に文字列として処理
+      const parentJoinStr = typeof parentJoinValue === 'string' ? parentJoinValue : (Array.isArray(parentJoinValue) ? parentJoinValue[0] : '');
+      
+      if (parentJoinStr && parentJoinStr !== '選択してください' && parentJoinStr.trim() !== '') {
+        // IDの場合は表示テキストにマッピング、すでに表示テキストの場合はそのまま使用
+        const displayText = parentJoinMapping[parentJoinStr] || parentJoinStr;
+        parentJoinText = `※${displayText}`;
+      }
+      
+      return {
+        id: course.id,
+        scheduleIndex,
+        title: course.title,
+        subtitle: course.subtitle,
+        thumbImg: course.thumbImg,
+        status: scheduleItem.subStatus || course.status,
+        year: course.year,
+        scheduleDate: course.atAnyTime ? null : scheduleItem.date, // 随時開催の場合は日付を空にする
+        startTime: scheduleItem.startTime,
+        endTime: scheduleItem.endTime,
+        href: `/course/summer-course/${currentYearPath}/${course.id}${urlSuffix}`,
+        providerNames: course.providerItem?.map(item => item.providerName).join('、') || '',
+        targetGrades: Array.isArray(course.targetGrades) ? course.targetGrades : (course.targetGrades ? [course.targetGrades] : []),
+        category: (typeof course.category === 'object' && course.category?.title) ? course.category.title : (course.category || 'その他'),
+        courseType: (Array.isArray(course.courseType) ? course.courseType[0] : course.courseType)?.toString().trim() || 'undefined',
+        residencyText,
+        parentJoinText,
+        atAnyTime: course.atAnyTime || false,
+        hasReport: !!(course.afterImages?.length || course.instructor || course.afterReport || course.participantCount)
+      };
+    });
+  } else {
+    // scheduleが存在しない場合は従来通り
+    const residencyText = course.cityOutsideOk ? '市内・市外在住の' : '市内在住の';
+    // 随時開催の場合のparentJoin値の表示用変換
+    // microCMSのselectフィールドはID値で返されるため、表示用テキストにマッピング
+    const parentJoinMapping: Record<string, string> = {
+      'r0A1BukTIs': '保護者の方も参加できます',
+      '87MGdHzdV4': '保護者の方は参加できません',
+      'FEytb3Ezyt': '保護者の方の参加が必須です'
+    };
+    
+    const parentJoinValue = course.parentJoin;
+    let parentJoinText = '';
+    
+    // 安全に文字列として処理
+    const parentJoinStr = typeof parentJoinValue === 'string' ? parentJoinValue : (Array.isArray(parentJoinValue) ? parentJoinValue[0] : '');
+    
+    if (parentJoinStr && parentJoinStr !== '選択してください' && parentJoinStr.trim() !== '') {
+      // IDの場合は表示テキストにマッピング、すでに表示テキストの場合はそのまま使用
+      const displayText = parentJoinMapping[parentJoinStr] || parentJoinStr;
+      parentJoinText = `※${displayText}`;
+    }
+    
+    return [{
+      id: course.id,
+      scheduleIndex: 1,
+      title: course.title,
+      subtitle: course.subtitle,
+      thumbImg: course.thumbImg,
+      status: course.status,
+      year: course.year,
+      scheduleDate: null,
+      startTime: null,
+      endTime: null,
+      href: `/course/summer-course/${currentYearPath}/${course.id}`,
+      providerNames: course.providerItem?.map(item => item.providerName).join('、') || '',
+      targetGrades: Array.isArray(course.targetGrades) ? course.targetGrades : (course.targetGrades ? [course.targetGrades] : []),
+      category: (typeof course.category === 'object' && course.category?.title) ? course.category.title : (course.category || 'その他'),
+      courseType: (Array.isArray(course.courseType) ? course.courseType[0] : course.courseType)?.toString().trim() || 'undefined',
+      residencyText,
+      parentJoinText,
+      atAnyTime: course.atAnyTime || false,
+      hasReport: !!(course.afterImages?.length || course.instructor || course.afterReport || course.afterMovieUrl)
+    }];
+  }
+});
 
 
 // フェーズに応じたメッセージ（後で実装）
@@ -74,7 +162,7 @@ const getPhaseMessage = (phase: string) => {
   }
 };
 
-// TODO: 特設講座のフェーズ取得（後で実装）
+// TODO: 夏の課外授業のフェーズ取得（後で実装）
 const phase = 'before';
 const phaseMessage = '';
 
@@ -88,7 +176,7 @@ function getStatusColorClass(status: string): string {
     case '募集受付中':
       return 'status-badge--brand-secondary';
     case '抽選作業中':
-      return 'status-badge--brand-turquoise';
+      return 'status-badge--brand-pink';
     case '当選者発表':
       return 'status-badge--brand-pink';
     default:
@@ -236,11 +324,11 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   <main>
     <!-- ヒーローセクション -->
     <HeroSection 
-      title="特設講座"
-      subtitle="Special Course"
-      imageSrc="/images/backgrounds/img_bg-hero_special-course-01.webp"
-      imageAlt="特設講座"
-      customBackgroundStyle="hero--special-course"
+      title="夏の課外授業"
+      subtitle="Summer Course"
+      imageSrc="/images/backgrounds/img_bg-hero_summer-course-01.webp"
+      imageAlt="夏の課外授業"
+      customBackgroundStyle="hero--summer-course"
     />
 
     <!-- パンくずリスト -->
@@ -251,32 +339,32 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
       <div class="content-section__container intro-section__container">
         <div class="intro-section__content">
           <h1 class="intro-section__title">
-            <span class="intro-section__title-line">本物の体験を、もっと多くの子どもたちへ</span>
+            <span class="intro-section__title-line">宗像市の魅力を楽しく学ぶ、本物の体験学習</span>
           </h1>
           <p class="intro-section__description">
-            月に1〜2回、職業に関わる講座を中心に展開しています。宗像市内だけでなく、企業の施設や大学の実習室など、より現実に即した環境での職業体験を多数開催。<br>
-            未就学児や市外在住の児童も参加できる講座や、不登校児童生徒の社会的自立のきっかけとなるような講座も用意し、子どもたちが年間通じて様々な職業体験にチャレンジできる機会を提供。
+            市内外問わず、幅広い年齢の子どもたちが参加できる体験活動。<br>
+            ものづくり、スポーツ・遊び、飲食・食育など様々なカテゴリーの体験を、夏休み期間中に多数開催しています。
           </p>
           
-          <!-- 特設講座 3つのポイント -->
+          <!-- 夏の課外授業 3つのポイント -->
           <div class="intro-section__points">
             <h2 class="intro-section__points-title">
-              特設講座 <span class="intro-section__points-number">3</span>つのポイント
+              夏の課外授業 <span class="intro-section__points-number">3</span>つのポイント
             </h2>
             
             <div class="intro-section__points-grid">
               <!-- ポイント01 -->
               <div class="intro-section__point">
                 <div class="intro-section__point-image">
-                  <img src="/images/content/img_special-course-point-01.webp" alt="ポイント1" />
+                  <img src="/images/content/img_summer-course-point-01.webp" alt="ポイント1" />
                 </div>
                 <div class="intro-section__point-content">
                   <div class="intro-section__point-number">
                     <span class="point-text">point</span><span class="point-number">01</span>
                   </div>
-                  <h3 class="intro-section__point-title">高頻度で開講</h3>
+                  <h3 class="intro-section__point-title">多彩なカテゴリー</h3>
                   <p class="intro-section__point-description">
-                    月1回以上のペースで講座を実施し、キャリア教育の機会を年間とおして提供。
+                    ものづくり、スポーツ・遊び、飲食・食育などの多彩なカテゴリーの体験活動を用意。
                   </p>
                 </div>
               </div>
@@ -284,15 +372,15 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
               <!-- ポイント02 -->
               <div class="intro-section__point">
                 <div class="intro-section__point-image">
-                  <img src="/images/content/img_special-course-point-02.webp" alt="ポイント2" />
+                  <img src="/images/content/img_summer-course-point-02.webp" alt="ポイント2" />
                 </div>
                 <div class="intro-section__point-content">
                   <div class="intro-section__point-number">
                     <span class="point-text">point</span><span class="point-number">02</span>
                   </div>
-                  <h3 class="intro-section__point-title">“本物”の施設でも開催</h3>
+                  <h3 class="intro-section__point-title">市内外の小中学生が参加可能</h3>
                   <p class="intro-section__point-description">
-                    事業者の施設など、市外へ飛び出し、より職業をイメージできるようなリアルな体験ができることも。
+                    居住地域を問わず、全国から小学生・中学生が気軽に参加可能。
                   </p>
                 </div>
               </div>
@@ -300,15 +388,15 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
               <!-- ポイント03 -->
               <div class="intro-section__point">
                 <div class="intro-section__point-image">
-                  <img src="/images/content/img_special-course-point-03.webp" alt="ポイント3" />
+                  <img src="/images/content/img_summer-course-point-03.webp" alt="ポイント3" />
                 </div>
                 <div class="intro-section__point-content">
                   <div class="intro-section__point-number">
                     <span class="point-text">point</span><span class="point-number">03</span>
                   </div>
-                  <h3 class="intro-section__point-title">幅広い参加対象</h3>
+                  <h3 class="intro-section__point-title">事業者・団体が主体運営</h3>
                   <p class="intro-section__point-description">
-                    未就学児や不登校の子どもたちに向けた講座や、市外在住の子どもたちも申し込める講座も開催。
+                    各分野の企業や団体が主催・講師となり、本物の体験を提供。
                   </p>
                 </div>
               </div>
@@ -394,9 +482,53 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
         />
         
         {courseCards.length > 0 ? (
-          <div class="courses-grid">
-            {courseCards.map(course => (
-              <a href={course.href} class="course-card">
+          <div class="courses-section">
+            <div class="filter-tabs">
+              <button class="filter-tab filter-tab--active" data-sort="date">日付から探す</button>
+              <button class="filter-tab" data-sort="category">カテゴリーから探す</button>
+            </div>
+            <div class="courses-container">
+            
+            <!-- カード色分け凡例 -->
+            <div class="course-legend">
+              <div class="course-legend__item">
+                <div class="course-legend__color course-legend__color--job-experience"></div>
+                <span class="course-legend__label">職業体験</span>
+              </div>
+              <div class="course-legend__item">
+                <div class="course-legend__color course-legend__color--hands-on"></div>
+                <span class="course-legend__label">体験活動</span>
+              </div>
+            </div>
+            
+            <!-- 時期別スクロールリンク -->
+            <div class="period-scroll-links" id="period-scroll-links" 
+                 style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 16px 0 24px 0;">
+              <a href="#" class="period-link" data-period="late-july" 
+                 style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 12px 4px 8px; border: 1px solid #1c0083; border-radius: 10px; white-space: nowrap; color: #1c0083; background-color: #ffffff; text-decoration: none; transition: all 0.2s ease; cursor: pointer;">
+                7月下旬 <span class="period-link__arrow" style="width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg) translateY(-4px); flex-shrink: 0; margin-left: 0px;"></span>
+              </a>
+              <a href="#" class="period-link" data-period="early-august" 
+                 style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 12px 4px 8px; border: 1px solid #1c0083; border-radius: 10px; white-space: nowrap; color: #1c0083; background-color: #ffffff; text-decoration: none; transition: all 0.2s ease; cursor: pointer;">
+                8月上旬 <span class="period-link__arrow" style="width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg) translateY(-4px); flex-shrink: 0; margin-left: 0px;"></span>
+              </a>
+              <a href="#" class="period-link" data-period="mid-august" 
+                 style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 12px 4px 8px; border: 1px solid #1c0083; border-radius: 10px; white-space: nowrap; color: #1c0083; background-color: #ffffff; text-decoration: none; transition: all 0.2s ease; cursor: pointer;">
+                8月中旬 <span class="period-link__arrow" style="width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg) translateY(-4px); flex-shrink: 0; margin-left: 0px;"></span>
+              </a>
+              <a href="#" class="period-link" data-period="late-august" 
+                 style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 12px 4px 8px; border: 1px solid #1c0083; border-radius: 10px; white-space: nowrap; color: #1c0083; background-color: #ffffff; text-decoration: none; transition: all 0.2s ease; cursor: pointer;">
+                8月下旬 <span class="period-link__arrow" style="width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg) translateY(-4px); flex-shrink: 0; margin-left: 0px;"></span>
+              </a>
+              <a href="#" class="period-link" data-period="anytime" 
+                 style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 12px 4px 8px; border: 1px solid #1c0083; border-radius: 10px; white-space: nowrap; color: #1c0083; background-color: #ffffff; text-decoration: none; transition: all 0.2s ease; cursor: pointer;">
+                随時開催 <span class="period-link__arrow" style="width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg) translateY(-4px); flex-shrink: 0; margin-left: 0px;"></span>
+              </a>
+            </div>
+            
+            <div class="courses-grid" id="courses-grid">
+              {courseCards.map(course => (
+              <a href={course.href} class={`course-card ${course.courseType ? 'course-card--' + course.courseType : ''}`} data-schedule-date={course.scheduleDate || ''} data-category={course.category || ''} data-at-any-time={course.atAnyTime ? 'true' : 'false'}>
                 <div class="course-card__image">
                   <img 
                     src={course.thumbImg?.url || '/images/ui/img_course-no-image-01.webp'} 
@@ -423,6 +555,17 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
                   )}
                 </div>
                 <div class="course-card__content">
+                  {/* 開催日 */}
+                  {(course.scheduleDate || course.atAnyTime) && (
+                    <p class="course-card__schedule-date">
+                      {course.atAnyTime ? '随時開催' : formatExecutedDate(course.scheduleDate)}
+                      {course.startTime && !course.atAnyTime && (
+                        <span class="course-card__time">
+                          {' '}{course.startTime}〜{course.endTime || ''}
+                        </span>
+                      )}
+                    </p>
+                  )}
                   {course.executedDate && (
                     <p class="course-card__executed-date">{formatExecutedDate(course.executedDate)}</p>
                   )}
@@ -430,8 +573,18 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
                     <h3 class="course-card__title">{course.title}</h3>
                     <div class="course-card__arrow"></div>
                   </div>
+                  {/* カテゴリー名 */}
+                  {course.category?.category && (
+                    <div class="course-card__category">
+                      <span class="category-tag">#{course.category.category}</span>
+                    </div>
+                  )}
                   {course.providerNames && (
                     <p class="course-card__provider">{course.providerNames}</p>
+                  )}
+                  {/* 市外住民参加可否文言 */}
+                  {course.residencyText && (
+                    <p class="course-card__residency">{course.residencyText}</p>
                   )}
                   {course.targetGrades.length > 0 && (
                     <div class="course-card__grades">
@@ -443,9 +596,15 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
                       })()}
                     </div>
                   )}
+                  {/* 保護者参加文言 */}
+                  {course.parentJoinText && (
+                    <p class="course-card__parent-join">{course.parentJoinText}</p>
+                  )}
                 </div>
               </a>
-            ))}
+              ))}
+            </div>
+            </div>
           </div>
         ) : (
           <div class="empty-state">
@@ -475,17 +634,17 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
         <div class="process-section__content">
           <div class="process-section__intro">
             <p>
-              特設講座は申込・抽選があります。詳しくは以下の流れをご確認ください。
+              夏の課外授業の参加までの流れです。詳しくは下記をご確認ください。
             </p>
           </div>
           <div class="process-section__illustration">
             <img 
-              src="/images/content/img_special-course_joinflow-illustration-sp.webp" 
+              src="/images/content/img_summer-course_joinflow-illustration-sp.webp" 
               alt="参加までの流れ"
               class="process-section__image process-section__image--sp"
             />
             <img 
-              src="/images/content/img_special-course_joinflow-illustration-pc.webp" 
+              src="/images/content/img_summer-course_joinflow-illustration-pc.webp" 
               alt="参加までの流れ"
               class="process-section__image process-section__image--pc"
             />
@@ -530,7 +689,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
                 const yearNum = parseInt(year.replace('令和', '').replace('年度', ''));
                 const urlYear = `r${yearNum.toString().padStart(2, '0')}`;
                 return (
-                  <a href={`/course/special-course/${urlYear}`} class="base-button base-button--blue">
+                  <a href={`/course/summer-course/${urlYear}`} class="base-button base-button--blue">
                     <span class="base-button__text">{year}</span>
                     <div class="base-button__icon">
                       <div class="base-button__icon-arrow"></div>
@@ -626,7 +785,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
       right: rem(-200);
       width: rem(400);
       height: 100%;
-      background-image: url('/images/content/img_line-decoration-turquoise-01.svg');
+      background-image: url('/images/content/img_line-decoration-pink-01.svg');
       background-repeat: no-repeat;
       background-position: top right;
       background-size: contain;
@@ -654,7 +813,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     right: 0;
     width: rem(30);
     height: rem(30);
-    background-color: $brand-sub-turquoise-low;
+    background-color: $brand-sub-pink-low;
     z-index: -1;
     
     @include breakpoint-up(md) {
@@ -688,7 +847,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   
   &__title-line {
     display: inline;
-    background: linear-gradient(to bottom, transparent 15%, $brand-turquoise 15%, $brand-turquoise 93%, transparent 93%);
+    background: linear-gradient(to bottom, transparent 15%, $brand-pink 15%, $brand-pink 93%, transparent 93%);
     color: $text-white;
     line-height: 1.6;
     padding: rem(2) rem(3);
@@ -714,7 +873,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     margin-top: rem(32);
   }
   
-  // 特設講座 3つのポイント
+  // 夏の課外授業 3つのポイント
   &__points {
     margin-top: rem(80);
     text-align: center;
@@ -730,8 +889,8 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     color: $text-primary;
     margin: 0 auto rem(30);
     text-align: center;
-    border-left: 8px solid $brand-turquoise;
-    border-right: 8px solid $brand-turquoise;
+    border-left: 8px solid $brand-pink;
+    border-right: 8px solid $brand-pink;
     display: inline-block;
     padding: 0 rem(20) rem(5);
     
@@ -743,7 +902,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   
   &__points-number {
     @include font-ja-l(semibold);
-    color: $brand-turquoise;
+    color: $brand-pink;
     line-height: 1;
     vertical-align: baseline;
     position: relative;
@@ -823,7 +982,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   &__point-number {
     letter-spacing: 0.1em;
     margin-bottom: 0;
-    color: $brand-turquoise;
+    color: $brand-pink;
     
     // Point部分
     .point-text {
@@ -915,7 +1074,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     }
 
     &:hover {
-      color: $brand-turquoise;
+      color: $brand-pink;
       text-decoration: none;
 
       .page-nav__arrow {
@@ -943,23 +1102,236 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
 /* ②開講コースセクション */
 .courses-section {
   @extend .section-decoration;
-  background: $brand-sub-turquoise-low;
+  background: $brand-sub-pink-low;
+  
+  .content-section__container {
+    padding: 0 3%;
+    // @include breakpoint-up(md) {
+    //   padding: 0 5%;
+    // }
+    @include breakpoint-up(xl) {
+      padding: 0 rem(50);
+    }
+  }
   
   &::after {
     background: linear-gradient(to bottom, $background-primary 50%, $background-primary 50%);
   }
+  
+}
+
+/* 開講コースタイトルのpadding */
+.courses-section .content-section__container .content-section__header .content-section__title-wrapper.courses-title-wrapper {
+  padding-left: 3% !important;
+  
+  @include breakpoint-up(xl) {
+    padding-left: 0 !important;
+  }
 }
 
 /* 講座グリッド */
+/* コースセクション（タブとコンテナの親要素） */
+.courses-section {
+  position: relative;
+}
+
+/* コースコンテナ（白背景ボックス） */
+.courses-container {
+  background: $background-primary;
+  border-radius: $radius-l;
+  padding: rem(20) rem(12);
+  
+  @include breakpoint-up(md) {
+    padding: rem(20);
+    border-radius: $radius-2l;
+  }
+  
+  @include breakpoint-up(lg) {
+    padding: rem(25);
+  }
+}
+
+/* フィルタータブ */
+.filter-tabs {
+  display: flex;
+  gap: rem(4);
+  z-index: 10;
+  justify-content: center;
+  width: 100%;
+  @include breakpoint-up(lg) {
+    gap: rem(10);
+  }
+}
+
+.filter-tab {
+  @include font-ja-s(semibold);
+  padding: rem(12) rem(16);
+  background: $background-secondary;
+  color: $text-primary;
+  border-radius: $radius-m $radius-m 0 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  border: none;
+  
+  @include breakpoint-up(md) {
+    @include font-ja-s(semibold);
+    padding: rem(14) rem(20);
+  }
+  
+  &:hover {
+    background: darken($background-secondary, 5%);
+  }
+  
+  &--active {
+    background: $background-primary;
+    color: $text-primary;
+    
+    // 文字の下にピンクの下線
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: rem(8);
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - #{rem(32)});
+      height: rem(3);
+      background: $brand-pink;
+      border-radius: rem(2);
+    }
+    
+    @include breakpoint-up(md) {
+      &::after {
+        bottom: rem(10);
+        width: calc(100% - #{rem(40)});
+      }
+    }
+    
+    &:hover {
+      background: $background-primary;
+    }
+  }
+}
+
+/* 凡例 */
+.course-legend {
+  display: flex;
+  gap: rem(20);
+  margin: rem(16) auto rem(20);
+  align-items: center;
+  justify-content: center;
+  
+  @include breakpoint-up(md) {
+    margin: rem(20) 0 rem(24) 0;
+    gap: rem(24);
+  }
+  
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: rem(8);
+  }
+  
+  &__color {
+    width: rem(16);
+    height: rem(16);
+    border-radius: rem(4);
+    flex-shrink: 0;
+    
+    @include breakpoint-up(md) {
+      width: rem(20);
+      height: rem(20);
+      border-radius: rem(6);
+    }
+    
+    &--job-experience {
+      background-color: $brand-sub-yellow-very-low;
+    }
+    
+    &--hands-on {
+      background-color: $brand-sub-purple-very-low;
+    }
+  }
+  
+  &__label {
+    @include font-ja-s(semibold);
+    color: $text-primary;
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-m(semibold);
+    }
+  }
+}
+
+/* 時期別スクロールリンク */
+.period-scroll-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: rem(8);
+  justify-content: center;
+  margin: rem(16) 0 rem(24) 0;
+  
+  @include breakpoint-up(md) {
+    gap: rem(12);
+    margin: rem(20) 0 rem(30) 0;
+  }
+}
+
+.period-link {
+  display: inline-flex;
+  align-items: center;
+  gap: rem(3);
+  font-size: rem(11);
+  font-weight: 600;
+  padding: rem(2) rem(6);
+  border: 1px solid $brand-black;
+  border-radius: rem(7);
+  white-space: nowrap;
+  color: $text-primary;
+  background-color: $background-primary;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  
+  @include breakpoint-up(md) {
+    @include font-ja-3s(semibold);
+    padding: rem(3) rem(8);
+  }
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-2s(semibold);
+  }
+  
+  &:hover {
+    background-color: $brand-black;
+    color: $background-primary;
+    text-decoration: none;
+  }
+  
+  &__arrow {
+    width: rem(8);
+    height: rem(8);
+    border-right: 1px solid currentColor;
+    border-bottom: 1px solid currentColor;
+    transform: rotate(45deg);
+    flex-shrink: 0;
+    margin-left: rem(2);
+    
+    @include breakpoint-up(md) {
+      width: rem(9);
+      height: rem(9);
+      border-right: 2px solid currentColor;
+      border-bottom: 2px solid currentColor;
+    }
+  }
+}
+
 .courses-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: rem(12);
-  padding-bottom: rem(32);
   
   @include breakpoint-up(md) {
     gap: rem(18);
-    padding-bottom: rem(40);
   }
   
   @include breakpoint-up(lg) {
@@ -970,6 +1342,65 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     margin: 0 auto;
     gap: rem(24);
     padding-bottom: rem(48);
+  }
+  
+  // 日付タブ表示時のスタイル
+  &.date-grouped {
+    display: block !important;
+    
+    // 子要素のカードには影響しないよう、直接のグリッドスタイルをリセット
+    grid-template-columns: none !important;
+    gap: 0 !important;
+  }
+}
+
+/* 日付グループ */
+.date-group {
+  margin-bottom: rem(32);
+  
+  @include breakpoint-up(md) {
+    margin-bottom: rem(40);
+  }
+}
+
+.date-group__header {
+  margin-top: rem(40);
+  margin-bottom: rem(16);
+  text-align: left;
+  
+  @include breakpoint-up(md) {
+    margin-bottom: rem(20);
+  }
+}
+
+.date-group__title {
+  @include font-ja-m(semibold);
+  color: $text-secondary;
+  margin: 0;
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-l(semibold);
+  }
+}
+
+.date-group__grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: rem(12) !important;
+  
+  @include breakpoint-up(md) {
+    gap: rem(18) !important;
+  }
+  
+  @include breakpoint-up(lg) {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: rem(24) !important;
+  }
+  
+  @include breakpoint-up(xl) {
+    max-width: rem(1400) !important;
+    margin: 0 auto !important;
+    gap: rem(24) !important;
   }
 }
 
@@ -988,6 +1419,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   @include breakpoint-up(md) {
     border-radius: $radius-l;
   }
+  
   
   &:hover {
     transform: translateY(-4px);
@@ -1075,7 +1507,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   }
   
   &__content {
-    padding: rem(12) rem(12) rem(16);
+    padding: rem(12) rem(8) rem(16);
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -1087,6 +1519,30 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     @include breakpoint-up(lg) {
       padding: rem(20) rem(20) rem(30);
     }
+  }
+  
+  &__schedule-date {
+    font-size: rem(9);
+    font-weight: 600;
+    color: $text-dark-gray;
+    margin: 0 0 rem(8) 0;
+    line-height: 1.4;
+    @include breakpoint-up(md) {
+      @include font-ja-2s(semibold);
+    }
+    
+    @include breakpoint-up(md) {
+      margin-bottom: rem(10);
+    }
+    
+    @include breakpoint-up(lg) {
+      margin-bottom: rem(12);
+    }
+  }
+  
+  &__time {
+    color: $text-dark-gray;
+    font-weight: 600;
   }
   
   &__executed-date {
@@ -1112,7 +1568,10 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     align-items: flex-start;
     justify-content: space-between;
     gap: rem(8);
-    margin-bottom: rem(12);
+    margin-bottom: rem(8);
+    @include breakpoint-up(md) {
+      margin-bottom: rem(12);
+    }
   }
   
   &__title {
@@ -1134,7 +1593,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   &__arrow {
     width: rem(20);
     height: rem(20);
-    background-color: $brand-turquoise;
+    background-color: $brand-pink;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -1183,14 +1642,40 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     }
   }
   
+  &__category {
+    margin: 0;
+    @include breakpoint-up(md) {
+      margin: 0 0 rem(8) 0;
+    }
+  }
+  
+  &__residency {
+    @include font-ja-3s(semibold);
+    color: $text-dark-gray;
+    margin: rem(8) 0 rem(2) 0;
+    line-height: 1.4;
+    @include breakpoint-up(md) {
+      margin: rem(8) 0 rem(4) 0;
+    }
+  }
+  
   &__grades {
     display: flex;
     flex-wrap: wrap;
-    gap: rem(4);
-    margin-top: auto;
+    gap: rem(2);
     
     @include breakpoint-up(md) {
       gap: rem(6);
+    }
+  }
+  
+  &__parent-join {
+    @include font-ja-3s(semibold);
+    color: $text-dark-gray;
+    margin: 0 0 0 0;
+    line-height: 1.4;
+    @include breakpoint-up(md) {
+      margin: rem(2) 0 0 0;
     }
   }
 }
@@ -1325,14 +1810,42 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
 }
 
 /* 学年タグ（scheduleページと同じスタイル） */
-.target-grade {
-  @include font-ja-3s(semibold);
-  padding: rem(2) rem(4);
+/* カテゴリータグ */
+.category-tag {
+  font-size: rem(9);
+  font-weight: 600;
+  padding: rem(1) rem(3);
   border: 1px solid $brand-black;
-  border-radius: rem(8);
+  border-radius: rem(7);
+  white-space: nowrap;
+  color: $text-primary;
+  background-color: $background-primary;
+  display: inline-block;
+  
+  @include breakpoint-up(md) {
+    @include font-ja-3s(semibold);
+  }
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-2s(semibold);
+    padding: rem(4) rem(6);
+    border-radius: rem(10);
+  }
+}
+
+.target-grade {
+  font-size: rem(9);
+  font-weight: 600;
+  padding: rem(1) rem(3);
+  border: 1px solid $brand-black;
+  border-radius: rem(7);
   white-space: nowrap;
   margin-bottom: rem(2);
   color: $text-primary;
+  
+  @include breakpoint-up(md) {
+    @include font-ja-3s(semibold);
+  }
   
   @include breakpoint-up(lg) {
     @include font-ja-2s(semibold);
@@ -1413,7 +1926,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   background: $background-primary;
   
   &::after {
-    background: linear-gradient(to bottom, $brand-sub-turquoise-low 50%, $background-secondary 50%);
+    background: linear-gradient(to bottom, $brand-sub-pink-low 50%, $background-secondary 50%);
   }
   
   &__content {
@@ -1589,7 +2102,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
 
 .application-buttons-check-label {
   @include font-ja-l(semibold);
-  color: $brand-turquoise;
+  color: $brand-pink;
   text-align: center;
   margin-bottom: rem(10);
   animation: checkScale 2s ease-in-out infinite;
@@ -1644,12 +2157,12 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   width: 100%;
   max-width: rem(420);
   padding: rem(28) rem(18);
-  border: 2px solid $brand-turquoise;
+  border: 2px solid $brand-pink;
   border-radius: $radius-m;
   background-color: $background-primary !important;
   background-image: 
-    radial-gradient(circle, #c5f3fe 1px, transparent 1px),
-    radial-gradient(circle, #c5f3fe 1px, transparent 1px) !important;
+    radial-gradient(circle, #fec8e3 1px, transparent 1px),
+    radial-gradient(circle, #fec8e3 1px, transparent 1px) !important;
   background-position: 0 0, 6.5px 6.5px !important;
   background-size: 13px 13px !important;
   animation: buttonBoxScale 2.5s ease-in-out infinite;
@@ -1817,6 +2330,15 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     transform: scale(1.02); 
   }
 }
+
+/* 講座種別による背景色 */
+div.courses-grid a.course-card.course-card--職業体験 {
+  background: $brand-sub-yellow-very-low !important;
+}
+
+div.courses-grid a.course-card.course-card--体験活動 {
+  background: $brand-sub-purple-very-low !important;
+}
 </style>
 
 <script>
@@ -1842,6 +2364,586 @@ document.addEventListener('DOMContentLoaded', function() {
           behavior: 'smooth'
         });
       }
+    });
+  });
+});
+
+// フィルタータブの切り替え機能
+document.addEventListener('DOMContentLoaded', function() {
+  const filterTabs = document.querySelectorAll('.filter-tab');
+  const coursesGrid = document.querySelector('#courses-grid');
+  const periodScrollLinks = document.querySelector('#period-scroll-links');
+  
+  if (filterTabs.length === 0 || !coursesGrid) return;
+  
+  // 元のカードを保存
+  const originalCards = Array.from(coursesGrid.children);
+  
+  // デバッグ：各カードのdata属性を確認
+  console.log('All cards data attributes:');
+  originalCards.forEach((card, index) => {
+    const title = card.querySelector('.course-card__title')?.textContent || 'No title';
+    console.log(`Card ${index} (${title}):`, {
+      scheduleDate: card.dataset.scheduleDate,
+      atAnyTime: card.dataset.atAnyTime,
+      category: card.dataset.category,
+      hasAtAnyTimeAttribute: card.hasAttribute('data-at-any-time'),
+      atAnyTimeValue: card.getAttribute('data-at-any-time')
+    });
+  });
+  
+  // 日付フォーマット関数
+  function formatDateForDisplay(dateString) {
+    if (!dateString) return '';
+    
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    
+    const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+    const weekday = weekdays[date.getDay()];
+    
+    return `${year}年${month}月${day}日(${weekday})`;
+  }
+  
+  // 日付でグループ化する関数
+  function groupByDate(cards) {
+    const groups = {};
+    
+    cards.forEach((card, index) => {
+      const dateAttr = card.dataset.scheduleDate;
+      const atAnyTime = card.dataset.atAnyTime === 'true';
+      const title = card.querySelector('.course-card__title')?.textContent || 'No title';
+      console.log(`Card ${index} (${title.substring(0, 20)}...):`, {
+        dateAttr,
+        atAnyTime,
+        datasetAtAnyTime: card.dataset.atAnyTime,
+        hasAtAnyTimeAttr: card.hasAttribute('data-at-any-time')
+      });
+      
+      let groupKey;
+      if (atAnyTime) {
+        // 随時開催の場合
+        console.log(`🎯 Card "${title.substring(0, 20)}..." assigned to 随時開催 group`);
+        groupKey = '随時開催';
+      } else if (dateAttr) {
+        // 日付指定の場合
+        const formattedDate = formatDateForDisplay(dateAttr);
+        if (!formattedDate) return;
+        groupKey = formattedDate;
+      } else {
+        // 日付もatAnyTimeも設定されていない場合はスキップ
+        return;
+      }
+      
+      console.log('Group key:', groupKey);
+      if (!groups[groupKey]) {
+        groups[groupKey] = [];
+      }
+      groups[groupKey].push(card);
+    });
+    
+    console.log('Final groups:', groups);
+    return groups;
+  }
+  
+  // 日付グループ表示を作成
+  function renderDateGroups(groups) {
+    console.log('renderDateGroups called with:', groups);
+    coursesGrid.innerHTML = '';
+    coursesGrid.classList.add('date-grouped');
+    
+    // 日付順にソート（「随時開催」は最後）
+    const sortedDates = Object.keys(groups).sort((a, b) => {
+      // 「随時開催」は常に最後
+      if (a === '随時開催') return 1;
+      if (b === '随時開催') return -1;
+      
+      // 両方とも日付の場合は日付順
+      const dateA = new Date(groups[a][0].dataset.scheduleDate);
+      const dateB = new Date(groups[b][0].dataset.scheduleDate);
+      return dateA - dateB;
+    });
+    
+    console.log('sortedDates:', sortedDates);
+    
+    sortedDates.forEach(date => {
+      const dateGroup = document.createElement('div');
+      dateGroup.className = 'date-group';
+      
+      const header = document.createElement('div');
+      header.className = 'date-group__header';
+      header.style.marginTop = '40px';
+      header.style.marginBottom = '16px';
+      header.style.textAlign = 'left';
+      
+      const title = document.createElement('h3');
+      title.className = 'date-group__title';
+      title.style.margin = '0';
+      title.style.color = '#1c0083'; // $text-secondary
+      title.style.fontWeight = '600'; // semibold
+      title.style.lineHeight = '1.4';
+      title.textContent = date;
+      
+      const grid = document.createElement('div');
+      grid.className = 'date-group__grid';
+      grid.style.display = 'grid';
+      
+      // レスポンシブ対応
+      function setResponsiveStyles() {
+        const width = window.innerWidth;
+        if (width >= 1200) { // xl以降
+          title.style.fontSize = '32px'; // ja-l
+          grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+          grid.style.gap = '24px';
+          header.style.marginTop = '64px';
+          header.style.marginBottom = '20px';
+        } else if (width >= 1024) { // lg~xl未満
+          title.style.fontSize = '32px'; // ja-l
+          grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+          grid.style.gap = '18px';
+          header.style.marginTop = '54px';
+          header.style.marginBottom = '20px';
+        } else if (width >= 768) { // md~lg未満
+          title.style.fontSize = '20px'; // ja-m
+          grid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+          grid.style.gap = '18px';
+          header.style.marginTop = '40px';
+          header.style.marginBottom = '20px';
+        } else { // sm未満
+          title.style.fontSize = '20px'; // ja-m
+          grid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+          grid.style.gap = '12px';
+          header.style.marginTop = '40px';
+          header.style.marginBottom = '16px';
+        }
+      }
+      
+      setResponsiveStyles();
+      window.addEventListener('resize', setResponsiveStyles);
+      
+      header.appendChild(title);
+      dateGroup.appendChild(header);
+      dateGroup.appendChild(grid);
+      
+      groups[date].forEach(card => {
+        grid.appendChild(card);
+      });
+      
+      coursesGrid.appendChild(dateGroup);
+    });
+  }
+  
+  // カテゴリーでグループ化する関数
+  function groupByCategory(cards) {
+    const groups = {};
+    
+    cards.forEach(card => {
+      // .category-tag要素からカテゴリ名を取得（#を除去）
+      const categoryTagElement = card.querySelector('.category-tag');
+      const category = categoryTagElement ? 
+        categoryTagElement.textContent.replace('#', '') : 'その他';
+      console.log('Card category from tag:', category);
+      
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+      groups[category].push(card);
+    });
+    
+    console.log('Category groups:', groups);
+    return groups;
+  }
+  
+  // カテゴリーグループ表示
+  function renderCategoryGroups(groups) {
+    coursesGrid.innerHTML = '';
+    coursesGrid.classList.add('date-grouped'); // 同じスタイルを使用
+    
+    // カテゴリーをソート（アルファベット順）
+    const sortedCategories = Object.keys(groups).sort();
+    
+    console.log('sortedCategories:', sortedCategories);
+    
+    sortedCategories.forEach(category => {
+      const categoryGroup = document.createElement('div');
+      categoryGroup.className = 'date-group';
+      
+      const header = document.createElement('div');
+      header.className = 'date-group__header';
+      header.style.marginTop = '40px';
+      header.style.marginBottom = '16px';
+      header.style.textAlign = 'left';
+      
+      const title = document.createElement('h3');
+      title.className = 'date-group__title';
+      title.style.margin = '0';
+      title.style.color = '#1c0083'; // $text-secondary
+      title.style.fontWeight = '600'; // semibold
+      title.style.lineHeight = '1.4';
+      title.textContent = String(category);
+      console.log('Setting category title:', String(category));
+      
+      const grid = document.createElement('div');
+      grid.className = 'date-group__grid';
+      grid.style.display = 'grid';
+      
+      // レスポンシブ対応
+      function setResponsiveStyles() {
+        const width = window.innerWidth;
+        if (width >= 1200) { // xl以降
+          title.style.fontSize = '32px'; // ja-l
+          grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+          grid.style.gap = '24px';
+          header.style.marginTop = '64px';
+          header.style.marginBottom = '20px';
+        } else if (width >= 1024) { // lg~xl未満
+          title.style.fontSize = '32px'; // ja-l
+          grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+          grid.style.gap = '18px';
+          header.style.marginTop = '54px';
+          header.style.marginBottom = '20px';
+        } else if (width >= 768) { // md~lg未満
+          title.style.fontSize = '20px'; // ja-m
+          grid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+          grid.style.gap = '18px';
+          header.style.marginTop = '40px';
+          header.style.marginBottom = '20px';
+        } else { // sm未満
+          title.style.fontSize = '20px'; // ja-m
+          grid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+          grid.style.gap = '12px';
+          header.style.marginTop = '32px';
+          header.style.marginBottom = '16px';
+        }
+      }
+      
+      setResponsiveStyles();
+      window.addEventListener('resize', setResponsiveStyles);
+      
+      header.appendChild(title);
+      categoryGroup.appendChild(header);
+      categoryGroup.appendChild(grid);
+      
+      groups[category].forEach(card => {
+        grid.appendChild(card);
+      });
+      
+      coursesGrid.appendChild(categoryGroup);
+    });
+  }
+  
+  // 日付を時期に分類する関数
+  function getDatePeriod(dateString) {
+    if (!dateString) return null;
+    
+    const date = new Date(dateString);
+    const month = date.getMonth() + 1; // 0ベースなので+1
+    const day = date.getDate();
+    
+    if (month === 7 && day >= 15) {
+      return 'late-july';
+    } else if (month === 8 && day >= 1 && day <= 10) {
+      return 'early-august';
+    } else if (month === 8 && day >= 11 && day <= 20) {
+      return 'mid-august';
+    } else if (month === 8 && day >= 21 && day <= 31) {
+      return 'late-august';
+    }
+    
+    return null;
+  }
+
+  // 日付タブ用スクロールリンクイベントリスナーを追加する関数
+  function attachDateScrollListeners() {
+    const periodLinks = document.querySelectorAll('.period-link');
+    
+    periodLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const period = this.dataset.period;
+        let targetElement = null;
+        
+        if (period === 'anytime') {
+          // 随時開催グループを探す
+          targetElement = document.querySelector('.date-group__header:last-child');
+          const headers = document.querySelectorAll('.date-group__header');
+          headers.forEach(header => {
+            if (header.textContent.includes('随時開催')) {
+              targetElement = header;
+            }
+          });
+        } else {
+          // 指定された時期の最初の日付グループを探す
+          const dateHeaders = document.querySelectorAll('.date-group__header');
+          dateHeaders.forEach(header => {
+            const headerText = header.textContent;
+            // ヘッダーから日付を抽出して時期判定
+            const dateMatch = headerText.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+            if (dateMatch) {
+              const [, year, month, day] = dateMatch;
+              const dateString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+              const headerPeriod = getDatePeriod(dateString);
+              if (headerPeriod === period && !targetElement) {
+                targetElement = header;
+              }
+            }
+          });
+        }
+        
+        if (targetElement) {
+          // ヘッダーの高さ分のオフセット（xl以上では追加マージン）
+          const isXlOrLarger = window.innerWidth >= 1280;
+          const headerHeight = isXlOrLarger ? 120 : 80;
+          const elementPosition = targetElement.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+        }
+      });
+    });
+  }
+
+  // 日付タブ用スクロールリンクを復元する関数
+  function updateDateScrollLinks() {
+    console.log('updateDateScrollLinks called');
+    const periodScrollLinks = document.querySelector('#period-scroll-links');
+    if (!periodScrollLinks) return;
+    
+    // 既存のリンクをクリア
+    periodScrollLinks.innerHTML = '';
+    
+    // 日付タブ用の静的なボタンを作成
+    const dateButtons = [
+      { period: 'late-july', text: '7月下旬' },
+      { period: 'early-august', text: '8月上旬' },
+      { period: 'mid-august', text: '8月中旬' },
+      { period: 'late-august', text: '8月下旬' },
+      { period: 'anytime', text: '随時開催' }
+    ];
+    
+    dateButtons.forEach(buttonData => {
+      const link = document.createElement('a');
+      link.className = 'period-link';
+      link.href = '#';
+      link.dataset.period = buttonData.period;
+      
+      // インラインスタイルを適用（基本は12px、lg以上は14px）
+      link.style.display = 'inline-flex';
+      link.style.alignItems = 'center';
+      link.style.gap = '6px';
+      link.style.fontSize = '12px';
+      link.style.fontWeight = '600';
+      link.style.padding = '4px 12px 4px 8px';
+      link.style.border = '1px solid #1c0083';
+      link.style.borderRadius = '10px';
+      link.style.whiteSpace = 'nowrap';
+      link.style.color = '#1c0083';
+      link.style.backgroundColor = '#ffffff';
+      link.style.textDecoration = 'none';
+      link.style.transition = 'all 0.2s ease';
+      link.style.cursor = 'pointer';
+      
+      // レスポンシブ対応（lg以上では14px）
+      const updateResponsiveStyles = () => {
+        const width = window.innerWidth;
+        if (width >= 1024) { // lg以上
+          link.style.fontSize = '14px';
+        } else {
+          link.style.fontSize = '12px';
+        }
+      };
+      updateResponsiveStyles();
+      window.addEventListener('resize', updateResponsiveStyles);
+      
+      // アロー要素を作成（lg以上サイズで統一）
+      const arrow = document.createElement('span');
+      arrow.className = 'period-link__arrow';
+      arrow.style.width = '8px';
+      arrow.style.height = '8px';
+      arrow.style.borderRight = '2px solid currentColor';
+      arrow.style.borderBottom = '2px solid currentColor';
+      arrow.style.transform = 'rotate(45deg) translateY(-4px)';
+      arrow.style.flexShrink = '0';
+      arrow.style.marginLeft = '0px';
+      
+      // テキストとアローを追加
+      link.textContent = buttonData.text;
+      link.appendChild(arrow);
+      
+      // ホバー効果を追加
+      link.addEventListener('mouseenter', function() {
+        this.style.backgroundColor = '#1c0083';
+        this.style.color = '#ffffff';
+      });
+      
+      link.addEventListener('mouseleave', function() {
+        this.style.backgroundColor = '#ffffff';
+        this.style.color = '#1c0083';
+      });
+      
+      periodScrollLinks.appendChild(link);
+    });
+    
+    // 新しく作成されたボタンにイベントリスナーをアタッチ
+    attachDateScrollListeners();
+    
+    console.log('Date scroll links restored');
+  }
+
+  // カテゴリー別スクロールリンクを更新する関数
+  function updateCategoryScrollLinks(categoryGroups) {
+    const periodScrollLinks = document.querySelector('#period-scroll-links');
+    if (!periodScrollLinks) return;
+    
+    // 既存のリンクをクリア
+    periodScrollLinks.innerHTML = '';
+    
+    // カテゴリー名をソート（アルファベット順）
+    const sortedCategories = Object.keys(categoryGroups).sort();
+    
+    sortedCategories.forEach(category => {
+      const link = document.createElement('a');
+      link.className = 'period-link';
+      link.href = '#';
+      link.dataset.category = category;
+      
+      // インラインスタイルを適用（基本は12px、lg以上は14px）
+      link.style.display = 'inline-flex';
+      link.style.alignItems = 'center';
+      link.style.gap = '6px';
+      link.style.fontSize = '12px';
+      link.style.fontWeight = '600';
+      link.style.padding = '4px 12px 4px 8px';
+      link.style.border = '1px solid #1c0083';
+      link.style.borderRadius = '10px';
+      link.style.whiteSpace = 'nowrap';
+      link.style.color = '#1c0083';
+      link.style.backgroundColor = '#ffffff';
+      link.style.textDecoration = 'none';
+      link.style.transition = 'all 0.2s ease';
+      link.style.cursor = 'pointer';
+      
+      // レスポンシブ対応（lg以上では14px）
+      const updateResponsiveStylesCategory = () => {
+        const width = window.innerWidth;
+        if (width >= 1024) { // lg以上
+          link.style.fontSize = '14px';
+        } else {
+          link.style.fontSize = '12px';
+        }
+      };
+      updateResponsiveStylesCategory();
+      window.addEventListener('resize', updateResponsiveStylesCategory);
+      
+      // アロー要素を作成（lg以上サイズで統一）
+      const arrow = document.createElement('span');
+      arrow.className = 'period-link__arrow';
+      arrow.style.width = '8px';
+      arrow.style.height = '8px';
+      arrow.style.borderRight = '2px solid currentColor';
+      arrow.style.borderBottom = '2px solid currentColor';
+      arrow.style.transform = 'rotate(45deg) translateY(-4px)';
+      arrow.style.flexShrink = '0';
+      arrow.style.marginLeft = '0px';
+      
+      // テキストとアローを追加
+      link.textContent = category;
+      link.appendChild(arrow);
+      
+      // ホバー効果を追加
+      link.addEventListener('mouseenter', function() {
+        this.style.backgroundColor = '#1c0083';
+        this.style.color = '#ffffff';
+      });
+      
+      link.addEventListener('mouseleave', function() {
+        this.style.backgroundColor = '#ffffff';
+        this.style.color = '#1c0083';
+      });
+      
+      // スクロール機能を追加
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const headers = document.querySelectorAll('.date-group__header');
+        let targetElement = null;
+        
+        headers.forEach(header => {
+          const titleElement = header.querySelector('.date-group__title');
+          if (titleElement && titleElement.textContent === category) {
+            targetElement = header;
+          }
+        });
+        
+        if (targetElement) {
+          // ヘッダーの高さ分のオフセット（xl以上では追加マージン）
+          const isXlOrLarger = window.innerWidth >= 1280;
+          const headerHeight = isXlOrLarger ? 120 : 80;
+          const elementPosition = targetElement.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+        }
+      });
+      
+      periodScrollLinks.appendChild(link);
+    });
+  }
+  
+  filterTabs.forEach(tab => {
+    tab.addEventListener('click', function() {
+      // アクティブ状態を切り替え
+      filterTabs.forEach(t => t.classList.remove('filter-tab--active'));
+      this.classList.add('filter-tab--active');
+      
+      const sortType = this.dataset.sort;
+      
+      if (sortType === 'date') {
+        // 日付でグループ化
+        const dateGroups = groupByDate(originalCards);
+        renderDateGroups(dateGroups);
+        // 日付タブ用の静的スクロールリンクに復元
+        updateDateScrollLinks();
+        if (periodScrollLinks) {
+          periodScrollLinks.style.display = 'flex';
+        }
+      } else if (sortType === 'category') {
+        // カテゴリーでグループ化
+        const categoryGroups = groupByCategory(originalCards);
+        renderCategoryGroups(categoryGroups);
+        // カテゴリー別スクロールリンクを更新
+        updateCategoryScrollLinks(categoryGroups);
+        if (periodScrollLinks) {
+          periodScrollLinks.style.display = 'flex';
+        }
+      }
+    });
+  });
+  
+  // 初期表示は日付タブがアクティブなので、日付グループ表示にする
+  const dateGroups = groupByDate(originalCards);
+  renderDateGroups(dateGroups);
+  // 初期表示時もイベントリスナーをアタッチ
+  updateDateScrollLinks();
+  
+  // 静的要素にもホバー効果を追加
+  const existingLinks = document.querySelectorAll('.period-link');
+  existingLinks.forEach(link => {
+    link.addEventListener('mouseenter', function() {
+      this.style.backgroundColor = '#1c0083';
+      this.style.color = '#ffffff';
+    });
+    
+    link.addEventListener('mouseleave', function() {
+      this.style.backgroundColor = '#ffffff';
+      this.style.color = '#1c0083';
     });
   });
 });
