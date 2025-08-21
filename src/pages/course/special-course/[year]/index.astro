@@ -150,7 +150,7 @@ function getGradeColorClass(grade: string): string {
           <div class="hero__text fade-up">
             <h1 class="hero__title">
               <span class="hero__title-line1">特設講座</span>
-              <span class="hero__title-line2">過去の実績({actualYear})</span>
+              <span class="hero__title-line2">過去の実績<br class="sm-only">({actualYear})</span>
             </h1>
             <p class="hero__subtitle">{heroSubtitle}</p>
           </div>
@@ -881,3 +881,14 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
+
+<style lang="scss">
+@import "../../../../styles/index";
+
+/* スマホのみ改行を表示 */
+.sm-only {
+  @include breakpoint-up(md) {
+    display: none;
+  }
+}
+</style>

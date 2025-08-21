@@ -7,7 +7,8 @@ import CourseCard from '@/components/CourseCard.astro';
 import AfterImagesSlider from '@/components/AfterImagesSlider.astro';
 import { 
   getGlobalSettings,
-  getSummerCourses
+  getSummerCourses,
+  getSummerCategories
 } from '@/lib/microcms';
 import { convertYearToPath, convertPathToYear } from '@/utils/yearConverter';
 
@@ -65,6 +66,9 @@ if (year === currentYearPath) {
 // 過去年度の講座一覧を取得
 const courses = await getSummerCourses(actualYear);
 
+// 夏課外カテゴリーデータを取得
+const summerCategories = await getSummerCategories();
+
 // 該当年度の講座が存在しない場合は404
 if (!courses || courses.length === 0) {
   return Astro.redirect('/404');
@@ -89,7 +93,22 @@ const breadcrumbItems = [
 const courseCards = [];
 let cardIndex = 0;
 
+// デバッグ: 実際のcoursesデータ構造を確認
+console.log('Raw courses data:', JSON.stringify(courses.slice(0, 2), null, 2));
+console.log('CourseCards data:', JSON.stringify(courseCards.slice(0, 3), null, 2));
+
 courses.forEach(course => {
+  console.log(`Course ${course.id} schedule:`, course.schedule);
+  console.log(`Course ${course.id} full data:`, {
+    executedDate: course.executedDate,
+    startTime: course.startTime,
+    endTime: course.endTime,
+    atAnyTime: course.atAnyTime,
+    atAnyTimeType: typeof course.atAnyTime,
+    date: course.date,
+    scheduleLength: course.schedule?.length
+  });
+  
   const courseYearPath = convertYearToPath(Array.isArray(course.year) ? course.year[0] : course.year);
   
   // scheduleが存在し、複数の開催日がある場合は分割
@@ -98,6 +117,8 @@ courses.forEach(course => {
       const urlSuffix = course.schedule.length > 1 ? `-${index + 1}` : '';
       const scheduleTitle = course.schedule.length > 1 ? 
         `${course.title} (${index + 1}回目)` : course.title;
+      
+      console.log(`Schedule item ${index}:`, scheduleItem);
       
       courseCards.push({
         id: `${course.id}${urlSuffix}`,
@@ -111,11 +132,18 @@ courses.forEach(course => {
         targetGrades: Array.isArray(course.targetGrades) ? course.targetGrades : (course.targetGrades ? [course.targetGrades] : []),
         category: (typeof course.category === 'object' && course.category?.category) ? course.category.category : (course.category || 'その他'),
         courseType: (Array.isArray(course.courseType) ? course.courseType[0] : course.courseType)?.toString().trim() || 'undefined',
-        hasReport: !!(course.afterImages?.length || course.instructor || course.afterReport || course.afterMovieUrl)
+        hasReport: !!(course.afterImages?.length || course.instructor || course.afterReport || course.afterMovieUrl),
+        scheduleDate: scheduleItem.date || course.date,
+        executedDate: scheduleItem.executedDate || course.executedDate,
+        startTime: scheduleItem.startTime || course.startTime,
+        endTime: scheduleItem.endTime || course.endTime,
+        atAnyTime: scheduleItem.atAnyTime || course.atAnyTime,
+        residencyText: course.cityOutsideOk ? '市内・市外在住の' : '市内在住の',
+        parentJoinText: course.parentJoin ? '保護者の参加が必要です' : ''
       });
     });
   } else {
-    // scheduleが存在しない場合は1つのカードとして追加
+    // scheduleが存在しない場合はcourseレベルのデータを使用
     courseCards.push({
       id: course.id,
       title: course.title,
@@ -128,7 +156,32 @@ courses.forEach(course => {
       targetGrades: Array.isArray(course.targetGrades) ? course.targetGrades : (course.targetGrades ? [course.targetGrades] : []),
       category: (typeof course.category === 'object' && course.category?.category) ? course.category.category : (course.category || 'その他'),
       courseType: (Array.isArray(course.courseType) ? course.courseType[0] : course.courseType)?.toString().trim() || 'undefined',
-      hasReport: !!(course.afterImages?.length || course.instructor || course.afterReport || course.afterMovieUrl)
+      hasReport: !!(course.afterImages?.length || course.instructor || course.afterReport || course.afterMovieUrl),
+      scheduleDate: course.date,
+      executedDate: course.executedDate,
+      startTime: course.startTime,
+      endTime: course.endTime,
+      atAnyTime: course.atAnyTime,
+      residencyText: course.cityOutsideOk ? '市内・市外在住の' : '市内在住の',
+      parentJoinText: course.parentJoin ? '保護者の参加が必要です' : ''
+    });
+  }
+});
+
+// デバッグ: courseCards作成後の確認
+console.log('Final courseCards count:', courseCards.length);
+console.log('CourseCards schedule info:');
+courseCards.forEach((card, index) => {
+  if (index < 5) {
+    console.log(`Card ${index} (${card.title}):`, {
+      scheduleDate: card.scheduleDate,
+      atAnyTime: card.atAnyTime,
+      executedDate: card.executedDate,
+      startTime: card.startTime,
+      endTime: card.endTime,
+      willShowScheduleDate: !!(card.scheduleDate || card.atAnyTime),
+      residencyText: card.residencyText,
+      hasResidencyText: !!card.residencyText
     });
   }
 });
@@ -146,8 +199,97 @@ function formatYear(year) {
   return year.replace('令和', '').replace('年度', '');
 }
 
+// 日付フォーマット関数
+function formatExecutedDate(dateString: string): string {
+  if (!dateString) return '';
+  
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  
+  const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+  const weekday = weekdays[date.getDay()];
+  
+  return `${year}年${month}月${day}日(${weekday})`;
+}
+
+// 学年の整列順序関数（scheduleページと同様）
+function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: string[]; htmlString: string } {
+  const grades = Array.isArray(targetGrades) ? targetGrades : [targetGrades];
+  
+  // 学年の表示順を決める関数
+  function getGradeOrder(grade: string): number {
+    // 未就学児は最初
+    if (grade === '未就学児') {
+      return 0;
+    }
+    
+    // 1年～9年（小中学校）
+    const elementaryJuniorMatch = grade.match(/^(\d+)年$/);
+    if (elementaryJuniorMatch && elementaryJuniorMatch[1]) {
+      const num = parseInt(elementaryJuniorMatch[1]);
+      if (num >= 1 && num <= 9) {
+        return num; // 1～9の順序
+      }
+    }
+    
+    // 高1～高3（高校）
+    const highSchoolMatch = grade.match(/^高(\d+)$/);
+    if (highSchoolMatch && highSchoolMatch[1]) {
+      const num = parseInt(highSchoolMatch[1]);
+      if (num >= 1 && num <= 3) {
+        return 10 + num; // 11～13の順序（10 + 1～3）
+      }
+    }
+    
+    // その他は最後
+    return 999;
+  }
+  
+  // 学年を指定された順序でソート
+  const sortedGrades = grades.sort((a, b) => {
+    return getGradeOrder(a) - getGradeOrder(b);
+  });
+  
+  return {
+    sortedGrades,
+    htmlString: sortedGrades.join('・') // 後方互換性のため
+  };
+}
+
 // ヒーローセクションの年度表示用の英語表記
 const reiwaNumber = reiwaYear;
+
+// 学年の色分けクラス取得関数（scheduleページと同様）
+function getGradeColorClass(grade: string): string {
+  // むなかた子ども大学の日（学校名）の場合
+  if (grade.includes('小学校') || grade.includes('中学校') || grade.includes('学校') || grade.includes('学園')) {
+    return 'mku-day';
+  }
+  
+  // 特殊なケース
+  if (grade === '未就学児' || grade === 'だれでも' || grade.includes('その他')) {
+    return 'special';
+  }
+  
+  // 数字を抽出
+  const yearMatch = grade.match(/^(\d+)年$/);
+  if (yearMatch) {
+    const num = parseInt(yearMatch[1]);
+    if (num >= 1 && num <= 3) return 'elementary-low';    // 1~3年
+    if (num >= 4 && num <= 6) return 'elementary-high';   // 4~6年
+    if (num >= 7 && num <= 9) return 'junior';            // 7~9年
+  }
+  
+  // 高校生
+  if (grade.match(/^高\d+$/)) {
+    return 'junior'; // 高校生は中学生と同じ色
+  }
+  
+  // その他
+  return 'special';
+}
 ---
 
 <BaseLayout 
@@ -155,61 +297,181 @@ const reiwaNumber = reiwaYear;
   description={pageDescription}
   noIndex={false}
 >
-  <!-- カスタムヒーローセクション -->
-  <section class="hero">
-    <div class="hero__container">
-      <h1 class="hero__title">
-        夏の課外授業<br>
-        過去の実績（{actualYear}）
-      </h1>
-      <div class="hero__subtitle">
-        Report - Summer Course - Reiwa {reiwaNumber}
-      </div>
-    </div>
-  </section>
-
-  <!-- パンくずリスト -->
-  <Breadcrumb items={breadcrumbItems} />
-
-  <!-- 過去実績一覧 -->
-  <section class="past-results">
-    <div class="past-results__container">
-      <ContentSectionHeader
-        tag="Past Results"
-        title={`${actualYear}の実績`}
-        description={`${actualYear}に開催された夏の課外授業の一覧です。多くの子どもたちが参加し、貴重な体験をしました。`}
-      />
-      
-      <!-- 講座カード一覧 -->
-      <div class="courses-grid">
-        {courseCards.map(course => (
-          <CourseCard 
-            key={course.id}
-            id={course.id}
-            title={course.title}
-            subtitle={course.subtitle}
-            thumbImg={course.thumbImg}
-            status={course.status}
-            year={course.year}
-            href={course.href}
-            providerNames={course.providerNames}
-            targetGrades={course.targetGrades}
-            category={course.category}
-            courseType={course.courseType}
-            hasReport={course.hasReport}
-          />
-        ))}
-      </div>
-
-      {/* 過去実績画像スライダー */}
-      {allAfterImages.length > 0 && (
-        <div class="after-images-section">
-          <h2 class="after-images-section__title">活動の様子</h2>
-          <AfterImagesSlider images={allAfterImages} />
+  <main>
+    <!-- ヒーローセクション -->
+    <section class="hero hero--summer-course">
+      <div class="hero__container">
+        <div class="hero__content">
+          <div class="hero__text fade-up">
+            <h1 class="hero__title">
+              <span class="hero__title-line1">夏の課外授業</span>
+              <span class="hero__title-line2">過去の実績<br class="sm-only">({actualYear})</span>
+            </h1>
+            <p class="hero__subtitle">Report - Summer Course - Reiwa {reiwaNumber}</p>
+          </div>
         </div>
-      )}
-    </div>
-  </section>
+      </div>
+    </section>
+
+    <Breadcrumb items={breadcrumbItems} />
+
+    <!-- 講座の様子スライダー -->
+    {allAfterImages.length > 0 && (
+      <AfterImagesSlider images={allAfterImages} class="fade-up" />
+    )}
+
+    <!-- 講座一覧セクション -->
+    <section id="courses" class="courses-section content-section">
+      <div class="content-section__container">
+        <ContentSectionHeader 
+          englishTitle=""
+          title={`${actualYear} <br class="u-br-sm">開講コース`}
+          customTitleWrapperStyle="courses-title-wrapper"
+          customIconStyle="courses-icon"
+          class="fade-up"
+        />
+        
+        {courseCards.length > 0 ? (
+          <div class="courses-section">
+            <div class="filter-tabs">
+              <button class="filter-tab filter-tab--active" data-sort="date">日付から探す</button>
+              <button class="filter-tab" data-sort="category">カテゴリーから探す</button>
+            </div>
+            <div class="courses-container">
+            
+            <!-- カード色分け凡例 -->
+            <div class="course-legend">
+              <div class="course-legend__item">
+                <div class="course-legend__color course-legend__color--job-experience"></div>
+                <span class="course-legend__label">職業体験</span>
+              </div>
+              <div class="course-legend__item">
+                <div class="course-legend__color course-legend__color--hands-on"></div>
+                <span class="course-legend__label">体験活動</span>
+              </div>
+            </div>
+            
+            <!-- 時期別スクロールリンク -->
+            <div class="period-scroll-links" id="period-scroll-links" 
+                 data-category-order={JSON.stringify(summerCategories?.map(cat => cat.category) || [])}
+                 style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 16px 0 24px 0;">
+              <a href="#" class="period-link" data-period="late-july" 
+                 style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 12px 4px 8px; border: 1px solid #1c0083; border-radius: 10px; white-space: nowrap; color: #1c0083; background-color: #ffffff; text-decoration: none; transition: all 0.2s ease; cursor: pointer;">
+                7月下旬 <span class="period-link__arrow"></span>
+              </a>
+              <a href="#" class="period-link" data-period="early-august" 
+                 style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 12px 4px 8px; border: 1px solid #1c0083; border-radius: 10px; white-space: nowrap; color: #1c0083; background-color: #ffffff; text-decoration: none; transition: all 0.2s ease; cursor: pointer;">
+                8月上旬 <span class="period-link__arrow"></span>
+              </a>
+              <a href="#" class="period-link" data-period="mid-august" 
+                 style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 12px 4px 8px; border: 1px solid #1c0083; border-radius: 10px; white-space: nowrap; color: #1c0083; background-color: #ffffff; text-decoration: none; transition: all 0.2s ease; cursor: pointer;">
+                8月中旬 <span class="period-link__arrow"></span>
+              </a>
+              <a href="#" class="period-link" data-period="late-august" 
+                 style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 12px 4px 8px; border: 1px solid #1c0083; border-radius: 10px; white-space: nowrap; color: #1c0083; background-color: #ffffff; text-decoration: none; transition: all 0.2s ease; cursor: pointer;">
+                8月下旬 <span class="period-link__arrow"></span>
+              </a>
+              <a href="#" class="period-link" data-period="anytime" 
+                 style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 12px 4px 8px; border: 1px solid #1c0083; border-radius: 10px; white-space: nowrap; color: #1c0083; background-color: #ffffff; text-decoration: none; transition: all 0.2s ease; cursor: pointer;">
+                随時開催 <span class="period-link__arrow"></span>
+              </a>
+            </div>
+            
+            <div class="courses-grid" id="courses-grid">
+              {courseCards.map(course => (
+              <a href={course.href} class={`course-card ${course.courseType ? 'course-card--' + course.courseType : ''}`} data-schedule-date={course.scheduleDate || ''} data-category={course.category || ''} data-at-any-time={course.atAnyTime ? 'true' : 'false'}>
+                <div class="course-card__image">
+                  <img 
+                    src={course.thumbImg?.url || '/images/ui/img_course-no-image-01.webp'} 
+                    alt={course.title} 
+                  />
+                  <div class="course-card__status">
+                    <span class="status-badge status-badge--dark-gray">募集終了</span>
+                  </div>
+                  {course.hasReport && (
+                    <div class="course-card__report-ribbon">
+                      <div class="report-ribbon__tail"></div>
+                      <div class="report-ribbon__circle">
+                        <div class="report-ribbon__text">
+                          <span class="report-ribbon__text-line1">実施</span><br>
+                          <span class="report-ribbon__text-line2">レポート</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div class="course-card__content">
+                  {/* 開催日 */}
+                  {(course.scheduleDate || course.atAnyTime) && (
+                    <p class="course-card__schedule-date">
+                      {course.atAnyTime ? '随時開催' : formatExecutedDate(course.scheduleDate)}
+                      {course.startTime && !course.atAnyTime && (
+                        <span class="course-card__time">
+                          {' '}{course.startTime}〜{course.endTime || ''}
+                        </span>
+                      )}
+                    </p>
+                  )}
+                  <div class="course-card__header">
+                    <h3 class="course-card__title">{course.title}</h3>
+                    <div class="course-card__arrow"></div>
+                  </div>
+                  {/* カテゴリー名 */}
+                  {course.category && (
+                    <div class="course-card__category">
+                      <span class="category-tag">#{(() => {
+                        if (typeof course.category === 'object' && course.category?.category) {
+                          return course.category.category;
+                        } else if (course.category) {
+                          return String(course.category);
+                        } else {
+                          return 'その他';
+                        }
+                      })()}</span>
+                    </div>
+                  )}
+                  {/* 市外住民参加可否文言 */}
+                  {course.residencyText && (
+                    <p class="course-card__residency">{course.residencyText}</p>
+                  )}
+                  {course.targetGrades.length > 0 && (
+                    <div class="course-card__grades">
+                      {(() => {
+                        const { sortedGrades } = formatTargetGrades(course.targetGrades);
+                        return sortedGrades.map(grade => (
+                          <span class={`target-grade target-grade--${getGradeColorClass(grade)}`}>{grade}</span>
+                        ));
+                      })()}
+                    </div>
+                  )}
+                  {/* 保護者参加文言 */}
+                  {course.parentJoinText && (
+                    <p class="course-card__parent-join">{course.parentJoinText}</p>
+                  )}
+                </div>
+              </a>
+              ))}
+            </div>
+            </div>
+          </div>
+        ) : (
+          <div class="empty-state">
+            <div class="empty-state__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+              </svg>
+            </div>
+            <p class="empty-state__description">
+              現在、{actualYear}の講座は登録されていません。<br>
+              講座が決まり次第、随時掲載いたしますので、<br class="u-br-sm">お待ちください。
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+
+  </main>
 </BaseLayout>
 
 <style lang="scss">
@@ -217,144 +479,1679 @@ const reiwaNumber = reiwaYear;
 
 // ヒーローセクション（ピンク色バージョン）
 .hero {
-  background: linear-gradient(135deg, $brand-pink 0%, $brand-sub-pink-low 100%);
-  padding: rem(60) 0;
   position: relative;
-  overflow: hidden;
-
+  padding: 0;
+  background: linear-gradient(to bottom, $brand-sub-pink 0%, $background-primary 70%, $background-primary 100%);
+  border-radius: 0 rem(120) 0 0;
+  
   @include breakpoint-up(md) {
-    padding: rem(80) 0;
-  }
-
-  @include breakpoint-up(lg) {
-    padding: rem(100) 0;
-  }
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 100%;
-    height: 100%;
-    background: url('/images/hero-pattern.svg') no-repeat right center;
-    background-size: contain;
-    opacity: 0.1;
-    z-index: 1;
+    border-radius: 0 rem(240) 0 0;
   }
 
   &__container {
-    max-width: rem(1200);
     margin: 0 auto;
-    padding: 0 5%;
+    padding: 0 0 0 5%;
+    overflow: hidden;
     position: relative;
-    z-index: 2;
-
-    @include breakpoint-up(lg) {
-      padding: 0 rem(24);
+    
+    @include breakpoint-up(xl) {
+      padding: 0 0 0 rem(50);
     }
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      background-color: $brand-pink;
+      z-index: -1;
+    }
+  }
+
+  &__content {
+    position: relative;
+    padding: rem(100) 0 0;
+
+    @include breakpoint-up(md) {
+      padding: rem(120) 0 0;
+    }
+    @include breakpoint-up(xl) {
+      padding: rem(160) 0 0;
+    }
+  }
+
+  &__text {
+    max-width: none;
+    margin: 0;
+    text-align: left;
   }
 
   &__title {
     @include font-ja-2l(semibold);
     font-weight: bold;
-    color: $text-white;
-    margin-bottom: rem(16);
-    line-height: 1.3;
-    text-align: center;
-
-    @include breakpoint-up(md) {
-      @include font-ja-3l(semibold);
-      margin-bottom: rem(20);
-    }
+    color: $text-primary;
+    margin: 0 0 rem(8) 0;
+    line-height: 1.4;
 
     @include breakpoint-up(lg) {
       @include font-ja-3l(semibold);
-      margin-bottom: rem(24);
+      margin-bottom: rem(12);
+    }
+
+    .hero__title-line1 {
+      display: block;
+      @include font-ja-m(semibold);
+      margin-bottom: rem(8);
+
+      @include breakpoint-up(lg) {
+        @include font-ja-l(semibold);
+      }
+    }
+
+    .hero__title-line2 {
+      display: block;
+      @include font-ja-2l(semibold);
+      font-weight: bold;
+      line-height: 1.4;
+
+      @include breakpoint-up(lg) {
+        @include font-ja-3l(semibold);
+      }
     }
   }
 
   &__subtitle {
-    @include font-ja-s(semibold);
+    @include font-en-s(semibold);
     color: $brand-pink;
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-
-    @include breakpoint-up(md) {
-      @include font-ja-m(semibold);
-    }
+    margin: 0 0 rem(30) 0;
+    font-weight: 500;
+    letter-spacing: 0.05em;
 
     @include breakpoint-up(lg) {
-      @include font-ja-l(semibold);
+      @include font-en-m(semibold);
+      margin-bottom: 0;
     }
   }
 }
 
-// 過去実績セクション
-.past-results {
-  padding: rem(40) 0 rem(60);
-
-  @include breakpoint-up(md) {
-    padding: rem(60) 0 rem(80);
-  }
-
+.breadcrumb {
+  padding: rem(20) 0;
+  background: $background-primary;
   @include breakpoint-up(lg) {
-    padding: rem(80) 0 rem(100);
+    padding: rem(50) 0 rem(20);
   }
 
   &__container {
-    max-width: rem(1200);
     margin: 0 auto;
-    padding: 0 5%;
+    padding: 0 0 0 5%;
+    @include breakpoint-up(xl) {
+      padding: 0 0 0 rem(50);
+    }
+  }
 
-    @include breakpoint-up(lg) {
-      padding: 0 rem(24);
+  &__list {
+    display: flex;
+    align-items: center;
+    gap: rem(8);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
+    @include font-ja-3s;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+
+    &:not(:last-child)::after {
+      content: '>';
+      margin-left: rem(8);
+      color: $text-secondary;
+    }
+
+    a {
+      @include font-ja-3s(semibold);
+      color: $text-link;
+      text-decoration: underline;
+
+      &:hover {
+        color: $text-link-hover;
+        text-decoration: underline;
+      }
+    }
+
+    &[aria-current="page"] {
+      @include font-ja-3s;
+      color: $text-primary;
+      font-weight: 500;
     }
   }
 }
 
-// 講座カード一覧
+/* 共通セクションスタイル */
+.content-section {
+  padding: 0 0 rem(120);
+  background: $background-primary;
+  position: relative;
+  
+  @include breakpoint-up(xl) {
+    padding: 0 0 rem(160);
+  }
+
+  &__container {
+    padding: 0 3%;
+    overflow: hidden;
+    @include breakpoint-up(xl) {
+      padding: 0 rem(50);
+    }
+  }
+}
+
+/* 講座セクション */
+.courses-section {
+  background: $brand-sub-pink-low;
+}
+
+/* 講座グリッド */
 .courses-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: rem(20);
-  margin-top: rem(40);
-
-  @include breakpoint-up(sm) {
-    grid-template-columns: repeat(2, 1fr);
-    gap: rem(24);
-  }
-
+  grid-template-columns: repeat(2, 1fr);
+  gap: rem(12);
+  padding-bottom: rem(32);
+  
   @include breakpoint-up(md) {
-    grid-template-columns: repeat(3, 1fr);
-    gap: rem(30);
+    gap: rem(18);
+    padding-bottom: rem(40);
   }
-
+  
   @include breakpoint-up(lg) {
-    margin-top: rem(60);
-    gap: rem(32);
+    grid-template-columns: repeat(3, 1fr);
+  }
+  @include breakpoint-up(xl) {
+    max-width: rem(1400);
+    margin: 0 auto;
+    gap: rem(24);
+    padding-bottom: rem(48);
+  }
+  
+  // 日付タブ表示時のスタイル
+  &.date-grouped {
+    display: block !important;
+    
+    // 子要素のカードには影響しないよう、直接のグリッドスタイルをリセット
+    grid-template-columns: none !important;
+    gap: 0 !important;
   }
 }
 
-// 活動の様子セクション
-.after-images-section {
-  margin-top: rem(60);
-
+/* フィルタータブ */
+.filter-tabs {
+  display: flex;
+  gap: rem(4);
+  z-index: 10;
+  justify-content: center;
+  width: 100%;
   @include breakpoint-up(lg) {
-    margin-top: rem(80);
+    gap: rem(10);
   }
+}
 
-  &__title {
-    @include font-ja-m(semibold);
+.filter-tab {
+  @include font-ja-s(semibold);
+  padding: rem(12) rem(16);
+  background: $background-secondary;
+  color: $text-primary;
+  border-radius: $radius-m $radius-m 0 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  border: none;
+  
+  @include breakpoint-up(md) {
+    @include font-ja-s(semibold);
+    padding: rem(14) rem(20);
+  }
+  
+  &:hover {
+    background: darken($background-secondary, 5%);
+  }
+  
+  &--active {
+    background: $background-primary;
     color: $text-primary;
-    text-align: center;
-    margin-bottom: rem(30);
+    
+    // 文字の下にピンクの下線
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: rem(8);
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - #{rem(32)});
+      height: rem(3);
+      background: $brand-pink;
+      border-radius: rem(2);
+    }
+    
+    @include breakpoint-up(md) {
+      &::after {
+        bottom: rem(10);
+        width: calc(100% - #{rem(40)});
+      }
+    }
+    
+    &:hover {
+      background: $background-primary;
+    }
+  }
+}
 
+.courses-container {
+  background: $background-primary;
+  border-radius: $radius-l;
+  padding: rem(20) rem(12);
+  
+  @include breakpoint-up(md) {
+    padding: rem(20);
+    border-radius: $radius-2l;
+  }
+  
+  @include breakpoint-up(lg) {
+    padding: rem(25);
+  }
+  
+  @include breakpoint-up(xl) {
+    padding: rem(25) rem(40);
+    max-width: rem(1480);
+    margin: 0 auto;
+  }
+}
+
+/* 凡例 */
+.course-legend {
+  display: flex;
+  gap: rem(20);
+  margin: rem(16) auto rem(20);
+  align-items: center;
+  justify-content: center;
+  
+  @include breakpoint-up(md) {
+    margin: rem(20) 0 rem(24) 0;
+    gap: rem(24);
+  }
+  
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: rem(8);
+  }
+  
+  &__color {
+    width: rem(16);
+    height: rem(16);
+    border-radius: rem(4);
+    flex-shrink: 0;
+    
+    @include breakpoint-up(md) {
+      width: rem(20);
+      height: rem(20);
+      border-radius: rem(6);
+    }
+    
+    &--job-experience {
+      background-color: $brand-sub-yellow-very-low;
+    }
+    
+    &--hands-on {
+      background-color: $brand-sub-purple-very-low;
+    }
+  }
+  
+  &__label {
+    @include font-ja-s(semibold);
+    color: $text-primary;
+    
     @include breakpoint-up(lg) {
-      @include font-ja-l(semibold);
+      @include font-ja-m(semibold);
+    }
+  }
+}
+
+/* 時期別スクロールリンク */
+.period-scroll-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: rem(8);
+  justify-content: center;
+  margin: rem(16) 0 rem(24) 0;
+  
+  @include breakpoint-up(md) {
+    gap: rem(12);
+    margin: rem(20) 0 rem(30) 0;
+  }
+  
+}
+
+.period-link {
+  display: inline-flex;
+  align-items: center;
+  gap: rem(3);
+  @include font-ja-3s(semibold);
+  padding: rem(2) rem(6);
+  border: 1px solid $brand-black;
+  border-radius: rem(7);
+  white-space: nowrap;
+  color: $text-primary;
+  background-color: $background-primary;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  
+  @include breakpoint-up(md) {
+    padding: rem(3) rem(8);
+  }
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-2s(semibold);
+  }
+  
+  &:hover {
+    background-color: $brand-black;
+    color: $background-primary;
+    text-decoration: none;
+  }
+  
+  &__arrow {
+    width: rem(6);
+    height: rem(6);
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg) translateY(rem(-2));
+    flex-shrink: 0;
+    margin-left: rem(2);
+    
+    @include breakpoint-up(lg) {
+      width: rem(8);
+      height: rem(8);
+      transform: rotate(45deg) translateY(rem(-4));
+    }
+  }
+}
+
+/* カテゴリータグ */
+.category-tag {
+  font-size: rem(9);
+  font-weight: 600;
+  padding: rem(1) rem(3);
+  border: 1px solid $brand-black;
+  border-radius: rem(7);
+  white-space: nowrap;
+  color: $text-primary;
+  background-color: $background-primary;
+  display: inline-block;
+  
+  @include breakpoint-up(md) {
+    @include font-ja-3s(semibold);
+  }
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-2s(semibold);
+    padding: rem(4) rem(6);
+    border-radius: rem(10);
+  }
+}
+
+/* コースカード */
+.course-card {
+  background: $background-primary;
+  border-radius: $radius-m;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  @include breakpoint-up(md) {
+    border-radius: $radius-l;
+  }
+  
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+  }
+  
+  &__image {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: $radius-m;
+
+    @include breakpoint-up(md) {
+      border-radius: $radius-l;
+      aspect-ratio: 16 / 9;
+    }
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 5%, transparent 100%);
+      pointer-events: none;
+      z-index: 1;
+    }
+    
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+  }
+  
+  &__status {
+    position: absolute;
+    top: rem(8);
+    left: rem(8);
+    z-index: 2;
+    @include breakpoint-up(md) {
+      top: rem(10);
+      left: rem(10);
+    }
+    @include breakpoint-up(lg) {
+      top: rem(12);
+      left: rem(12);
+    }
+    
+    img {
+      height: rem(24);
+      width: auto;
+      
+      @include breakpoint-up(md) {
+        height: rem(32);
+      }
+    }
+  }
+  
+  &__report-ribbon {
+    position: absolute;
+    bottom: rem(16);
+    right: rem(8);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+    @include breakpoint-up(md) {
+      bottom: rem(20);
+      right: rem(10);
+    }
+    
+    @include breakpoint-up(lg) {
+      bottom: rem(24);
+      right: rem(12);
+    }
+    
+    @include breakpoint-up(xl) {
+      bottom: rem(32);
+    }
+  }
+  
+  &__content {
+    padding: rem(12) rem(8) rem(16);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    
+    @include breakpoint-up(md) {
+      padding: rem(16) rem(16) rem(20);
+    }
+    
+    @include breakpoint-up(lg) {
+      padding: rem(20) rem(20) rem(30);
+    }
+  }
+  
+  &__schedule-date {
+    font-size: rem(9);
+    font-weight: 600;
+    color: $text-dark-gray;
+    margin: 0 0 rem(8) 0;
+    line-height: 1.4;
+    @include breakpoint-up(md) {
+      @include font-ja-2s(semibold);
+    }
+    
+    @include breakpoint-up(md) {
+      margin-bottom: rem(10);
+    }
+    
+    @include breakpoint-up(lg) {
+      margin-bottom: rem(12);
+    }
+  }
+  
+  &__time {
+    color: $text-dark-gray;
+    font-weight: 600;
+  }
+  
+  &__executed-date {
+    @include font-ja-3s(semibold);
+    color: $text-dark-gray;
+    margin: 0 0 rem(8) 0;
+    line-height: 1.4;
+    @include breakpoint-up(md) {
+      @include font-ja-2s(semibold);
+    }
+    
+    @include breakpoint-up(md) {
+      margin-bottom: rem(10);
+    }
+    
+    @include breakpoint-up(lg) {
+      margin-bottom: rem(12);
+    }
+  }
+  
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: rem(8);
+    margin-bottom: rem(8);
+    @include breakpoint-up(md) {
+      margin-bottom: rem(12);
+    }
+  }
+  
+  &__title {
+    @include font-ja-2s(semibold);
+    color: $text-primary;
+    margin: 0;
+    line-height: 1.4;
+    flex: 1;
+    
+    @include breakpoint-up(md) {
+      @include font-ja-s(semibold);
+    }
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-m(semibold);
+    }
+  }
+  
+  &__arrow {
+    width: rem(20);
+    height: rem(20);
+    background-color: $brand-pink;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    
+    @include breakpoint-up(md) {
+      width: rem(24);
+      height: rem(24);
+    }
+    
+    &::after {
+      content: '';
+      width: rem(6);
+      height: rem(6);
+      border-right: 2px solid $text-white;
+      border-bottom: 2px solid $text-white;
+      transform: translateX(rem(-1)) rotate(-45deg);
+      
+      @include breakpoint-up(md) {
+        width: rem(8);
+        height: rem(8);
+        transform: translateX(rem(-1)) rotate(-45deg);
+      }
+    }
+  }
+  
+  &:hover &__arrow {
+    transform: translateX(rem(2));
+  }
+  
+  &:hover &__image img {
+    transform: scale(1.1);
+  }
+  
+  
+  &__category {
+    margin: 0;
+    @include breakpoint-up(md) {
+      margin: 0 0 rem(8) 0;
+    }
+  }
+  
+  &__residency {
+    @include font-ja-3s(semibold);
+    color: $text-dark-gray;
+    margin: rem(8) 0 rem(2) 0;
+    line-height: 1.4;
+    @include breakpoint-up(md) {
+      margin: rem(8) 0 rem(4) 0;
+    }
+  }
+  
+  &__grades {
+    display: flex;
+    flex-wrap: wrap;
+    gap: rem(2);
+    
+    @include breakpoint-up(md) {
+      gap: rem(6);
+    }
+  }
+  
+  &__parent-join {
+    @include font-ja-3s(semibold);
+    color: $text-dark-gray;
+    margin: 0 0 0 0;
+    line-height: 1.4;
+    @include breakpoint-up(md) {
+      margin: rem(2) 0 0 0;
+    }
+  }
+}
+
+/* 実施レポートリボン */
+.report-ribbon {
+  &__tail {
+    position: absolute;
+    left: 50%;
+    top: rem(30);
+    transform: translateX(-50%);
+    height: 0;
+    width: 0;
+    border-top: rem(12) solid $text-white;
+    border-left: rem(12) solid $text-white;
+    border-right: rem(12) solid $text-white;
+    border-bottom: rem(12) solid transparent;
+    border-radius: 0 0 rem(3) rem(3);
+    z-index: 1;
+    
+    @include breakpoint-up(md) {
+      top: rem(38);
+    }
+    @include breakpoint-up(lg) {
+      top: rem(44);
+    }
+    @include breakpoint-up(xl) {
+      top: rem(60);
+      border-top: rem(18) solid $text-white;
+      border-left: rem(18) solid $text-white;
+      border-right: rem(18) solid $text-white;
+      border-bottom: rem(18) solid transparent;
+      border-radius: 0 0 rem(5) rem(5);
+    }
+  }
+  
+  &__circle {
+    width: rem(40);
+    height: rem(40);
+    background-color: $brand-primary;
+    border: 2px solid $text-white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+    
+    @include breakpoint-up(md) {
+      width: rem(48);
+      height: rem(48);
+    }
+    @include breakpoint-up(lg) {
+      width: rem(52);
+      height: rem(52);
+    }
+    @include breakpoint-up(xl) {
+      width: rem(70);
+      height: rem(70);
+    }
+  }
+  
+  &__text {
+    color: $text-white;
+    text-align: center;
+    line-height: 0.6;
+    padding-bottom: rem(4);
+    @include breakpoint-up(md) {
+      line-height: 0.7;
+      padding-bottom: rem(4);
+    }
+    @include breakpoint-up(lg) {
+      padding-bottom: 0;
+    }
+    @include breakpoint-up(xl) {
+      line-height: 1;
+      padding-bottom: rem(2);
+    }
+  }
+  
+  &__text-line1 {
+    @include font-ja-3s(semibold);
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-s(semibold);
+      margin-top: rem(-1);
+    }
+  }
+  
+  &__text-line2 {
+    @include font-ja-4s(semibold);
+    margin-top: rem(-2);
+    
+    @include breakpoint-up(xl) {
+      @include font-ja-3s(semibold);
+      margin-top: 0;
+    }
+  }
+}
+
+/* ステータスバッジ */
+.status-badge {
+  @include font-ja-3s(semibold);
+  color: $text-white;
+  padding: rem(2) rem(4);
+  border-radius: $radius-xs;
+  white-space: nowrap;
+  
+  @include breakpoint-up(md) {
+    @include font-ja-2s(semibold);
+  }
+  
+  &--dark-gray {
+    background: $background-dark-gray;
+  }
+  
+  &--brand-secondary {
+    background: $brand-secondary;
+  }
+  
+  &--brand-turquoise {
+    background: $brand-turquoise;
+  }
+  
+  &--brand-pink {
+    background: $brand-pink;
+  }
+}
+
+/* 学年タグ（scheduleページと同じスタイル） */
+/* カテゴリータグ */
+.category-tag {
+  font-size: rem(9);
+  font-weight: 600;
+  padding: rem(1) rem(3);
+  border: 1px solid $brand-black;
+  border-radius: rem(7);
+  white-space: nowrap;
+  color: $text-primary;
+  background-color: $background-primary;
+  display: inline-block;
+  
+  @include breakpoint-up(md) {
+    @include font-ja-3s(semibold);
+  }
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-2s(semibold);
+    padding: rem(4) rem(6);
+    border-radius: rem(10);
+  }
+}
+
+.target-grade {
+  font-size: rem(9);
+  font-weight: 600;
+  padding: rem(1) rem(3);
+  border: 1px solid $brand-black;
+  border-radius: rem(7);
+  white-space: nowrap;
+  margin-bottom: rem(2);
+  color: $text-primary;
+  
+  @include breakpoint-up(md) {
+    @include font-ja-3s(semibold);
+  }
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-2s(semibold);
+    padding: rem(4) rem(6);
+    border-radius: rem(10);
+  }
+  
+  &--elementary-low {
+    background-color: $brand-sub-yellow-low;
+    color: $text-primary;
+  }
+  
+  &--elementary-high {
+    background-color: $brand-sub-purple-low;
+    color: $text-primary;
+  }
+  
+  &--junior {
+    background-color: $brand-sub-turquoise-low;
+    color: $text-primary;
+  }
+  
+  &--special {
+    background-color: $brand-sub-pink-low;
+    color: $text-primary;
+  }
+  
+  // むなかた子ども大学の日用（学校名表示）
+  &--mku-day {
+    background-color: $background-primary;
+    border: 1px solid $brand-black;
+    color: $text-primary;
+  }
+}
+
+/* 空状態 */
+.empty-state {
+  text-align: center;
+  padding: rem(40) 0 0;
+  
+  @include breakpoint-up(md) {
+    // padding: rem(80);
+  }
+  
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: rem(32);
+    
+    @include breakpoint-up(md) {
       margin-bottom: rem(40);
     }
+    
+    svg {
+      width: rem(60);
+      height: rem(60);
+      color: $brand-pink;
+      
+      @include breakpoint-up(md) {
+        width: rem(80);
+        height: rem(80);
+      }
+    }
+  }
+  
+  &__description {
+    @include font-ja-s;
+    color: $text-primary;
+    line-height: 1.7;
+    margin: 0;
+  }
+}
+
+// カードの色分け（courseTypeベース）
+div.courses-grid a.course-card.course-card--職業体験 {
+  background: $brand-sub-yellow-very-low !important;
+}
+
+div.courses-grid a.course-card.course-card--体験活動 {
+  background: $brand-sub-purple-very-low !important;
+}
+
+/* 日付グループ */
+.date-group {
+  margin-bottom: rem(32);
+  
+  @include breakpoint-up(md) {
+    margin-bottom: rem(40);
+  }
+}
+
+.date-group__header {
+  margin-top: rem(40);
+  margin-bottom: rem(16);
+  text-align: left;
+  
+  @include breakpoint-up(md) {
+    margin-bottom: rem(20);
+  }
+  
+  @include breakpoint-up(lg) {
+    margin-top: rem(54);
+  }
+  
+  @include breakpoint-up(xl) {
+    margin-top: rem(64);
+  }
+}
+
+h3.date-group__title {
+  @include font-ja-m(semibold);
+  color: $text-secondary !important;
+  margin: 0 !important;
+  line-height: 1.4 !important;
+  font-weight: 600 !important;
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-l(semibold);
+  }
+}
+
+.date-group__grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: rem(12) !important;
+  
+  @include breakpoint-up(md) {
+    gap: rem(18) !important;
+  }
+  
+  @include breakpoint-up(lg) {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: rem(24) !important;
+  }
+  
+  @include breakpoint-up(xl) {
+    max-width: rem(1400) !important;
+    margin: 0 auto !important;
+    gap: rem(24) !important;
+  }
+}
+</style>
+
+<script>
+// スクロールアニメーション用のIntersection Observer
+document.addEventListener('DOMContentLoaded', function() {
+  const observerOptions = {
+    threshold: 0.1, // 要素の10%が見えたら発火
+    rootMargin: '0px 0px -50px 0px' // 下から50px余裕を持たせる
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        // 一度表示されたら監視を停止（パフォーマンス向上）
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  // fade-upクラスを持つ全ての要素を監視対象に追加
+  const fadeUpElements = document.querySelectorAll('.fade-up');
+  fadeUpElements.forEach(element => {
+    observer.observe(element);
+  });
+
+});
+</script>
+
+<script>
+// 自動スクロール機能（ページ内ナビゲーション用）
+document.addEventListener('DOMContentLoaded', function() {
+  const navLinks = document.querySelectorAll('.page-nav__link');
+  
+  navLinks.forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      
+      const href = this.getAttribute('href');
+      const targetId = href?.substring(1);
+      const targetElement = targetId ? document.getElementById(targetId) : null;
+      
+      if (targetElement) {
+        const headerHeight = 80; // ヘッダーの高さ分のオフセット
+        const elementPosition = targetElement.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
+    });
+  });
+
+  // フィルタータブの切り替え機能（完全版）
+  const filterTabs = document.querySelectorAll('.filter-tab');
+  const coursesGrid = document.querySelector('#courses-grid');
+  const periodScrollLinks = document.querySelector('#period-scroll-links');
+  
+  if (filterTabs.length === 0 || !coursesGrid) return;
+  
+  // カテゴリーマスターデータ（APIレコード順）をHTMLから取得
+  const categoryOrderData = periodScrollLinks?.getAttribute('data-category-order');
+  const categoryOrder = categoryOrderData ? JSON.parse(categoryOrderData) : [];
+  
+  // 元のカードを保存
+  const originalCards = Array.from(coursesGrid.children);
+  
+  // デバッグ：各カードのdata属性を確認
+  console.log('All cards data attributes:');
+  originalCards.forEach((card, index) => {
+    const title = card.querySelector('.course-card__title')?.textContent || 'No title';
+    console.log(`Card ${index} (${title}):`, {
+      scheduleDate: card.dataset.scheduleDate,
+      scheduleDateLength: card.dataset.scheduleDate?.length,
+      scheduleDateIsEmpty: card.dataset.scheduleDate === '' || card.dataset.scheduleDate === null || card.dataset.scheduleDate === undefined,
+      atAnyTime: card.dataset.atAnyTime,
+      category: card.dataset.category,
+      hasAtAnyTimeAttribute: card.hasAttribute('data-at-any-time'),
+      atAnyTimeValue: card.getAttribute('data-at-any-time')
+    });
+  });
+  
+  // 日付フォーマット関数
+  function formatDateForDisplay(dateString) {
+    if (!dateString) return '';
+    
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    
+    const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+    const weekday = weekdays[date.getDay()];
+    
+    return `${year}年${month}月${day}日(${weekday})`;
+  }
+  
+  // 日付でグループ化する関数
+  function groupByDate(cards) {
+    const groups = {};
+    
+    cards.forEach((card, index) => {
+      const dateAttr = card.dataset.scheduleDate;
+      const atAnyTime = card.dataset.atAnyTime === 'true';
+      const title = card.querySelector('.course-card__title')?.textContent || 'No title';
+      console.log(`Card ${index} (${title.substring(0, 20)}...):`, {
+        dateAttr,
+        atAnyTime,
+        datasetAtAnyTime: card.dataset.atAnyTime,
+        hasAtAnyTimeAttr: card.hasAttribute('data-at-any-time')
+      });
+      
+      let groupKey;
+      if (atAnyTime) {
+        // 随時開催の場合
+        console.log(`🎯 Card "${title.substring(0, 20)}..." assigned to 随時開催 group`);
+        groupKey = '随時開催';
+      } else if (dateAttr && dateAttr.trim() !== '') {
+        // 日付指定の場合
+        console.log(`📅 Processing date for "${title.substring(0, 20)}...": "${dateAttr}"`);
+        const formattedDate = formatDateForDisplay(dateAttr);
+        console.log(`📅 Formatted date: "${formattedDate}"`);
+        if (!formattedDate) {
+          console.log(`❌ Skipping card "${title.substring(0, 20)}..." - invalid date format`);
+          return;
+        }
+        groupKey = formattedDate;
+      } else {
+        // 日付もatAnyTimeも設定されていない場合は「過去の実績」として扱う
+        console.log(`📝 Card "${title.substring(0, 20)}..." has no date, assigning to 過去の実績`);
+        groupKey = '過去の実績';
+      }
+      
+      console.log('Group key:', groupKey);
+      if (!groups[groupKey]) {
+        groups[groupKey] = [];
+      }
+      groups[groupKey].push(card);
+    });
+    
+    console.log('Final groups:', groups);
+    return groups;
+  }
+  
+  // 日付グループ表示を作成
+  function renderDateGroups(groups) {
+    console.log('renderDateGroups called with:', groups);
+    coursesGrid.innerHTML = '';
+    coursesGrid.classList.add('date-grouped');
+    
+    // 日付順にソート（「随時開催」は最後）
+    const sortedDates = Object.keys(groups).sort((a, b) => {
+      // 「随時開催」は常に最後
+      if (a === '随時開催') return 1;
+      if (b === '随時開催') return -1;
+      
+      // 両方とも日付の場合は日付順
+      const dateA = new Date(groups[a][0].dataset.scheduleDate);
+      const dateB = new Date(groups[b][0].dataset.scheduleDate);
+      return dateA - dateB;
+    });
+    
+    console.log('sortedDates:', sortedDates);
+    
+    sortedDates.forEach(date => {
+      const dateGroup = document.createElement('div');
+      dateGroup.className = 'date-group';
+      
+      const header = document.createElement('div');
+      header.className = 'date-group__header';
+      header.style.marginTop = '40px';
+      header.style.marginBottom = '16px';
+      header.style.textAlign = 'left';
+      
+      const title = document.createElement('h3');
+      title.className = 'date-group__title';
+      title.style.margin = '0';
+      title.style.color = '#1c0083'; // $text-secondary
+      title.style.fontWeight = '600'; // semibold
+      title.style.lineHeight = '1.4';
+      title.textContent = date;
+      
+      const grid = document.createElement('div');
+      grid.className = 'date-group__grid';
+      grid.style.display = 'grid';
+      
+      // レスポンシブ対応
+      function setResponsiveStyles() {
+        const width = window.innerWidth;
+        if (width >= 1200) { // xl以降
+          title.style.fontSize = '32px'; // ja-l
+          grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+          grid.style.gap = '24px';
+          header.style.marginTop = '64px';
+          header.style.marginBottom = '20px';
+        } else if (width >= 1024) { // lg~xl未満
+          title.style.fontSize = '32px'; // ja-l
+          grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+          grid.style.gap = '18px';
+          header.style.marginTop = '54px';
+          header.style.marginBottom = '20px';
+        } else if (width >= 768) { // md~lg未満
+          title.style.fontSize = '20px'; // ja-m
+          grid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+          grid.style.gap = '18px';
+          header.style.marginTop = '40px';
+          header.style.marginBottom = '20px';
+        } else { // sm未満
+          title.style.fontSize = '20px'; // ja-m
+          grid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+          grid.style.gap = '12px';
+          header.style.marginTop = '40px';
+          header.style.marginBottom = '16px';
+        }
+      }
+      
+      setResponsiveStyles();
+      window.addEventListener('resize', setResponsiveStyles);
+      
+      header.appendChild(title);
+      dateGroup.appendChild(header);
+      dateGroup.appendChild(grid);
+      
+      groups[date].forEach(card => {
+        grid.appendChild(card);
+      });
+      
+      coursesGrid.appendChild(dateGroup);
+    });
+  }
+  
+  // カテゴリーでグループ化する関数
+  function groupByCategory(cards) {
+    const groups = {};
+    
+    cards.forEach(card => {
+      // .category-tag要素からカテゴリ名を取得（#を除去）
+      const categoryTagElement = card.querySelector('.category-tag');
+      const category = categoryTagElement ? 
+        categoryTagElement.textContent.replace('#', '').trim() : 'その他';
+      
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+      groups[category].push(card);
+    });
+    
+    return groups;
+  }
+  
+  // カテゴリーグループ表示
+  function renderCategoryGroups(groups) {
+    coursesGrid.innerHTML = '';
+    coursesGrid.classList.add('date-grouped'); // 同じスタイルを使用
+    
+    // カテゴリーをAPIレコード順にソート
+    const categoryNames = Object.keys(groups);
+    const sortedCategories = categoryOrder.filter(catName => categoryNames.includes(catName));
+    
+    console.log('sortedCategories:', sortedCategories);
+    
+    sortedCategories.forEach(category => {
+      const categoryGroup = document.createElement('div');
+      categoryGroup.className = 'date-group';
+      
+      const header = document.createElement('div');
+      header.className = 'date-group__header';
+      header.style.marginTop = '40px';
+      header.style.marginBottom = '16px';
+      header.style.textAlign = 'left';
+      
+      const title = document.createElement('h3');
+      title.className = 'date-group__title';
+      title.style.margin = '0';
+      title.style.color = '#1c0083'; // $text-secondary
+      title.style.fontWeight = '600'; // semibold
+      title.style.lineHeight = '1.4';
+      title.textContent = String(category);
+      
+      const grid = document.createElement('div');
+      grid.className = 'date-group__grid';
+      grid.style.display = 'grid';
+      
+      // レスポンシブ対応
+      function setResponsiveStyles() {
+        const width = window.innerWidth;
+        if (width >= 1200) { // xl以降
+          title.style.fontSize = '32px'; // ja-l
+          grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+          grid.style.gap = '24px';
+          header.style.marginTop = '64px';
+          header.style.marginBottom = '20px';
+        } else if (width >= 1024) { // lg~xl未満
+          title.style.fontSize = '32px'; // ja-l
+          grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+          grid.style.gap = '18px';
+          header.style.marginTop = '54px';
+          header.style.marginBottom = '20px';
+        } else if (width >= 768) { // md~lg未満
+          title.style.fontSize = '20px'; // ja-m
+          grid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+          grid.style.gap = '18px';
+          header.style.marginTop = '40px';
+          header.style.marginBottom = '20px';
+        } else { // sm未満
+          title.style.fontSize = '20px'; // ja-m
+          grid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+          grid.style.gap = '12px';
+          header.style.marginTop = '32px';
+          header.style.marginBottom = '16px';
+        }
+      }
+      
+      setResponsiveStyles();
+      window.addEventListener('resize', setResponsiveStyles);
+      
+      header.appendChild(title);
+      categoryGroup.appendChild(header);
+      categoryGroup.appendChild(grid);
+      
+      groups[category].forEach(card => {
+        grid.appendChild(card);
+      });
+      
+      coursesGrid.appendChild(categoryGroup);
+    });
+  }
+  
+  // 日付を時期に分類する関数
+  function getDatePeriod(dateString) {
+    if (!dateString) return null;
+    
+    const date = new Date(dateString);
+    const month = date.getMonth() + 1; // 0ベースなので+1
+    const day = date.getDate();
+    
+    if (month === 7 && day >= 15) {
+      return 'late-july';
+    } else if (month === 8 && day >= 1 && day <= 10) {
+      return 'early-august';
+    } else if (month === 8 && day >= 11 && day <= 20) {
+      return 'mid-august';
+    } else if (month === 8 && day >= 21 && day <= 31) {
+      return 'late-august';
+    }
+    
+    return null;
+  }
+
+  // 日付タブ用スクロールリンクイベントリスナーを追加する関数
+  function attachDateScrollListeners() {
+    const periodLinks = document.querySelectorAll('.period-link');
+    
+    periodLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const period = this.dataset.period;
+        let targetElement = null;
+        
+        if (period === 'anytime') {
+          // 随時開催グループを探す
+          targetElement = document.querySelector('.date-group__header:last-child');
+          const headers = document.querySelectorAll('.date-group__header');
+          headers.forEach(header => {
+            if (header.textContent.includes('随時開催')) {
+              targetElement = header;
+            }
+          });
+        } else {
+          // 指定された時期の最初の日付グループを探す
+          const dateHeaders = document.querySelectorAll('.date-group__header');
+          dateHeaders.forEach(header => {
+            const headerText = header.textContent;
+            // ヘッダーから日付を抽出して時期判定
+            const dateMatch = headerText.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+            if (dateMatch) {
+              const [, year, month, day] = dateMatch;
+              const dateString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+              const headerPeriod = getDatePeriod(dateString);
+              if (headerPeriod === period && !targetElement) {
+                targetElement = header;
+              }
+            }
+          });
+        }
+        
+        if (targetElement) {
+          // ヘッダーの高さ分のオフセット（xl以上では追加マージン）
+          const isXlOrLarger = window.innerWidth >= 1280;
+          const headerHeight = isXlOrLarger ? 120 : 80;
+          const elementPosition = targetElement.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+        }
+      });
+    });
+  }
+
+  // 日付タブ用スクロールリンクを復元する関数
+  function updateDateScrollLinks() {
+    console.log('updateDateScrollLinks called');
+    const periodScrollLinks = document.querySelector('#period-scroll-links');
+    if (!periodScrollLinks) return;
+    
+    // 既存のリンクをクリア
+    periodScrollLinks.innerHTML = '';
+    
+    // 日付タブ用の静的なボタンを作成
+    const dateButtons = [
+      { period: 'late-july', text: '7月下旬' },
+      { period: 'early-august', text: '8月上旬' },
+      { period: 'mid-august', text: '8月中旬' },
+      { period: 'late-august', text: '8月下旬' },
+      { period: 'anytime', text: '随時開催' }
+    ];
+    
+    dateButtons.forEach(buttonData => {
+      const link = document.createElement('a');
+      link.className = 'period-link';
+      link.href = '#';
+      link.dataset.period = buttonData.period;
+      
+      // インラインスタイルを適用（基本は12px、lg以上は14px）
+      link.style.display = 'inline-flex';
+      link.style.alignItems = 'center';
+      link.style.gap = '6px';
+      link.style.fontSize = '12px';
+      link.style.fontWeight = '600';
+      link.style.padding = '4px 12px 4px 8px';
+      link.style.border = '1px solid #1c0083';
+      link.style.borderRadius = '10px';
+      link.style.whiteSpace = 'nowrap';
+      link.style.color = '#1c0083';
+      link.style.backgroundColor = '#ffffff';
+      link.style.textDecoration = 'none';
+      link.style.transition = 'all 0.2s ease';
+      link.style.cursor = 'pointer';
+      
+      // レスポンシブ対応（lg以上では14px）
+      const updateResponsiveStyles = () => {
+        const width = window.innerWidth;
+        if (width >= 1024) { // lg以上
+          link.style.fontSize = '14px';
+        } else {
+          link.style.fontSize = '12px';
+        }
+      };
+      updateResponsiveStyles();
+      window.addEventListener('resize', updateResponsiveStyles);
+      
+      // アロー要素を作成（レスポンシブ対応）
+      const arrow = document.createElement('span');
+      arrow.className = 'period-link__arrow';
+      
+      // アローのレスポンシブスタイリング
+      const updateArrowStyles = () => {
+        const width = window.innerWidth;
+        if (width >= 1024) { // lg以上
+          arrow.style.width = '8px';
+          arrow.style.height = '8px';
+          arrow.style.transform = 'rotate(45deg) translateY(-4px)';
+        } else {
+          arrow.style.width = '6px';
+          arrow.style.height = '6px';
+          arrow.style.transform = 'rotate(45deg) translateY(-2px)';
+        }
+        arrow.style.borderRight = '2px solid currentColor';
+        arrow.style.borderBottom = '2px solid currentColor';
+        arrow.style.flexShrink = '0';
+        arrow.style.marginLeft = '0px';
+      };
+      updateArrowStyles();
+      window.addEventListener('resize', updateArrowStyles);
+      
+      // テキストとアローを追加
+      link.textContent = buttonData.text;
+      link.appendChild(arrow);
+      
+      // ホバー効果を追加
+      link.addEventListener('mouseenter', function() {
+        this.style.backgroundColor = '#1c0083';
+        this.style.color = '#ffffff';
+      });
+      
+      link.addEventListener('mouseleave', function() {
+        this.style.backgroundColor = '#ffffff';
+        this.style.color = '#1c0083';
+      });
+      
+      periodScrollLinks.appendChild(link);
+    });
+    
+    // 新しく作成されたボタンにイベントリスナーをアタッチ
+    attachDateScrollListeners();
+    
+    console.log('Date scroll links restored');
+  }
+
+  // カテゴリー別スクロールリンクを更新する関数
+  function updateCategoryScrollLinks(categoryGroups) {
+    const periodScrollLinks = document.querySelector('#period-scroll-links');
+    if (!periodScrollLinks) return;
+    
+    // 既存のリンクをクリア
+    periodScrollLinks.innerHTML = '';
+    
+    // カテゴリー名をAPIレコード順にソート
+    const categoryNames = Object.keys(categoryGroups);
+    const sortedCategories = categoryOrder.filter(catName => categoryNames.includes(catName));
+    
+    sortedCategories.forEach(category => {
+      const link = document.createElement('a');
+      link.className = 'period-link';
+      link.href = '#';
+      link.dataset.category = category;
+      
+      // インラインスタイルを適用（基本は12px、lg以上は14px）
+      link.style.display = 'inline-flex';
+      link.style.alignItems = 'center';
+      link.style.gap = '6px';
+      link.style.fontSize = '12px';
+      link.style.fontWeight = '600';
+      link.style.padding = '4px 12px 4px 8px';
+      link.style.border = '1px solid #1c0083';
+      link.style.borderRadius = '10px';
+      link.style.whiteSpace = 'nowrap';
+      link.style.color = '#1c0083';
+      link.style.backgroundColor = '#ffffff';
+      link.style.textDecoration = 'none';
+      link.style.transition = 'all 0.2s ease';
+      link.style.cursor = 'pointer';
+      
+      // レスポンシブ対応（lg以上では14px）
+      const updateResponsiveStylesCategory = () => {
+        const width = window.innerWidth;
+        if (width >= 1024) { // lg以上
+          link.style.fontSize = '14px';
+        } else {
+          link.style.fontSize = '12px';
+        }
+      };
+      updateResponsiveStylesCategory();
+      window.addEventListener('resize', updateResponsiveStylesCategory);
+      
+      // アロー要素を作成（レスポンシブ対応）
+      const arrow = document.createElement('span');
+      arrow.className = 'period-link__arrow';
+      
+      // アローのレスポンシブスタイリング
+      const updateArrowStyles = () => {
+        const width = window.innerWidth;
+        if (width >= 1024) { // lg以上
+          arrow.style.width = '8px';
+          arrow.style.height = '8px';
+          arrow.style.transform = 'rotate(45deg) translateY(-4px)';
+        } else {
+          arrow.style.width = '6px';
+          arrow.style.height = '6px';
+          arrow.style.transform = 'rotate(45deg) translateY(-2px)';
+        }
+        arrow.style.borderRight = '2px solid currentColor';
+        arrow.style.borderBottom = '2px solid currentColor';
+        arrow.style.flexShrink = '0';
+        arrow.style.marginLeft = '0px';
+      };
+      updateArrowStyles();
+      window.addEventListener('resize', updateArrowStyles);
+      
+      // テキストとアローを追加
+      link.textContent = '#' + String(category);
+      link.appendChild(arrow);
+      
+      // ホバー効果を追加
+      link.addEventListener('mouseenter', function() {
+        this.style.backgroundColor = '#1c0083';
+        this.style.color = '#ffffff';
+      });
+      
+      link.addEventListener('mouseleave', function() {
+        this.style.backgroundColor = '#ffffff';
+        this.style.color = '#1c0083';
+      });
+      
+      // スクロール機能を追加
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const headers = document.querySelectorAll('.date-group__header');
+        let targetElement = null;
+        
+        headers.forEach(header => {
+          const titleElement = header.querySelector('.date-group__title');
+          if (titleElement && titleElement.textContent === category) {
+            targetElement = header;
+          }
+        });
+        
+        if (targetElement) {
+          // ヘッダーの高さ分のオフセット（xl以上では追加マージン）
+          const isXlOrLarger = window.innerWidth >= 1280;
+          const headerHeight = isXlOrLarger ? 120 : 80;
+          const elementPosition = targetElement.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+        }
+      });
+      
+      periodScrollLinks.appendChild(link);
+    });
+  }
+  
+  // フィルタータブの切り替え機能を追加
+  filterTabs.forEach(tab => {
+    tab.addEventListener('click', function() {
+      // アクティブ状態を切り替え
+      filterTabs.forEach(t => t.classList.remove('filter-tab--active'));
+      this.classList.add('filter-tab--active');
+      
+      const sortType = this.dataset.sort;
+      
+      if (sortType === 'date') {
+        // 日付でグループ化
+        const dateGroups = groupByDate(originalCards);
+        renderDateGroups(dateGroups);
+        // 日付タブ用の静的スクロールリンクに復元
+        updateDateScrollLinks();
+        if (periodScrollLinks) {
+          periodScrollLinks.style.display = 'flex';
+        }
+      } else if (sortType === 'category') {
+        // カテゴリーでグループ化
+        const categoryGroups = groupByCategory(originalCards);
+        renderCategoryGroups(categoryGroups);
+        // カテゴリー別スクロールリンクを更新
+        updateCategoryScrollLinks(categoryGroups);
+        if (periodScrollLinks) {
+          periodScrollLinks.style.display = 'flex';
+        }
+      }
+    });
+  });
+  
+  // 初期表示は日付タブがアクティブなので、日付グループ表示にする
+  const dateGroups = groupByDate(originalCards);
+  renderDateGroups(dateGroups);
+  // 初期表示時もイベントリスナーをアタッチ
+  updateDateScrollLinks();
+  
+  // 静的要素にもホバー効果を追加
+  const existingLinks = document.querySelectorAll('.period-link');
+  existingLinks.forEach(link => {
+    link.addEventListener('mouseenter', function() {
+      this.style.backgroundColor = '#1c0083';
+      this.style.color = '#ffffff';
+    });
+    
+    link.addEventListener('mouseleave', function() {
+      this.style.backgroundColor = '#ffffff';
+      this.style.color = '#1c0083';
+    });
+  });
+});
+</script>
+
+<style lang="scss">
+@import "../../../../styles/index";
+
+/* スマホのみ改行を表示 */
+.sm-only {
+  @include breakpoint-up(md) {
+    display: none;
   }
 }
 </style>

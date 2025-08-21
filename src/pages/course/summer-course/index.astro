@@ -511,23 +511,23 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
                  style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 16px 0 24px 0;">
               <a href="#" class="period-link" data-period="late-july" 
                  style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 12px 4px 8px; border: 1px solid #1c0083; border-radius: 10px; white-space: nowrap; color: #1c0083; background-color: #ffffff; text-decoration: none; transition: all 0.2s ease; cursor: pointer;">
-                7月下旬 <span class="period-link__arrow" style="width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg) translateY(-4px); flex-shrink: 0; margin-left: 0px;"></span>
+                7月下旬 <span class="period-link__arrow"></span>
               </a>
               <a href="#" class="period-link" data-period="early-august" 
                  style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 12px 4px 8px; border: 1px solid #1c0083; border-radius: 10px; white-space: nowrap; color: #1c0083; background-color: #ffffff; text-decoration: none; transition: all 0.2s ease; cursor: pointer;">
-                8月上旬 <span class="period-link__arrow" style="width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg) translateY(-4px); flex-shrink: 0; margin-left: 0px;"></span>
+                8月上旬 <span class="period-link__arrow"></span>
               </a>
               <a href="#" class="period-link" data-period="mid-august" 
                  style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 12px 4px 8px; border: 1px solid #1c0083; border-radius: 10px; white-space: nowrap; color: #1c0083; background-color: #ffffff; text-decoration: none; transition: all 0.2s ease; cursor: pointer;">
-                8月中旬 <span class="period-link__arrow" style="width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg) translateY(-4px); flex-shrink: 0; margin-left: 0px;"></span>
+                8月中旬 <span class="period-link__arrow"></span>
               </a>
               <a href="#" class="period-link" data-period="late-august" 
                  style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 12px 4px 8px; border: 1px solid #1c0083; border-radius: 10px; white-space: nowrap; color: #1c0083; background-color: #ffffff; text-decoration: none; transition: all 0.2s ease; cursor: pointer;">
-                8月下旬 <span class="period-link__arrow" style="width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg) translateY(-4px); flex-shrink: 0; margin-left: 0px;"></span>
+                8月下旬 <span class="period-link__arrow"></span>
               </a>
               <a href="#" class="period-link" data-period="anytime" 
                  style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 12px 4px 8px; border: 1px solid #1c0083; border-radius: 10px; white-space: nowrap; color: #1c0083; background-color: #ffffff; text-decoration: none; transition: all 0.2s ease; cursor: pointer;">
-                随時開催 <span class="period-link__arrow" style="width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg) translateY(-4px); flex-shrink: 0; margin-left: 0px;"></span>
+                随時開催 <span class="period-link__arrow"></span>
               </a>
             </div>
             
@@ -1300,8 +1300,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   display: inline-flex;
   align-items: center;
   gap: rem(3);
-  font-size: rem(11);
-  font-weight: 600;
+  @include font-ja-3s(semibold);
   padding: rem(2) rem(6);
   border: 1px solid $brand-black;
   border-radius: rem(7);
@@ -1312,7 +1311,6 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   transition: all 0.2s ease;
   
   @include breakpoint-up(md) {
-    @include font-ja-3s(semibold);
     padding: rem(3) rem(8);
   }
   
@@ -1327,19 +1325,18 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   }
   
   &__arrow {
-    width: rem(8);
-    height: rem(8);
-    border-right: 1px solid currentColor;
-    border-bottom: 1px solid currentColor;
-    transform: rotate(45deg);
+    width: rem(6);
+    height: rem(6);
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg) translateY(rem(-2));
     flex-shrink: 0;
     margin-left: rem(2);
     
-    @include breakpoint-up(md) {
-      width: rem(9);
-      height: rem(9);
-      border-right: 2px solid currentColor;
-      border-bottom: 2px solid currentColor;
+    @include breakpoint-up(lg) {
+      width: rem(8);
+      height: rem(8);
+      transform: rotate(45deg) translateY(rem(-4));
     }
   }
 }
@@ -2781,16 +2778,29 @@ document.addEventListener('DOMContentLoaded', function() {
       updateResponsiveStyles();
       window.addEventListener('resize', updateResponsiveStyles);
       
-      // アロー要素を作成（lg以上サイズで統一）
+      // アロー要素を作成（レスポンシブ対応）
       const arrow = document.createElement('span');
       arrow.className = 'period-link__arrow';
-      arrow.style.width = '8px';
-      arrow.style.height = '8px';
-      arrow.style.borderRight = '2px solid currentColor';
-      arrow.style.borderBottom = '2px solid currentColor';
-      arrow.style.transform = 'rotate(45deg) translateY(-4px)';
-      arrow.style.flexShrink = '0';
-      arrow.style.marginLeft = '0px';
+      
+      // アローのレスポンシブスタイリング
+      const updateArrowStyles = () => {
+        const width = window.innerWidth;
+        if (width >= 1024) { // lg以上
+          arrow.style.width = '8px';
+          arrow.style.height = '8px';
+          arrow.style.transform = 'rotate(45deg) translateY(-4px)';
+        } else {
+          arrow.style.width = '6px';
+          arrow.style.height = '6px';
+          arrow.style.transform = 'rotate(45deg) translateY(-2px)';
+        }
+        arrow.style.borderRight = '2px solid currentColor';
+        arrow.style.borderBottom = '2px solid currentColor';
+        arrow.style.flexShrink = '0';
+        arrow.style.marginLeft = '0px';
+      };
+      updateArrowStyles();
+      window.addEventListener('resize', updateArrowStyles);
       
       // テキストとアローを追加
       link.textContent = buttonData.text;
@@ -2862,16 +2872,29 @@ document.addEventListener('DOMContentLoaded', function() {
       updateResponsiveStylesCategory();
       window.addEventListener('resize', updateResponsiveStylesCategory);
       
-      // アロー要素を作成（lg以上サイズで統一）
+      // アロー要素を作成（レスポンシブ対応）
       const arrow = document.createElement('span');
       arrow.className = 'period-link__arrow';
-      arrow.style.width = '8px';
-      arrow.style.height = '8px';
-      arrow.style.borderRight = '2px solid currentColor';
-      arrow.style.borderBottom = '2px solid currentColor';
-      arrow.style.transform = 'rotate(45deg) translateY(-4px)';
-      arrow.style.flexShrink = '0';
-      arrow.style.marginLeft = '0px';
+      
+      // アローのレスポンシブスタイリング
+      const updateArrowStyles = () => {
+        const width = window.innerWidth;
+        if (width >= 1024) { // lg以上
+          arrow.style.width = '8px';
+          arrow.style.height = '8px';
+          arrow.style.transform = 'rotate(45deg) translateY(-4px)';
+        } else {
+          arrow.style.width = '6px';
+          arrow.style.height = '6px';
+          arrow.style.transform = 'rotate(45deg) translateY(-2px)';
+        }
+        arrow.style.borderRight = '2px solid currentColor';
+        arrow.style.borderBottom = '2px solid currentColor';
+        arrow.style.flexShrink = '0';
+        arrow.style.marginLeft = '0px';
+      };
+      updateArrowStyles();
+      window.addEventListener('resize', updateArrowStyles);
       
       // テキストとアローを追加
       link.textContent = '#' + String(category);
