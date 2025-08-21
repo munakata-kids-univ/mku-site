@@ -247,7 +247,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
       <div class="content-section__container intro-section__container">
         <div class="intro-section__content">
           <h1 class="intro-section__title">
-            <span class="intro-section__title-line">この1日で、興味・関心が『志』に変わる。</span>
+            <span class="intro-section__title-line">この1日で、<br class="u-br-sm">興味・関心が『志』に変わる。</span>
           </h1>
           <p class="intro-section__description">
             宗像市内に住む小・中学生が興味のある職業を1つ選び、1日をとおしてじっくり学ぶ、年に1度の職業体験イベントです。<br>
@@ -778,11 +778,20 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   }
   
   &__title-line {
+    font-size: rem(22);
+    font-weight: 600;
     display: inline;
     background: linear-gradient(to bottom, transparent 15%, $brand-secondary 15%, $brand-secondary 93%, transparent 93%);
     color: $text-primary;
     line-height: 1.6;
-    padding: rem(2) rem(3);
+    padding: rem(4) rem(8) rem(2) rem(4);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    
+    @include breakpoint-up(md) {
+      @include font-ja-l(semibold);
+      padding: rem(4) rem(10) rem(2) rem(6);
+    }
   }
   
   &__description {

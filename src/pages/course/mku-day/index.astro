@@ -1,0 +1,1080 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import ContentSectionHeader from '@/components/ContentSectionHeader.astro';
+import { 
+  getGlobalSettings, 
+  getMkuDays
+} from '../../../lib/microcms';
+
+// データ取得
+const globalSettings = await getGlobalSettings();
+const currentYear = globalSettings.currentYear;
+
+// 現行年度のむなかた子ども大学の日データを取得
+const currentYearValue = Array.isArray(currentYear) ? currentYear[0] : currentYear;
+if (!currentYearValue) {
+  throw new Error('Current year is not defined');
+}
+const mkuDayEvents = await getMkuDays(currentYearValue.toString());
+
+// 過去の実績セクション用：全年度のMKU Dayデータを取得
+const allMkuDayEvents = await getMkuDays();
+
+// ページ情報
+const pageTitle = `むなかた子ども大学の日（${currentYearValue}）`;
+const pageDescription = `${currentYearValue}のむなかた子ども大学の日。宗像市内すべての小学校で開催される年に一度のキャリア教育イベントで、地域や企業等との繋がりを活かした学習活動を実施しています。`;
+
+// パンくずリスト
+const breadcrumbItems = [
+  { label: 'ホーム', href: '/' },
+  { label: '講座', href: '/course' },
+  { label: 'むなかた子ども大学の日' }
+];
+---
+
+<BaseLayout 
+  title={pageTitle}
+  description={pageDescription}
+>
+  <main>
+    <!-- ヒーローセクション -->
+    <section class="hero hero--mku-day">
+      <div class="hero__container">
+        <div class="hero__content">
+          <div class="hero__text fade-up">
+            <h1 class="hero__title">
+              <span class="hero__title-line1">むなかた子ども大学の日</span>
+            </h1>
+            <p class="hero__subtitle">MKU Day</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <Breadcrumb items={breadcrumbItems} />
+
+    <!-- イントロセクション -->
+    <section class="intro-section">
+      <div class="content-section__container intro-section__container">
+        <div class="intro-section__content">
+          <h1 class="intro-section__title">
+            <span class="intro-section__title-line">みんなの学校がキャンパス —— <br>地域の魅力を体感し、<br class="u-br-sm">学びを深める1日</span>
+          </h1>
+          <p class="intro-section__description">
+            むなかた子ども大学の日は、宗像市内すべての小学校で開催される、年に一度のキャリア教育イベントです。<br>
+            地域や企業等との繋がりを活かした学習活動を、キャリア教育の視点で、各学年のねらいに合わせて実施しています。
+          </p>
+          
+          <div class="intro-section__points">
+            <h2 class="intro-section__points-title">
+              むなかた子ども大学の日<br class="u-br-sm"> <span class="intro-section__points-number">3</span>つのポイント
+            </h2>
+            
+            <div class="intro-section__points-grid">
+              
+              <div class="intro-section__point">
+                <div class="intro-section__point-image">
+                  <img src="/images/content/img_mku-day-point-01.webp" alt="全小学校で開催" />
+                </div>
+                <div class="intro-section__point-content">
+                  <div class="intro-section__point-number">
+                    <span class="point-text">point</span><span class="point-number">01</span>
+                  </div>
+                  <h3 class="intro-section__point-title">全小学校で開催</h3>
+                  <p class="intro-section__point-description">
+                    市内全ての小学校が主体となり、年に1回開催。
+                  </p>
+                </div>
+              </div>
+              
+              <div class="intro-section__point">
+                <div class="intro-section__point-image">
+                  <img src="/images/content/img_mku-day-point-02.webp" alt="地域連携" />
+                </div>
+                <div class="intro-section__point-content">
+                  <div class="intro-section__point-number">
+                    <span class="point-text">point</span><span class="point-number">02</span>
+                  </div>
+                  <h3 class="intro-section__point-title">地域連携</h3>
+                  <p class="intro-section__point-description">
+                    地域の保護者や企業等と連携し、地域の特長を活かした授業を多数展開。学校の枠を超えた本物の学びを実現します。
+                  </p>
+                </div>
+              </div>
+              
+              <div class="intro-section__point">
+                <div class="intro-section__point-image">
+                  <img src="/images/content/img_mku-day-point-03.webp" alt="参観可能" />
+                </div>
+                <div class="intro-section__point-content">
+                  <div class="intro-section__point-number">
+                    <span class="point-text">point</span><span class="point-number">03</span>
+                  </div>
+                  <h3 class="intro-section__point-title">参観可能</h3>
+                  <p class="intro-section__point-description">
+                    保護者や地域の方も参観可。<br>
+                    地域への愛着や参画意識の向上にもつながるような取組をぜひご覧ください。
+                  </p>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 講座一覧セクション -->
+    <section id="courses" class="courses-section content-section">
+      <div class="content-section__container">
+        <ContentSectionHeader 
+          englishTitle=""
+          title={`${currentYearValue} <br class="u-br-sm">活動内容`}
+          customTitleWrapperStyle="courses-title-wrapper"
+          customIconStyle="courses-icon"
+          class="fade-up"
+        />
+        
+        {mkuDayEvents && mkuDayEvents.length > 0 ? (
+          <div class="schools-list">
+            {mkuDayEvents.map(event => (
+              <div class="school-item">
+                <h3 class="school-item__name">{event.schoolName?.name || event.schoolName}</h3>
+                {event.eventDates && event.eventDates.length > 0 && (
+                  <p class="school-item__dates">
+                    実施日：{event.eventDates.map(dateItem => (
+                      new Date(dateItem.date).toLocaleDateString('ja-JP', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })
+                    )).join('、')}
+                  </p>
+                )}
+                
+                {/* 活動内容テーブル */}
+                <div class="activity-table">
+                  <table class="activity-table__table">
+                    <tbody>
+                      {/* 体験活動 */}
+                      {event.expActivities && event.expActivities.length > 0 && (
+                        event.expActivities.map((item: any, index: number) => (
+                          <tr class="activity-table__row">
+                            {index === 0 && (
+                              <td class="activity-table__category" rowspan={event.expActivities?.length || 0}>
+                                体験活動
+                              </td>
+                            )}
+                            <td class="activity-table__grade">{Array.isArray(item.grade) ? item.grade.join(', ') : item.grade}</td>
+                            <td class="activity-table__content" set:html={item.experienceDesc?.replace(/\n/g, '<br>')}></td>
+                          </tr>
+                        ))
+                      )}
+                      
+                      {/* 学習発表 */}
+                      {event.presenActivities && event.presenActivities.length > 0 && (
+                        event.presenActivities.map((item: any, index: number) => (
+                          <tr class="activity-table__row">
+                            {index === 0 && (
+                              <td class="activity-table__category presentation-category" rowspan={event.presenActivities?.length || 0}>
+                                学習発表
+                              </td>
+                            )}
+                            <td class="activity-table__grade">{Array.isArray(item.grade) ? item.grade.join(', ') : item.grade}</td>
+                            <td class="activity-table__content" set:html={item.presentationDesc?.replace(/\n/g, '<br>')}></td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div class="empty-state">
+            <div class="empty-state__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+              </svg>
+            </div>
+            <p class="empty-state__description">
+              現在、{currentYearValue}のむなかた子ども大学の日は準備中です。<br>
+              詳細が決まり次第、随時掲載いたしますので、<br class="u-br-sm">お待ちください。
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+
+    <!-- 過去の実績 -->
+    <section id="archive" class="archive-section content-section">
+      <div class="content-section__container archive-section__container">
+        <ContentSectionHeader 
+          englishTitle=""
+          title="過去の実績"
+          class="fade-up"
+        />
+        <div class="archive-section__content">
+          <div class="archive-links">
+            {(() => {
+              // 全MKU Dayイベントから年度を抽出し、重複を除去
+              const allYears = allMkuDayEvents.map(event => {
+                const eventYear = Array.isArray(event.year) ? event.year[0] : event.year;
+                return eventYear;
+              }).filter((year, index, self) => self.indexOf(year) === index);
+              
+              // 現在年度の数字部分を取得（令和7年度 → 7）
+              const currentYearNum = parseInt(currentYearValue.replace('令和', '').replace('年度', ''));
+              
+              // 現在年度より小さい年度のみフィルタリングし、数字の降順でソート
+              const pastYears = allYears
+                .filter(year => year && typeof year === 'string') // undefinedと非文字列をフィルタリング
+                .map(year => {
+                  const yearNum = parseInt(year.replace('令和', '').replace('年度', ''));
+                  return { original: year, num: yearNum };
+                })
+                .filter(yearObj => yearObj.num < currentYearNum)
+                .sort((a, b) => b.num - a.num) // 降順ソート
+                .map(yearObj => yearObj.original);
+              
+              return pastYears.map(year => {
+                if (!year) return null;
+                const yearNum = parseInt(year.replace('令和', '').replace('年度', ''));
+                const urlYear = `r${yearNum.toString().padStart(2, '0')}`;
+                return (
+                  <a href={`/course/mku-day/${urlYear}`} class="base-button base-button--blue">
+                    <span class="base-button__text">{year}</span>
+                    <div class="base-button__icon">
+                      <div class="base-button__icon-arrow"></div>
+                    </div>
+                  </a>
+                );
+              });
+            })()}
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+@import "../../../styles/index";
+
+/* 共通セクションスタイル */
+.content-section {
+  padding: 0 0 rem(120);
+  background: $background-primary;
+  position: relative;
+  
+  @include breakpoint-up(xl) {
+    padding: 0 0 rem(160);
+  }
+
+  &__container {
+    padding: 0 5%;
+    overflow: hidden;
+    @include breakpoint-up(xl) {
+      padding: 0 rem(50);
+    }
+    
+    &::after {
+      background: linear-gradient(to bottom, $background-primary 50%, $background-primary 50%);
+    }
+  }
+}
+
+.hero {
+  position: relative;
+  padding: 0;
+  background: linear-gradient(to bottom, $brand-sub-purple 0%, $background-primary 70%, $background-primary 100%);
+  border-radius: 0 rem(120) 0 0;
+  
+  @include breakpoint-up(md) {
+    border-radius: 0 rem(240) 0 0;
+  }
+
+  &__container {
+    margin: 0 auto;
+    padding: 0 0 0 5%;
+    overflow: hidden;
+    position: relative;
+    
+    @include breakpoint-up(xl) {
+      padding: 0 0 0 rem(50);
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      background-color: $brand-purple;
+      z-index: -1;
+    }
+  }
+
+  &__content {
+    position: relative;
+    padding: rem(100) 0 0;
+
+    @include breakpoint-up(md) {
+      padding: rem(120) 0 0;
+    }
+    @include breakpoint-up(xl) {
+      padding: rem(160) 0 0;
+    }
+  }
+
+  &__text {
+    max-width: none;
+    margin: 0;
+    text-align: left;
+  }
+
+  &__title {
+    @include font-ja-2l(semibold);
+    font-weight: bold;
+    color: $text-primary;
+    margin: 0 0 rem(8) 0;
+    line-height: 1.4;
+
+    @include breakpoint-up(lg) {
+      @include font-ja-3l(semibold);
+      margin-bottom: rem(12);
+    }
+
+    .hero__title-line1 {
+      display: block;
+      @include font-ja-2l(semibold);
+      font-weight: bold;
+      line-height: 1.4;
+
+      @include breakpoint-up(lg) {
+        @include font-ja-3l(semibold);
+      }
+    }
+  }
+
+  &__subtitle {
+    @include font-en-s(semibold);
+    color: $brand-purple;
+    margin: 0 0 rem(30) 0;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+
+    @include breakpoint-up(lg) {
+      @include font-en-m(semibold);
+      margin-bottom: 0;
+    }
+  }
+}
+
+.breadcrumb {
+  padding: rem(20) 0;
+  background: $background-primary;
+  @include breakpoint-up(lg) {
+    padding: rem(50) 0 rem(20);
+  }
+
+  &__container {
+    margin: 0 auto;
+    padding: 0 0 0 5%;
+    @include breakpoint-up(xl) {
+      padding: 0 0 0 rem(50);
+    }
+  }
+
+  &__list {
+    display: flex;
+    align-items: center;
+    gap: rem(8);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
+    @include font-ja-3s;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+
+    &:not(:last-child)::after {
+      content: '>';
+      margin-left: rem(8);
+      color: $text-secondary;
+    }
+
+    a {
+      @include font-ja-3s(semibold);
+      color: $text-link;
+      text-decoration: underline;
+
+      &:hover {
+        color: $text-link-hover;
+        text-decoration: underline;
+      }
+    }
+
+    &[aria-current="page"] {
+      @include font-ja-3s;
+      color: $text-primary;
+      font-weight: 500;
+    }
+  }
+}
+
+/* イントロセクション */
+.intro-section {
+  background: $background-primary;
+  padding: rem(60) 0 rem(120);
+  text-align: center;
+  border-bottom-right-radius: rem(30);
+  position: relative;
+  
+  @include breakpoint-up(md) {
+    border-bottom-right-radius: rem(60);
+  }
+  
+  @include breakpoint-up(lg) {
+    border-bottom-right-radius: rem(72);
+  }
+  
+  @include breakpoint-up(xl) {
+    padding: rem(80) 0 rem(160);
+  }
+  
+  &__container {
+    position: relative;
+    
+    // 背景装飾SVG（紫色）
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: rem(-200);
+      width: rem(400);
+      height: 100%;
+      background-image: url('/images/content/img_line-decoration-purple-01.svg');
+      background-repeat: no-repeat;
+      background-position: top right;
+      background-size: contain;
+      opacity: 0.5;
+      z-index: 0;
+      pointer-events: none;
+      
+      @include breakpoint-up(md) {
+        right: rem(-300);
+        width: rem(600);
+      }
+      
+      @include breakpoint-up(lg) {
+        right: rem(-350);
+        width: rem(700);
+      }
+    }
+  }
+  
+  // 右下の切り欠け部分の背景色を設定（次のセクションと同色）
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: rem(30);
+    height: rem(30);
+    background-color: $brand-sub-purple-low;
+    z-index: -1;
+    
+    @include breakpoint-up(md) {
+      width: rem(60);
+      height: rem(60);
+    }
+    
+    @include breakpoint-up(lg) {
+      width: rem(72);
+      height: rem(72);
+    }
+  }
+  
+  &__content {
+    max-width: none;
+    margin: 0;
+    text-align: left;
+    position: relative;
+    z-index: 1;
+  }
+  
+  &__title {
+    @include font-ja-l(semibold);
+    margin-bottom: rem(24);
+    line-height: 1.4;
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-2l(semibold);
+    }
+  }
+  
+  &__title-line {
+    font-size: rem(22);
+    font-weight: 600;
+    display: inline;
+    background: linear-gradient(to bottom, transparent 15%, $brand-purple 15%, $brand-purple 93%, transparent 93%);
+    color: $text-white;
+    line-height: 1.6;
+    padding: rem(4) rem(8) rem(2) rem(4);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    
+    @include breakpoint-up(md) {
+      @include font-ja-l(semibold);
+      padding: rem(4) rem(10) rem(2) rem(6);
+    }
+  }
+  
+  &__description {
+    @include font-ja-s;
+    color: $text-primary;
+    line-height: 1.7;
+    margin-bottom: rem(32);
+    
+    @include breakpoint-up(md) {
+      margin-bottom: rem(48);
+    }
+    
+    @include breakpoint-up(xl) {
+      max-width: rem(1200);
+    }
+  }
+  
+  // 3つのポイント
+  &__points {
+    margin-top: rem(60);
+    text-align: center;
+    
+    @include breakpoint-up(lg) {
+      margin: rem(80) auto;
+      max-width: rem(1140);
+    }
+  }
+  
+  &__points-title {
+    @include font-ja-m(semibold);
+    color: $text-primary;
+    margin: 0 auto rem(30);
+    text-align: center;
+    border-left: 8px solid $brand-purple;
+    border-right: 8px solid $brand-purple;
+    display: inline-block;
+    padding: 0 rem(20) rem(5);
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-l(semibold);
+      margin: 0 auto rem(40);
+    }
+  }
+  
+  &__points-number {
+    @include font-ja-l(semibold);
+    color: $brand-purple;
+    line-height: 1;
+    vertical-align: baseline;
+    position: relative;
+    bottom: rem(-2);
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-2l(semibold);
+      bottom: rem(-4);
+    }
+  }
+  
+  &__points-grid {
+    display: flex;
+    flex-direction: column;
+    gap: rem(20);
+    
+    @include breakpoint-up(lg) {
+      flex-direction: row;
+      gap: rem(30);
+    }
+  }
+  
+  &__point {
+    display: flex;
+    gap: 0;
+    align-items: flex-start;
+    background: $background-secondary;
+    border-radius: $radius-l;
+    
+    @include breakpoint-up(lg) {
+      flex-direction: column;
+      text-align: center;
+      flex: 1;
+      border-radius: $radius-2l;
+    }
+  }
+  
+  &__point-image {
+    flex-shrink: 0;
+    width: rem(130);
+    height: rem(130);
+    
+    @include breakpoint-up(lg) {
+      width: 100%;
+      aspect-ratio: 4/3;
+      height: auto;
+      margin: 0 auto;
+    }
+    
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: $radius-l;
+      
+      @include breakpoint-up(lg) {
+        border-radius: $radius-2l;
+      }
+    }
+  }
+  
+  &__point-content {
+    flex: 1;
+    padding: rem(6) rem(8) rem(6) rem(12);
+    text-align: left;
+    
+    @include breakpoint-up(md) {
+      padding: rem(10) rem(15) rem(10) rem(20);
+    }
+    
+    @include breakpoint-up(lg) {
+      flex: none;
+      padding: rem(15) rem(20) rem(30);
+      text-align: center;
+    }
+  }
+  
+  &__point-number {
+    letter-spacing: 0.1em;
+    margin-bottom: 0;
+    color: $brand-purple;
+    
+    // Point部分
+    .point-text {
+      @include font-en-3s(semibold);
+    }
+    
+    // 数字部分
+    .point-number {
+      @include font-en-s(semibold);
+    }
+  }
+  
+  &__point-title {
+    @include font-ja-s(semibold);
+    color: $text-primary;
+    margin-bottom: rem(12);
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-m(semibold);
+    }
+  }
+  
+  &__point-description {
+    @include font-ja-2s;
+    color: $text-primary;
+    line-height: 1.6;
+    margin: 0;
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-s;
+      text-align: left;
+    }
+  }
+}
+
+/* 講座セクション */
+.courses-section {
+  background: $brand-sub-purple-low;
+  border-top-left-radius: rem(30);
+  border-bottom-right-radius: rem(30);
+  position: relative;
+  
+  @include breakpoint-up(md) {
+    border-top-left-radius: rem(60);
+    border-bottom-right-radius: rem(60);
+  }
+  
+  @include breakpoint-up(lg) {
+    border-top-left-radius: rem(72);
+    border-bottom-right-radius: rem(72);
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, $background-primary 50%, $background-secondary 50%);
+    z-index: -1;
+  }
+}
+
+/* 学校リスト */
+.schools-list {
+  display: flex;
+  flex-direction: column;
+  gap: rem(32);
+  padding-bottom: rem(32);
+  
+  @include breakpoint-up(md) {
+    gap: rem(40);
+    padding-bottom: rem(40);
+  }
+  
+  @include breakpoint-up(xl) {
+    max-width: rem(1400);
+    margin: 0 auto;
+    gap: rem(48);
+    padding-bottom: rem(48);
+  }
+}
+
+.school-item {
+  margin-bottom: rem(32);
+  width: 100%;
+  
+  @include breakpoint-up(md) {
+    margin-bottom: rem(40);
+  }
+  
+  @include breakpoint-up(xl) {
+    margin-bottom: rem(48);
+    max-width: rem(1400);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  &__name {
+    @include font-ja-m(semibold);
+    color: $text-secondary;
+    margin: 0 0 rem(8) 0;
+    line-height: 1.4;
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-l(semibold);
+    }
+  }
+
+  &__dates {
+    @include font-ja-s(semibold);
+    color: $text-primary;
+    margin: 0 0 rem(8) 0;
+    line-height: 1.4;
+    
+    @include breakpoint-up(md) {
+      margin-bottom: rem(12);
+    }
+  }
+}
+
+.activity-table {
+  overflow-x: auto;
+  
+  &__table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: $background-primary;
+    border: 1px solid $border-secondary;
+    border-radius: $radius-m;
+    overflow: hidden;
+    
+    @include breakpoint-up(md) {
+      border-radius: $radius-l;
+      table-layout: auto;
+    }
+  }
+  
+  td {
+    border-right: 1px solid $border-secondary;
+    border-bottom: 1px solid $border-secondary;
+    
+    // 最後の列は右ボーダーなし
+    &:last-child {
+      border-right: none;
+    }
+  }
+  
+  // 最下段の行のすべてのセルは下ボーダーなし
+  &__row:last-child td {
+    border-bottom: none;
+  }
+  
+  // 学習発表のカテゴリセルのみ下ボーダーなし
+  &__category.presentation-category {
+    border-bottom: none !important;
+  }
+  
+  &__category {
+    @include font-ja-s(semibold);
+    background: $background-primary;
+    color: $text-primary;
+    padding: rem(12) rem(2);
+    text-align: center;
+    vertical-align: middle;
+    width: rem(40);
+    max-width: rem(40);
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    
+    @include breakpoint-up(md) {
+      padding: rem(16) rem(12);
+      width: rem(60);
+      max-width: rem(60);
+      table-layout: auto;
+    }
+    
+    @include breakpoint-up(lg) {
+      width: rem(80);
+      max-width: rem(80);
+    }
+  }
+  
+  &__grade {
+    @include font-ja-s(semibold);
+    background: $background-primary;
+    color: $text-primary;
+    padding: rem(12) rem(4);
+    text-align: center;
+    width: rem(55);
+    max-width: rem(55);
+    
+    @include breakpoint-up(md) {
+      padding: rem(16) rem(12);
+      width: rem(80);
+      max-width: rem(80);
+    }
+    
+    @include breakpoint-up(lg) {
+      padding: rem(16) rem(12);
+      width: rem(100);
+      max-width: rem(100);
+    }
+    @include breakpoint-up(xl) {
+      width: rem(120);
+      max-width: rem(120);
+    }
+  }
+  
+  &__content {
+    @include font-ja-s(semibold);
+    background: $background-primary;
+    color: $text-primary;
+    padding: rem(12) rem(12);
+    line-height: 1.5;
+    
+    @include breakpoint-up(md) {
+      padding: rem(16) rem(16);
+    }
+  }
+  
+}
+
+/* 空状態 */
+.empty-state {
+  text-align: center;
+  padding: rem(40) 0 0;
+  
+  @include breakpoint-up(md) {
+    padding: rem(60) 0 0;
+  }
+  
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: rem(32);
+    
+    @include breakpoint-up(md) {
+      margin-bottom: rem(40);
+    }
+    
+    svg {
+      width: rem(60);
+      height: rem(60);
+      color: $brand-purple;
+      
+      @include breakpoint-up(md) {
+        width: rem(80);
+        height: rem(80);
+      }
+    }
+  }
+  
+  &__description {
+    @include font-ja-s;
+    color: $text-primary;
+    line-height: 1.7;
+    margin: 0;
+  }
+}
+
+/* タイトルのハイライト色をpurpleに変更 */
+.content-section__header .content-section__title-wrapper.courses-title-wrapper {
+  padding-left: 3% !important;
+  
+  @include breakpoint-up(xl) {
+    padding-left: 0 !important;
+  }
+}
+
+:global(.content-section__title--highlight) {
+  color: $brand-purple !important;
+}
+
+/* 過去の実績セクション */
+.archive-section {
+  background: $background-secondary;
+  border-top-left-radius: rem(30);
+  position: relative;
+  padding-bottom: 0;
+  
+  @include breakpoint-up(md) {
+    border-top-left-radius: rem(60);
+  }
+  
+  @include breakpoint-up(lg) {
+    border-top-left-radius: rem(72);
+  }
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: rem(100);
+    height: rem(100);
+    background: $brand-sub-purple-low;
+    z-index: -1;
+    
+    @include breakpoint-up(md) {
+      width: rem(120);
+      height: rem(120);
+    }
+    
+    @include breakpoint-up(lg) {
+      width: rem(144);
+      height: rem(144);
+    }
+  }
+  
+  &__container {
+    position: relative;
+    z-index: 1;
+    
+    // 背景装飾SVG
+    &::before {
+      content: '';
+      position: absolute;
+      bottom: rem(-20);
+      right: rem(-50);
+      width: rem(200);
+      height: rem(200);
+      background-image: url('/logos/mark-del_mku_white.svg');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+      opacity: 0.5;
+      z-index: 1;
+      pointer-events: none;
+      
+      @include breakpoint-up(md) {
+        right: rem(-60);
+        width: rem(250);
+        height: rem(250);
+      }
+      
+      @include breakpoint-up(lg) {
+        bottom: 0;
+        right: rem(-40);
+        width: rem(300);
+        height: rem(300);
+      }
+    }
+  }
+  
+  &__content {
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    padding-bottom: rem(80);
+    @include breakpoint-up(md) {
+      padding-bottom: rem(100);
+    }
+    @include breakpoint-up(lg) {
+      padding-bottom: rem(120);
+    }
+  }
+}
+
+/* アーカイブリンク */
+.archive-links {
+  display: flex;
+  justify-content: center;
+  gap: rem(16);
+  flex-wrap: wrap;
+  
+  @include breakpoint-up(md) {
+    gap: rem(24);
+    justify-content: flex-start;
+    margin: 0 auto;
+  }
+  
+  .base-button {
+    color: $text-white;
+    text-decoration: none;
+    
+    &:hover {
+      text-decoration: none;
+      color: $text-primary;
+    }
+  }
+}
+</style>
+
+<script>
+// スクロールアニメーション用のIntersection Observer
+document.addEventListener('DOMContentLoaded', function() {
+  const observerOptions = {
+    threshold: 0.1, // 要素の10%が見えたら発火
+    rootMargin: '0px 0px -50px 0px' // 下から50px余裕を持たせる
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        // 一度表示されたら監視を停止（パフォーマンス向上）
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  // fade-upクラスを持つ全ての要素を監視対象に追加
+  const fadeUpElements = document.querySelectorAll('.fade-up');
+  fadeUpElements.forEach(element => {
+    observer.observe(element);
+  });
+});
+</script>
