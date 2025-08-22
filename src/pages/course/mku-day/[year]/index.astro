@@ -1,0 +1,711 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import HeroSection from '@/components/HeroSection.astro';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import ContentSectionHeader from '@/components/ContentSectionHeader.astro';
+import CourseCard from '@/components/CourseCard.astro';
+import AfterImagesSlider from '@/components/AfterImagesSlider.astro';
+import { 
+  getGlobalSettings,
+  getMkuDays
+} from '@/lib/microcms';
+import { convertYearToPath, convertPathToYear } from '@/utils/yearConverter';
+
+// 静的パス生成
+export async function getStaticPaths() {
+  try {
+    // 全てのMKU Dayイベントデータを取得
+    const allEvents = await getMkuDays();
+    
+    if (!allEvents || allEvents.length === 0) {
+      return [];
+    }
+
+    // 各年度のユニークなパスを生成
+    const uniqueYears = [...new Set(allEvents.map(event => {
+      return Array.isArray(event.year) ? event.year[0] : event.year;
+    }))];
+
+    const paths = uniqueYears.map(originalYear => {
+      const pathYear = convertYearToPath(originalYear);
+      return {
+        params: { year: pathYear },
+        props: { originalYear, pathYear }
+      };
+    });
+
+    return paths;
+  } catch (error) {
+    console.error('Error generating static paths for MKU Day year pages:', error);
+    return [];
+  }
+}
+
+// パラメータを取得
+const { year } = Astro.params;
+const { originalYear, pathYear } = Astro.props;
+
+if (!year) {
+  return Astro.redirect('/404');
+}
+
+// グローバル設定を取得
+const globalSettings = await getGlobalSettings();
+const currentYear = Array.isArray(globalSettings.currentYear) ? globalSettings.currentYear[0] : globalSettings.currentYear;
+const currentYearPath = convertYearToPath(currentYear);
+
+// パスから年度を復元
+const actualYear = originalYear || convertPathToYear(year);
+
+// 現在年度の場合は /course/mku-day へリダイレクト
+if (year === currentYearPath) {
+  return Astro.redirect('/course/mku-day', 301);
+}
+
+// 過去年度のMKU Dayイベントを取得
+const events = await getMkuDays(actualYear);
+
+// 該当年度のイベントが存在しない場合は404
+if (!events || events.length === 0) {
+  return Astro.redirect('/404');
+}
+
+// ページ情報
+const pageTitle = `過去の実績（${actualYear}）- むなかた子ども大学の日`;
+const pageDescription = `${actualYear}のむなかた子ども大学の日実績。宗像市内すべての小学校で開催された年に一度のキャリア教育イベントの記録です。`;
+
+// パンくずリスト
+const breadcrumbItems = [
+  { label: 'ホーム', href: '/' },
+  { label: '講座内容', href: '/course' },
+  { label: 'むなかた子ども大学の日', href: '/course/mku-day' },
+  { label: `${actualYear}` }
+];
+
+// 全イベントのafterImagesを収集
+const allAfterImages = events.reduce((acc, event) => {
+  if (event.afterImages && event.afterImages.length > 0) {
+    acc.push(...event.afterImages);
+  }
+  return acc;
+}, []);
+
+// サブ見出しの英語年度表示（例：「Reiwa 6」）
+const englishYear = actualYear.replace('令和', 'Reiwa ').replace('年度', '');
+
+// ヒーローセクション用のタイトル構築
+const heroTitle = `むなかた子ども大学の日\n過去の実績(${actualYear})`;
+const heroSubtitle = `Report - MKU Day - ${englishYear}`;
+
+// 学年の色分けクラス取得関数
+function getGradeColorClass(grade: string): string {
+  // むなかた子ども大学の日（学校名）の場合
+  if (grade.includes('小学校') || grade.includes('中学校') || grade.includes('学校') || grade.includes('学園')) {
+    return 'mku-day';
+  }
+  
+  // 特殊なケース
+  if (grade === '未就学児' || grade === 'だれでも' || grade.includes('その他')) {
+    return 'special';
+  }
+  
+  // 数字を抽出
+  const yearMatch = grade.match(/^(\d+)年$/);
+  if (yearMatch) {
+    const num = parseInt(yearMatch[1]);
+    if (num >= 1 && num <= 3) return 'elementary-low';    // 1~3年
+    if (num >= 4 && num <= 6) return 'elementary-high';   // 4~6年
+    if (num >= 7 && num <= 9) return 'junior';            // 7~9年
+  }
+  
+  // 高校生
+  if (grade.match(/^高\d+$/)) {
+    return 'junior'; // 高校生は中学生と同じ色
+  }
+  
+  // その他
+  return 'special';
+}
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <main>
+    <!-- ヒーローセクション -->
+    <section class="hero hero--mku-day">
+      <div class="hero__container">
+        <div class="hero__content">
+          <div class="hero__text fade-up">
+            <h1 class="hero__title">
+              <span class="hero__title-line1">むなかた子ども大学の日</span>
+              <span class="hero__title-line2">過去の実績<br class="sm-only">({actualYear})</span>
+            </h1>
+            <p class="hero__subtitle">{heroSubtitle}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <Breadcrumb items={breadcrumbItems} />
+
+    <!-- イベントの様子スライダー -->
+    {allAfterImages.length > 0 && (
+      <AfterImagesSlider images={allAfterImages} class="fade-up" />
+    )}
+
+    <!-- 活動内容セクション -->
+    <section class="activities-section content-section">
+      <div class="content-section__container">
+        <ContentSectionHeader 
+          englishTitle=""
+          title={`${actualYear} 活動内容`}
+          class="fade-up"
+        />
+        
+        {events.length > 0 ? (
+          <div class="schools-list">
+            {events.map(event => (
+              <div class="school-item">
+                <h3 class="school-item__name">{event.schoolName?.name || event.schoolName}</h3>
+                {event.eventDates && event.eventDates.length > 0 && (
+                  <p class="school-item__dates">
+                    実施日：{event.eventDates.map(dateItem => (
+                      new Date(dateItem.date).toLocaleDateString('ja-JP', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })
+                    )).join('、')}
+                  </p>
+                )}
+                
+                {/* 活動内容テーブル */}
+                <div class="activity-table">
+                  <table class="activity-table__table">
+                    <tbody>
+                      {/* 体験活動 */}
+                      {event.expActivities && event.expActivities.length > 0 && (
+                        event.expActivities.map((item: any, index: number) => (
+                          <tr class="activity-table__row">
+                            {index === 0 && (
+                              <td class="activity-table__category" rowspan={event.expActivities?.length || 0}>
+                                体験活動
+                              </td>
+                            )}
+                            <td class="activity-table__grade">{Array.isArray(item.grade) ? item.grade.join(', ') : item.grade}</td>
+                            <td class="activity-table__content" set:html={item.experienceDesc?.replace(/\n/g, '<br>')}></td>
+                          </tr>
+                        ))
+                      )}
+                      
+                      {/* 学習発表 */}
+                      {event.presenActivities && event.presenActivities.length > 0 && (
+                        event.presenActivities.map((item: any, index: number) => (
+                          <tr class="activity-table__row">
+                            {index === 0 && (
+                              <td class="activity-table__category presentation-category" rowspan={event.presenActivities?.length || 0}>
+                                学習発表
+                              </td>
+                            )}
+                            <td class="activity-table__grade">{Array.isArray(item.grade) ? item.grade.join(', ') : item.grade}</td>
+                            <td class="activity-table__content" set:html={item.presentationDesc?.replace(/\n/g, '<br>')}></td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                
+                {/* 実施後画像 */}
+                {event.afterImages && event.afterImages.length > 0 && (
+                  <div class="after-images">
+                    {event.afterImages.map(image => (
+                      <div class="after-images__item">
+                        <img 
+                          src={image.url} 
+                          alt={image.alt || `${event.schoolName?.name || event.schoolName}の活動の様子`} 
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div class="empty-state">
+            <div class="empty-state__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+              </svg>
+            </div>
+            <p class="empty-state__description">
+              現在、{actualYear}のむなかた子ども大学の日は登録されていません。<br>
+              データが準備でき次第、随時掲載いたしますので、<br class="u-br-sm">お待ちください。
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+  @import "../../../../styles/index";
+
+  .hero {
+    position: relative;
+    padding: 0;
+    background: linear-gradient(to bottom, $brand-sub-purple 0%, $background-primary 70%, $background-primary 100%);
+    border-radius: 0 rem(120) 0 0;
+    
+    @include breakpoint-up(md) {
+      border-radius: 0 rem(240) 0 0;
+    }
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 0 0 5%;
+      overflow: hidden;
+      position: relative;
+      
+      @include breakpoint-up(xl) {
+        padding: 0 0 0 rem(50);
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        background-color: $brand-purple;
+        z-index: -1;
+      }
+    }
+
+    &__content {
+      position: relative;
+      padding: rem(100) 0 0;
+
+      @include breakpoint-up(md) {
+        padding: rem(120) 0 0;
+      }
+      @include breakpoint-up(xl) {
+        padding: rem(160) 0 0;
+      }
+    }
+
+    &__text {
+      max-width: none;
+      margin: 0;
+      text-align: left;
+    }
+
+    &__title {
+      @include font-ja-2l(semibold);
+      font-weight: bold;
+      color: $text-primary;
+      margin: 0 0 rem(8) 0;
+      line-height: 1.4;
+
+      @include breakpoint-up(lg) {
+        @include font-ja-3l(semibold);
+        margin-bottom: rem(12);
+      }
+
+      .hero__title-line1 {
+        display: block;
+        @include font-ja-m(semibold);
+        margin-bottom: rem(8);
+
+        @include breakpoint-up(lg) {
+          @include font-ja-l(semibold);
+        }
+      }
+
+      .hero__title-line2 {
+        display: block;
+        @include font-ja-2l(semibold);
+        font-weight: bold;
+        line-height: 1.4;
+
+        @include breakpoint-up(lg) {
+          @include font-ja-3l(semibold);
+        }
+      }
+    }
+
+    &__subtitle {
+      @include font-en-s(semibold);
+      color: $brand-purple;
+      margin: 0 0 rem(30) 0;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+
+      @include breakpoint-up(lg) {
+        @include font-en-m(semibold);
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .breadcrumb {
+    padding: rem(20) 0;
+    background: $background-primary;
+    @include breakpoint-up(lg) {
+      padding: rem(50) 0 rem(20);
+    }
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 0 0 5%;
+      @include breakpoint-up(xl) {
+        padding: 0 0 0 rem(50);
+      }
+    }
+
+    &__list {
+      display: flex;
+      align-items: center;
+      gap: rem(8);
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      @include font-ja-3s;
+    }
+
+    &__item {
+      display: flex;
+      align-items: center;
+
+      &:not(:last-child)::after {
+        content: '>';
+        margin-left: rem(8);
+        color: $text-secondary;
+      }
+
+      a {
+        @include font-ja-3s(semibold);
+        color: $text-link;
+        text-decoration: underline;
+
+        &:hover {
+          color: $text-link-hover;
+          text-decoration: underline;
+        }
+      }
+
+      &[aria-current="page"] {
+        @include font-ja-3s;
+        color: $text-primary;
+        font-weight: 500;
+      }
+    }
+  }
+
+  /* 共通セクションスタイル */
+  .content-section {
+    padding: 0 0 rem(120);
+    background: $background-primary;
+    position: relative;
+    
+    @include breakpoint-up(xl) {
+      padding: 0 0 rem(160);
+    }
+
+    &__container {
+      padding: 0 5%;
+      overflow: hidden;
+      @include breakpoint-up(xl) {
+        padding: 0 rem(50);
+      }
+    }
+  }
+
+  /* 活動内容セクション */
+  .activities-section {
+    background: $brand-sub-purple-low;
+  }
+
+  /* 学校リスト */
+  .schools-list {
+    display: flex;
+    flex-direction: column;
+    gap: rem(32);
+    padding-bottom: rem(32);
+    
+    @include breakpoint-up(md) {
+      gap: rem(40);
+      padding-bottom: rem(40);
+    }
+    
+    @include breakpoint-up(xl) {
+      max-width: rem(1400);
+      margin: 0 auto;
+      gap: rem(48);
+      padding-bottom: rem(48);
+    }
+  }
+
+  .school-item {
+    margin-bottom: rem(32);
+    width: 100%;
+    
+    @include breakpoint-up(md) {
+      margin-bottom: rem(40);
+    }
+    
+    @include breakpoint-up(xl) {
+      margin-bottom: rem(48);
+      max-width: rem(1400);
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    &__name {
+      @include font-ja-m(semibold);
+      color: $text-secondary;
+      margin: 0 0 rem(8) 0;
+      line-height: 1.4;
+      
+      @include breakpoint-up(lg) {
+        @include font-ja-l(semibold);
+      }
+    }
+
+    &__dates {
+      @include font-ja-s(semibold);
+      color: $text-primary;
+      margin: 0 0 rem(8) 0;
+      line-height: 1.4;
+      
+      @include breakpoint-up(md) {
+        margin-bottom: rem(12);
+      }
+    }
+  }
+
+  .activity-table {
+    overflow-x: auto;
+    
+    &__table {
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: $background-primary;
+      border: 1px solid $border-secondary;
+      border-radius: $radius-m;
+      overflow: hidden;
+      
+      @include breakpoint-up(md) {
+        border-radius: $radius-l;
+        table-layout: auto;
+      }
+    }
+    
+    td {
+      border-right: 1px solid $border-secondary;
+      border-bottom: 1px solid $border-secondary;
+      
+      // 最後の列は右ボーダーなし
+      &:last-child {
+        border-right: none;
+      }
+    }
+    
+    // 最下段の行のすべてのセルは下ボーダーなし
+    &__row:last-child td {
+      border-bottom: none;
+    }
+    
+    // 学習発表のカテゴリセルのみ下ボーダーなし
+    &__category.presentation-category {
+      border-bottom: none !important;
+    }
+    
+    &__category {
+      @include font-ja-s(semibold);
+      background: $background-primary;
+      color: $text-primary;
+      padding: rem(12) rem(2);
+      text-align: center;
+      vertical-align: middle;
+      width: rem(40);
+      max-width: rem(40);
+      writing-mode: vertical-rl;
+      text-orientation: upright;
+      
+      @include breakpoint-up(md) {
+        padding: rem(16) rem(12);
+        width: rem(60);
+        max-width: rem(60);
+        table-layout: auto;
+      }
+      
+      @include breakpoint-up(lg) {
+        width: rem(80);
+        max-width: rem(80);
+      }
+    }
+    
+    &__grade {
+      @include font-ja-s(semibold);
+      background: $background-primary;
+      color: $text-primary;
+      padding: rem(12) rem(4);
+      text-align: center;
+      width: rem(55);
+      max-width: rem(55);
+      
+      @include breakpoint-up(md) {
+        padding: rem(16) rem(12);
+        width: rem(80);
+        max-width: rem(80);
+      }
+      
+      @include breakpoint-up(lg) {
+        padding: rem(16) rem(12);
+        width: rem(100);
+        max-width: rem(100);
+      }
+      @include breakpoint-up(xl) {
+        width: rem(120);
+        max-width: rem(120);
+      }
+    }
+    
+    &__content {
+      @include font-ja-s(semibold);
+      background: $background-primary;
+      color: $text-primary;
+      padding: rem(12) rem(12);
+      line-height: 1.5;
+      
+      @include breakpoint-up(md) {
+        padding: rem(16) rem(16);
+      }
+    }
+  }
+
+  /* 実施後画像 */
+  .after-images {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: rem(12);
+    margin-top: rem(16);
+    
+    @include breakpoint-up(sm) {
+      grid-template-columns: repeat(2, 1fr);
+      gap: rem(16);
+      margin-top: rem(20);
+    }
+    
+    @include breakpoint-up(md) {
+      gap: rem(20);
+      margin-top: rem(24);
+    }
+    
+    &__item {
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      border-radius: $radius-m;
+      background: $background-secondary;
+      
+      @include breakpoint-up(md) {
+        border-radius: $radius-l;
+      }
+      
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+        
+        &:hover {
+          transform: scale(1.05);
+        }
+      }
+    }
+  }
+
+  /* 空状態 */
+  .empty-state {
+    text-align: center;
+    padding: rem(40) 0 0;
+    
+    @include breakpoint-up(md) {
+      padding: rem(60) 0 0;
+    }
+    
+    &__icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: rem(32);
+      
+      @include breakpoint-up(md) {
+        margin-bottom: rem(40);
+      }
+      
+      svg {
+        width: rem(60);
+        height: rem(60);
+        color: $brand-purple;
+        
+        @include breakpoint-up(md) {
+          width: rem(80);
+          height: rem(80);
+        }
+      }
+    }
+    
+    &__description {
+      @include font-ja-s;
+      color: $text-primary;
+      line-height: 1.7;
+      margin: 0;
+    }
+  }
+
+</style>
+
+<script>
+// スクロールアニメーション用のIntersection Observer
+document.addEventListener('DOMContentLoaded', function() {
+  const observerOptions = {
+    threshold: 0.1, // 要素の10%が見えたら発火
+    rootMargin: '0px 0px -50px 0px' // 下から50px余裕を持たせる
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        // 一度表示されたら監視を停止（パフォーマンス向上）
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  // fade-upクラスを持つ全ての要素を監視対象に追加
+  const fadeUpElements = document.querySelectorAll('.fade-up');
+  fadeUpElements.forEach(element => {
+    observer.observe(element);
+  });
+});
+</script>
+
+<style lang="scss">
+@import "../../../../styles/index";
+
+/* スマホのみ改行を表示 */
+.sm-only {
+  @include breakpoint-up(md) {
+    display: none;
+  }
+}
+</style>
