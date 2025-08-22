@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import HeroSection from '@/components/HeroSection.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import ContentSectionHeader from '@/components/ContentSectionHeader.astro';
 import { 
@@ -39,19 +40,15 @@ const breadcrumbItems = [
 >
   <main>
     <!-- ヒーローセクション -->
-    <section class="hero hero--mku-day">
-      <div class="hero__container">
-        <div class="hero__content">
-          <div class="hero__text fade-up">
-            <h1 class="hero__title">
-              <span class="hero__title-line1">むなかた子ども<br class="u-br-sm">大学の日</span>
-            </h1>
-            <p class="hero__subtitle">MKU Day</p>
-          </div>
-        </div>
-      </div>
-    </section>
+    <HeroSection 
+      title="むなかた子ども<br class='u-br-sm'>大学の日"
+      subtitle="MKU Day"
+      imageSrc="/images/backgrounds/img_bg-hero_muk-day-01.webp"
+      imageAlt="むなかた子ども大学の日"
+      customBackgroundStyle="hero--mku-day"
+    />
 
+    <!-- パンくずリスト -->
     <Breadcrumb items={breadcrumbItems} />
 
     <!-- イントロセクション -->
@@ -288,93 +285,6 @@ const breadcrumbItems = [
   }
 }
 
-.hero {
-  position: relative;
-  padding: 0;
-  background: linear-gradient(to bottom, $brand-sub-purple 0%, $background-primary 70%, $background-primary 100%);
-  border-radius: 0 rem(120) 0 0;
-  
-  @include breakpoint-up(md) {
-    border-radius: 0 rem(240) 0 0;
-  }
-
-  &__container {
-    margin: 0 auto;
-    padding: 0 0 0 5%;
-    overflow: hidden;
-    position: relative;
-    
-    @include breakpoint-up(xl) {
-      padding: 0 0 0 rem(50);
-    }
-
-    &::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 100%;
-      height: 100%;
-      background-color: $brand-purple;
-      z-index: -1;
-    }
-  }
-
-  &__content {
-    position: relative;
-    padding: rem(100) 0 0;
-
-    @include breakpoint-up(md) {
-      padding: rem(120) 0 0;
-    }
-    @include breakpoint-up(xl) {
-      padding: rem(160) 0 0;
-    }
-  }
-
-  &__text {
-    max-width: none;
-    margin: 0;
-    text-align: left;
-  }
-
-  &__title {
-    @include font-ja-2l(semibold);
-    font-weight: bold;
-    color: $text-primary;
-    margin: 0 0 rem(8) 0;
-    line-height: 1.4;
-
-    @include breakpoint-up(lg) {
-      @include font-ja-3l(semibold);
-      margin-bottom: rem(12);
-    }
-
-    .hero__title-line1 {
-      display: block;
-      @include font-ja-2l(semibold);
-      font-weight: bold;
-      line-height: 1.4;
-
-      @include breakpoint-up(lg) {
-        @include font-ja-3l(semibold);
-      }
-    }
-  }
-
-  &__subtitle {
-    @include font-en-s(semibold);
-    color: $brand-purple;
-    margin: 0 0 rem(30) 0;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-
-    @include breakpoint-up(lg) {
-      @include font-en-m(semibold);
-      margin-bottom: 0;
-    }
-  }
-}
 
 .breadcrumb {
   padding: rem(20) 0;
