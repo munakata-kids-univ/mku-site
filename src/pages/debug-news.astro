@@ -1,0 +1,64 @@
+---
+import { getNewsItems, getNewsMediaList } from '../lib/microcms';
+
+// デバッグ用：全ての news-media データを取得
+const allNewsMedia = await getNewsMediaList({
+  limit: 10,
+  orders: '-publishedDate',
+  depth: 1
+});
+
+console.log('=== ALL NEWS MEDIA DEBUG ===');
+console.log('総件数:', allNewsMedia.totalCount);
+console.log('取得件数:', allNewsMedia.contents.length);
+allNewsMedia.contents.forEach((item, index) => {
+  console.log(`${index + 1}. ID: ${item.id}, Title: ${item.title}`);
+  console.log(`   Category: ${item.category?.nameJa} (type: ${item.category?.type})`);
+  console.log(`   Published: ${item.publishedDate}`);
+  console.log(`   Status: ${item.status}`);
+  console.log('---');
+});
+
+// 実際のgetNewsItems関数の結果
+const newsItems = await getNewsItems(50);
+console.log('=== FILTERED NEWS ITEMS ===');
+console.log('フィルター後総件数:', newsItems.totalCount);
+console.log('フィルター後取得件数:', newsItems.contents.length);
+---
+
+<html>
+<head>
+  <title>News Debug</title>
+</head>
+<body>
+  <h1>News Debug Page</h1>
+  
+  <h2>All News Media ({allNewsMedia.totalCount} total, showing {allNewsMedia.contents.length})</h2>
+  <ul>
+    {allNewsMedia.contents.map(item => (
+      <li>
+        <strong>{item.title}</strong><br>
+        ID: {item.id}<br>
+        Category: {item.category?.nameJa} (type: {item.category?.type})<br>
+        Published: {item.publishedDate}<br>
+        Status: {item.status}<br>
+        <hr>
+      </li>
+    ))}
+  </ul>
+
+  <h2>Filtered News Items ({newsItems.totalCount} total, showing {newsItems.contents.length})</h2>
+  <ul>
+    {newsItems.contents.map(item => (
+      <li>
+        <strong>{item.title}</strong><br>
+        ID: {item.id}<br>
+        Category: {item.category?.nameJa} (type: {item.category?.type})<br>
+        Published: {item.publishedDate}<br>
+        Status: {item.status}<br>
+        <hr>
+      </li>
+    ))}
+  </ul>
+</body>
+</html>

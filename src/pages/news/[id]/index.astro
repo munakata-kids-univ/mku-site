@@ -50,7 +50,7 @@ try {
   <main>
     <!-- パンくずリスト（グラデーション背景） -->
     <section class="breadcrumb-section">
-      <div class="breadcrumb-container">
+      <div class="news-detail__breadcrumb">
         <Breadcrumb items={breadcrumbItems} />
       </div>
     </section>
@@ -120,7 +120,7 @@ try {
   // パンくずリストセクション
   .breadcrumb-section {
     background: linear-gradient(to bottom, $background-primary 0%, $background-tertiary 100%);
-    padding-top: rem(120); // ヘッダーと被らない位置
+    padding-top: rem(120);
     padding-bottom: rem(40);
     
     @include breakpoint-up(lg) {
@@ -129,19 +129,14 @@ try {
     }
   }
 
-  .breadcrumb-container {
-    margin: 0 auto;
-    max-width: rem(1200);
-    padding: 0 5%;
-    
-    @include breakpoint-up(xl) {
-      padding: 0 rem(50);
-    }
-
-    // Breadcrumbコンポーネントのデフォルトスタイルを上書き
+  // パンくずリスト（他の下層ページと同じpadding仕様）
+  .news-detail__breadcrumb {
     :global(.breadcrumb) {
-      background: none !important;
-      padding: 0 !important;
+      background: transparent;
+    }
+    
+    :global(.breadcrumb__list) {
+      background: transparent;
     }
   }
 
@@ -170,7 +165,6 @@ try {
     background: $background-primary;
     border-radius: $radius-l;
     padding: rem(40) rem(20);
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
     @include breakpoint-up(md) {
       padding: rem(40) rem(30);
     }

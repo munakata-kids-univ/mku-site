@@ -10,13 +10,19 @@ import {
 
 // データ取得
 const globalSettings = await getGlobalSettings();
-const newsData = await getNewsItems(50); // より多くのアイテムを取得
+const initialNewsData = await getNewsItems(50); // 初期50件を取得
 const categoriesData = await getCategoriesWithLabels();
 
 // お知らせ用のカテゴリーを取得（トップページと同じロジック）
 const categories = categoriesData.newsCategories;
 
-const newsPosts = newsData.contents;
+const initialNewsPosts = initialNewsData.contents;
+const totalCount = initialNewsData.totalCount;
+
+// デバッグ情報
+console.log('初期記事数:', initialNewsPosts.length);
+console.log('総記事数:', totalCount);
+console.log('最初の記事:', initialNewsPosts[0]);
 
 // パンくずリスト
 const breadcrumbItems = [
@@ -53,41 +59,53 @@ const breadcrumbItems = [
         </div>
 
         <!-- ニュース一覧 -->
-        <div class="news-list">
-          {newsPosts.map(post => (
-            <article class="news-item">
-              <a href={`/news/${post.id}`} class="news-item__link">
-                
-                <!-- モバイル：縦並び、デスクトップ：横並び -->
-                <div class="news-item__thumbnail">
-                  <img 
-                    src={post.thumbnail?.url || '/images/ui/img_news-no-image.webp'} 
-                    alt={post.title}
-                    loading="lazy"
-                  />
-                </div>
-                
-                <div class="news-item__content">
-                  <div class="news-item__meta">
-                    <time class="news-item__date" datetime={post.publishedAt}>
-                      {new Date(post.publishedAt).toLocaleDateString('ja-JP', {
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit'
-                      }).replace(/\//g, '.')}
-                    </time>
-                    {post.category && (
-                      <span class="news-item__category" data-category={post.category.id}>
-                        {post.category.nameJa}
-                      </span>
-                    )}
+        <div class="news-list" id="news-list">
+          {initialNewsPosts.length > 0 ? (
+            initialNewsPosts.map(post => (
+              <article class="news-item">
+                <a href={`/news/${post.id}`} class="news-item__link">
+                  
+                  <!-- モバイル：縦並び、デスクトップ：横並び -->
+                  <div class="news-item__thumbnail">
+                    <img 
+                      src={post.thumbnail?.url || '/images/ui/img_news-no-image.webp'} 
+                      alt={post.title}
+                      loading="lazy"
+                    />
                   </div>
-                  <h2 class="news-item__title">{post.title}</h2>
-                </div>
-                
-              </a>
-            </article>
-          ))}
+                  
+                  <div class="news-item__content">
+                    <div class="news-item__meta">
+                      <time class="news-item__date" datetime={post.publishedDate}>
+                        {new Date(post.publishedDate).toLocaleDateString('ja-JP', {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit'
+                        }).replace(/\//g, '.')}
+                      </time>
+                      {post.category && (
+                        <span class="news-item__category" data-category={post.category.id}>
+                          {post.category.nameJa}
+                        </span>
+                      )}
+                    </div>
+                    <h2 class="news-item__title">{post.title}</h2>
+                  </div>
+                  
+                </a>
+              </article>
+            ))
+          ) : (
+            <div class="news-empty">
+              <p>お知らせはまだありません。</p>
+            </div>
+          )}
+        </div>
+
+        <!-- ローディング表示 -->
+        <div class="loading-indicator" id="loading-indicator" style="display: none;">
+          <div class="loading-spinner"></div>
+          <p>記事を読み込んでいます...</p>
         </div>
 
         <!-- 空状態表示 -->
@@ -184,6 +202,10 @@ const breadcrumbItems = [
         margin-bottom: rem(40); // sm以上では40pxの間隔
       }
       
+      @include breakpoint-up(xl) {
+        margin-bottom: rem(60); // xl以上では60pxの間隔
+      }
+      
       &::after {
         content: '';
         position: absolute;
@@ -195,6 +217,10 @@ const breadcrumbItems = [
         
         @include breakpoint-up(sm) {
           bottom: rem(-20); // sm以上では（40px / 2 = 20px）
+        }
+        
+        @include breakpoint-up(xl) {
+          bottom: rem(-30); // xl以上では（60px / 2 = 30px）
         }
       }
     }
@@ -323,44 +349,212 @@ const breadcrumbItems = [
     }
   }
 
+  // ローディング表示
+  .loading-indicator {
+    text-align: center;
+    padding: rem(40) rem(20);
+    color: $text-secondary;
+
+    p {
+      @include font-ja-s;
+      margin: rem(12) 0 0 0;
+    }
+  }
+
+  .loading-spinner {
+    width: rem(24);
+    height: rem(24);
+    border: 2px solid $border-secondary;
+    border-top-color: $brand-turquoise;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
 </style>
 
-<script>
-  // タブ機能の実装
-  document.addEventListener('DOMContentLoaded', function() {
-    const tabs = document.querySelectorAll('.news-tab');
+<script define:vars={{ totalCount }} is:inline>
+  // グローバル変数
+  let currentOffset = 50; // 次に読み込む記事のオフセット
+  let isLoading = false; // ローディング中フラグ
+  let hasMoreArticles = totalCount > 50; // さらに記事があるかどうか
+  let currentCategoryFilter = 'all'; // 現在のカテゴリーフィルター
+  let allLoadedArticles = []; // 読み込まれた全記事を保持
+
+  // 記事HTMLを生成する関数
+  function createNewsItemHTML(post) {
+    const publishedDate = new Date(post.publishedAt || post.publishedDate).toLocaleDateString('ja-JP', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).replace(/\//g, '.');
+    
+    const categoryHTML = post.category 
+      ? `<span class="news-item__category" data-category="${post.category.id}">${post.category.nameJa}</span>`
+      : '';
+    
+    return `
+      <article class="news-item">
+        <a href="/news/${post.id}" class="news-item__link">
+          <div class="news-item__thumbnail">
+            <img 
+              src="${post.thumbnail?.url || '/images/ui/img_news-no-image.webp'}" 
+              alt="${post.title}"
+              loading="lazy"
+            />
+          </div>
+          <div class="news-item__content">
+            <div class="news-item__meta">
+              <time class="news-item__date" datetime="${post.publishedAt || post.publishedDate}">
+                ${publishedDate}
+              </time>
+              ${categoryHTML}
+            </div>
+            <h2 class="news-item__title">${post.title}</h2>
+          </div>
+        </a>
+      </article>
+    `;
+  }
+
+  // 追加記事を読み込む関数
+  async function loadMoreArticles() {
+    if (isLoading || !hasMoreArticles) return;
+    
+    isLoading = true;
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const newsList = document.getElementById('news-list');
+    
+    // ローディング表示
+    loadingIndicator.style.display = 'block';
+    
+    try {
+      const response = await fetch(`/api/news?offset=${currentOffset}&limit=50`);
+      
+      if (!response.ok) {
+        throw new Error('記事の取得に失敗しました');
+      }
+      
+      const data = await response.json();
+      
+      if (data.contents && data.contents.length > 0) {
+        // 全記事リストに追加
+        allLoadedArticles = [...allLoadedArticles, ...data.contents];
+        
+        // 新しい記事をHTMLとして追加
+        data.contents.forEach(post => {
+          const articleHTML = createNewsItemHTML(post);
+          newsList.insertAdjacentHTML('beforeend', articleHTML);
+        });
+        
+        currentOffset += 50;
+        hasMoreArticles = data.contents.length === 50 && currentOffset < totalCount;
+        
+        // 現在のフィルターを再適用
+        applyCurrentFilter();
+      } else {
+        hasMoreArticles = false;
+      }
+    } catch (error) {
+      console.error('記事読み込みエラー:', error);
+      hasMoreArticles = false;
+    } finally {
+      isLoading = false;
+      loadingIndicator.style.display = 'none';
+    }
+  }
+
+  // 現在のフィルターを適用する関数
+  function applyCurrentFilter() {
     const newsItems = document.querySelectorAll('.news-item');
     const emptyState = document.querySelector('.news-empty');
+    let visibleCount = 0;
+    
+    newsItems.forEach(item => {
+      const itemCategory = item.querySelector('.news-item__category')?.getAttribute('data-category');
+      
+      if (currentCategoryFilter === 'all' || itemCategory === currentCategoryFilter) {
+        item.style.display = 'block';
+        visibleCount++;
+      } else {
+        item.style.display = 'none';
+      }
+    });
+    
+    // 空状態の表示切り替え
+    if (visibleCount === 0) {
+      emptyState.style.display = 'block';
+    } else {
+      emptyState.style.display = 'none';
+    }
+  }
 
+  // 無限スクロールの実装
+  function setupInfiniteScroll() {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && hasMoreArticles && !isLoading) {
+          loadMoreArticles();
+        }
+      });
+    }, {
+      rootMargin: '200px' // 200px手前で読み込み開始
+    });
+
+    // 監視対象要素を設定（最後の記事要素）
+    const observeLastItem = () => {
+      const newsItems = document.querySelectorAll('.news-item');
+      if (newsItems.length > 0) {
+        const lastItem = newsItems[newsItems.length - 1];
+        observer.observe(lastItem);
+      }
+    };
+
+    // 初期監視開始
+    observeLastItem();
+    
+    // 記事追加後に監視対象を更新
+    const originalLoadMore = loadMoreArticles;
+    loadMoreArticles = async function() {
+      const result = await originalLoadMore();
+      // 新しい最後の要素を監視
+      observer.disconnect();
+      observeLastItem();
+      return result;
+    };
+  }
+
+  // DOM読み込み後の処理
+  document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('.news-tab');
+    
+    // 初期の記事を全記事リストに追加（サーバーサイドでレンダリングされた記事）
+    const initialItems = document.querySelectorAll('.news-item');
+    // この時点では allLoadedArticles は空のままでOK（初期記事はすでにHTMLに含まれているため）
+    
+    // タブ機能の実装
     tabs.forEach(tab => {
       tab.addEventListener('click', function() {
-        const categoryId = this.getAttribute('data-category');
+        currentCategoryFilter = this.getAttribute('data-category');
         
         // アクティブタブの切り替え
         tabs.forEach(t => t.classList.remove('news-tab--active'));
         this.classList.add('news-tab--active');
         
-        // ニュース項目のフィルタリング
-        let visibleCount = 0;
-        
-        newsItems.forEach(item => {
-          const itemCategory = item.querySelector('.news-item__category')?.getAttribute('data-category');
-          
-          if (categoryId === 'all' || itemCategory === categoryId) {
-            item.style.display = 'block';
-            visibleCount++;
-          } else {
-            item.style.display = 'none';
-          }
-        });
-        
-        // 空状態の表示切り替え
-        if (visibleCount === 0) {
-          emptyState.style.display = 'block';
-        } else {
-          emptyState.style.display = 'none';
-        }
+        // フィルター適用
+        applyCurrentFilter();
       });
     });
+    
+    // 無限スクロールの設定
+    if (hasMoreArticles) {
+      setupInfiniteScroll();
+    }
   });
 </script>

@@ -580,7 +580,7 @@ export async function getNewsMediaList(queries: any = {}): Promise<MicroCMSListR
       endpoint: 'news-media',
       queries: {
         limit: 100,
-        orders: '-publishedAt',
+        orders: '-publishedDate',
         depth: 1, // カテゴリーのリレーション展開
         ...queries
       }
@@ -804,33 +804,54 @@ export async function getNewsByCategory(categoryIds?: string[], limit = 10): Pro
 }
 
 // お知らせ用のカテゴリーでフィルタリング（type="news"のカテゴリーのみ）
-export async function getNewsItems(limit = 10): Promise<MicroCMSListResponse<NewsMedia>> {
+export async function getNewsItems(limit = 10, offset = 0): Promise<MicroCMSListResponse<NewsMedia>> {
   try {
-    const queries = {
-      limit: 50, // より多くのデータを取得してからフィルタリング
-      orders: '-publishedAt',
-      depth: 1,
-      filters: 'category[exists]'
-    };
+    // microCMSから全てのデータを取得（複数回APIコールで100件ずつ）
+    let allContents: NewsMedia[] = [];
+    let currentOffset = 0;
+    const batchSize = 100;
+    let hasMore = true;
     
-    const allData = await getNewsMediaList(queries);
+    while (hasMore) {
+      const queries = {
+        limit: batchSize,
+        offset: currentOffset,
+        orders: '-publishedDate',
+        depth: 1,
+        filters: 'category[exists]'
+      };
+      
+      const batchData = await getNewsMediaList(queries);
+      allContents = [...allContents, ...batchData.contents];
+      
+      // 次のバッチがあるかチェック
+      hasMore = batchData.contents.length === batchSize;
+      currentOffset += batchSize;
+      
+      // 無限ループ防止（最大500件まで）
+      if (currentOffset >= 500) break;
+    }
     
     // type="お知らせ"のカテゴリーを持つ記事のみフィルタリング
-    const filteredContents = allData.contents.filter(item => {
+    const filteredContents = allContents.filter(item => {
       if (!item.category) return false;
       const type = Array.isArray(item.category.type) ? item.category.type[0] : item.category.type;
       return type === 'お知らせ';
     });
     
+    // offsetとlimitを適用
+    const paginatedContents = filteredContents.slice(offset, offset + limit);
+    
     return {
-      ...allData,
-      contents: filteredContents.slice(0, limit),
-      totalCount: filteredContents.length
+      contents: paginatedContents,
+      totalCount: filteredContents.length,
+      offset: offset,
+      limit: limit
     };
   } catch (error) {
     console.error('お知らせの取得に失敗しました:', error);
     // フォールバック
-    return getNewsMediaList({ limit });
+    return { contents: [], totalCount: 0, offset: 0, limit };
   }
 }
 
@@ -839,7 +860,7 @@ export async function getMediaItems(limit = 10): Promise<MicroCMSListResponse<Ne
   try {
     const queries = {
       limit: 50, // より多くのデータを取得してからフィルタリング
-      orders: '-publishedAt',
+      orders: '-publishedDate',
       depth: 1,
       filters: 'category[exists]'
     };
@@ -870,7 +891,7 @@ export async function getNewsItemsByCategory(categoryId: string, limit = 3): Pro
   try {
     const queries = {
       limit,
-      orders: '-publishedAt',
+      orders: '-publishedDate',
       depth: 1,
       filters: `category[equals]${categoryId}`
     };
@@ -904,7 +925,7 @@ export async function getMediaItemsByCategory(categoryId: string, limit = 3): Pr
   try {
     const queries = {
       limit,
-      orders: '-publishedAt',
+      orders: '-publishedDate',
       depth: 1,
       filters: `category[equals]${categoryId}`
     };
