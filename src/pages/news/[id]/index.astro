@@ -1,0 +1,668 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Breadcrumb from "../../../components/Breadcrumb.astro";
+import BaseButton from "../../../components/BaseButton.astro";
+import { getNewsMediaById, getNewsItems } from '../../../lib/microcms';
+
+export async function getStaticPaths() {
+  try {
+    // 全てのニュース記事を取得してパスを生成
+    const newsData = await getNewsItems(100);
+    
+    return newsData.contents.map((newsItem) => ({
+      params: { id: newsItem.id }
+    }));
+  } catch (error) {
+    console.error('静的パス生成時にニュース記事の取得に失敗しました:', error);
+    return [];
+  }
+}
+
+// パラメータからIDを取得
+const { id } = Astro.params;
+
+if (!id) {
+  throw new Error('News ID is required');
+}
+
+let newsItem;
+let breadcrumbItems;
+
+try {
+  // ニュース記事を取得
+  newsItem = await getNewsMediaById(id);
+  
+  
+  // パンくずリスト
+  breadcrumbItems = [
+    { href: "/", label: "ホーム" },
+    { href: "/news", label: "お知らせ" },
+    { label: newsItem.title, current: true }
+  ];
+
+} catch (error) {
+  console.error('ニュース記事の取得に失敗しました:', error);
+  return Astro.redirect('/news');
+}
+---
+
+<BaseLayout title={newsItem.title} description={newsItem.excerpt || newsItem.title}>
+  <main>
+    <!-- パンくずリスト（グラデーション背景） -->
+    <section class="breadcrumb-section">
+      <div class="breadcrumb-container">
+        <Breadcrumb items={breadcrumbItems} />
+      </div>
+    </section>
+
+    <!-- 記事コンテンツセクション（グラデーション背景） -->
+    <section class="news-content-section">
+      <div class="news-content-container">
+        
+        <!-- 記事キャンバス -->
+        <article class="news-article">
+          
+          <!-- メタ情報 -->
+          <div class="news-item__meta">
+            <time class="news-item__date" datetime={newsItem.publishedAt}>
+              {new Date(newsItem.publishedDate).toLocaleDateString('ja-JP', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+              }).replace(/\//g, '.')}
+            </time>
+            {newsItem.category && (
+              <span class="news-item__category">
+                {newsItem.category.nameJa}
+              </span>
+            )}
+          </div>
+
+          <!-- 記事タイトル -->
+          <h1 class="news-article__title">{newsItem.title}</h1>
+
+          <!-- サムネイル画像 -->
+          {newsItem.thumbnail && (
+            <div class="news-article__thumbnail">
+              <img 
+                src={newsItem.thumbnail.url} 
+                alt={newsItem.title}
+                width={newsItem.thumbnail.width}
+                height={newsItem.thumbnail.height}
+              />
+            </div>
+          )}
+
+          <!-- 記事本文 -->
+          <div class="news-article__content" set:html={newsItem.body} />
+
+          <!-- 戻るボタン -->
+          <div class="news-article__actions">
+            <a href="/news" class="back-button">
+              <span class="back-button__text">お知らせ一覧に戻る</span>
+              <div class="back-button__icon">
+                <div class="back-button__icon-arrow"></div>
+              </div>
+            </a>
+          </div>
+
+        </article>
+
+      </div>
+    </section>
+
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+  @import "../../../styles/index";
+
+  // パンくずリストセクション
+  .breadcrumb-section {
+    background: linear-gradient(to bottom, $background-primary 0%, $background-tertiary 100%);
+    padding-top: rem(120); // ヘッダーと被らない位置
+    padding-bottom: rem(40);
+    
+    @include breakpoint-up(lg) {
+      padding-top: rem(140);
+      padding-bottom: rem(60);
+    }
+  }
+
+  .breadcrumb-container {
+    margin: 0 auto;
+    max-width: rem(1200);
+    padding: 0 5%;
+    
+    @include breakpoint-up(xl) {
+      padding: 0 rem(50);
+    }
+
+    // Breadcrumbコンポーネントのデフォルトスタイルを上書き
+    :global(.breadcrumb) {
+      background: none !important;
+      padding: 0 !important;
+    }
+  }
+
+  // 記事コンテンツセクション
+  .news-content-section {
+    background: linear-gradient(to bottom, $background-tertiary 0%, $background-secondary 100%);
+    padding: rem(60) 0 rem(120);
+    
+    @include breakpoint-up(xl) {
+      padding: rem(80) 0 rem(160);
+    }
+  }
+
+  .news-content-container {
+    margin: 0 auto;
+    padding: 0 5%;
+    max-width: rem(1200);
+    
+    @include breakpoint-up(xl) {
+      padding: 0 rem(50);
+    }
+  }
+
+  // 記事キャンバス
+  .news-article {
+    background: $background-primary;
+    border-radius: $radius-l;
+    padding: rem(40) rem(20);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+    @include breakpoint-up(md) {
+      padding: rem(40) rem(30);
+    }
+    
+    @include breakpoint-up(lg) {
+      padding: rem(60);
+    }
+  }
+
+  // メタ情報（既存のニュース一覧と同じスタイル）
+  .news-item__meta {
+    display: flex;
+    align-items: center;
+    gap: rem(12);
+    margin-bottom: rem(24);
+    flex-wrap: wrap;
+  }
+
+  .news-item__date {
+    @include font-ja-2s(semibold);
+    color: $text-dark-gray;
+  }
+
+  .news-item__category {
+    @include font-ja-3s(semibold);
+    padding: rem(2) rem(8);
+    background: $brand-primary;
+    color: $text-white;
+    border-radius: $radius-xs;
+  }
+
+  // 記事タイトル
+  .news-article__title {
+    font-size: rem(24);
+    font-weight: 600;
+    color: $text-primary;
+    margin: 0 0 rem(32) 0;
+    line-height: 1.6;
+    
+    @include breakpoint-up(lg) {
+      margin-bottom: rem(40);
+      @include font-ja-l(semibold);
+    }
+  }
+
+  // サムネイル画像
+  .news-article__thumbnail {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: $radius-m;
+    overflow: hidden;
+    background: $background-tertiary;
+    margin-bottom: rem(40);
+    
+    @include breakpoint-up(lg) {
+      margin-bottom: rem(60);
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  // 記事本文
+  .news-article__content {
+    @include font-ja-s;
+    color: $text-primary;
+    line-height: 1.8;
+    margin-bottom: rem(60);
+    
+    @include breakpoint-up(lg) {
+      margin-bottom: rem(80);
+      max-width: rem(840);
+      margin: 0 auto rem(80);
+    }
+
+    // リッチエディタの基本スタイル
+    :global(p) {
+      margin: 0 0 rem(20) 0;
+    }
+
+    :global(h2) {
+      @include font-ja-m(semibold);
+      color: $text-primary;
+      margin: rem(40) 0 rem(20) 0;
+      padding-left: rem(16);
+      border-left: 4px solid $brand-primary;
+    }
+
+    :global(h3) {
+      @include font-ja-s(semibold);
+      color: $text-primary;
+      margin: rem(32) 0 rem(16) 0;
+    }
+
+    :global(ul, ol) {
+      margin: rem(16) 0;
+      padding-left: rem(24);
+    }
+
+    :global(li) {
+      margin-bottom: rem(8);
+    }
+
+    :global(a) {
+      color: $brand-turquoise;
+      text-decoration: underline;
+      
+      &:hover {
+        text-decoration: none;
+      }
+    }
+
+    :global(img) {
+      width: 100%;
+      height: auto;
+      border-radius: $radius-s;
+      margin: rem(20) 0;
+    }
+
+    // PDF Canvas表示スタイル（メインキャンパス講座詳細と同じ仕様）
+    :global(.pdf-canvas-block) {
+      border: 1px solid $border-primary;
+      border-radius: rem(8);
+      margin: rem(16) 0;
+      overflow: hidden;
+      background: $background-primary;
+      max-width: 100%;
+    }
+
+    :global(.pdf-canvas-header) {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: rem(12) rem(16);
+      background: $background-secondary;
+      border-bottom: 1px solid $border-primary;
+      flex-wrap: wrap;
+      gap: rem(8);
+      
+      @include breakpoint-up(md) {
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: rem(16);
+        padding: rem(16) rem(20);
+      }
+      
+      h4 {
+        @include font-ja-2s(semibold);
+        color: $text-primary;
+        margin: 0;
+        flex: 1;
+        
+        @include breakpoint-up(md) {
+          @include font-ja-s(semibold);
+        }
+      }
+    }
+
+    :global(.pdf-controls a) {
+      @include font-ja-3s(semibold);
+      color: $brand-turquoise;
+      text-decoration: none;
+      
+      @include breakpoint-up(md) {
+        @include font-ja-2s(semibold);
+      }
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    :global(.pdf-canvas-container) {
+      padding: rem(16);
+      text-align: center;
+      max-height: rem(300);
+      overflow-y: auto;
+      
+      @include breakpoint-up(md) {
+        padding: rem(20);
+        max-height: rem(400);
+      }
+      
+      @include breakpoint-up(lg) {
+        max-height: rem(800);
+      }
+    }
+
+    :global(.pdf-pages-container) {
+      display: flex;
+      flex-direction: column;
+      gap: rem(8);
+      align-items: center;
+    }
+
+    :global(.pdf-page-canvas) {
+      max-width: 100%;
+      height: auto;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: rem(4);
+      display: block;
+      margin: 0 auto;
+      background: $text-white;
+    }
+
+    :global(.pdf-loading) {
+      @include font-ja-2s;
+      color: $text-secondary;
+      padding: rem(20);
+      
+      @include breakpoint-up(md) {
+        @include font-ja-s;
+        padding: rem(40);
+      }
+    }
+  }
+
+  // アクションエリア
+  .news-article__actions {
+    text-align: center;
+  }
+
+  // 戻るボタンのカスタムスタイル（BaseButtonと同じ仕様）
+  .back-button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-width: rem(320);
+    height: rem(78);
+    padding: rem(10) rem(30) rem(10) rem(10);
+    box-sizing: border-box;
+    text-decoration: none;
+    @include font-ja-s(semibold);
+    border-radius: rem(39); // full radius
+    background-color: $brand-primary;
+    color: $text-white;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    
+    &:hover {
+      background-color: $brand-secondary;
+      color: $text-primary;
+      text-decoration: none;
+    }
+  }
+
+  .back-button__text {
+    flex: 1;
+    padding-right: rem(10);
+    text-align: left;
+  }
+
+  .back-button__icon {
+    position: absolute;
+    left: rem(10); // 左側に配置
+    width: rem(58);
+    height: rem(58);
+    background-color: $background-primary;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.5s ease;
+  }
+
+  // 基本設定（左向き矢印）
+  .back-button__icon-arrow {
+    width: rem(10); // 14.14px / √2 ≈ 10px (対角線を考慮)
+    height: rem(10); // 14.14px / √2 ≈ 10px (対角線を考慮)
+    border-top: 0;
+    border-right: 0;
+    border-left: 2px solid $brand-primary; // 左向き矢印用
+    border-bottom: 2px solid $brand-primary; // 左向き矢印用
+    transform: rotate(45deg); // 左向き矢印用の角度
+    transition: all 0.5s ease;
+  }
+
+  // ボタンテキスト（左側にアイコンがあるのでパディング調整）
+  .back-button__text {
+    flex: 1;
+    padding-left: rem(68); // 左側アイコン分のスペース確保
+    text-align: center;
+  }
+
+  // ホバー時のアニメーション（BaseButtonと同じ）
+  .back-button:hover .back-button__icon {
+    background-color: $brand-primary;
+    transform: rotate(360deg);
+  }
+
+  .back-button:hover .back-button__icon-arrow {
+    border-color: $brand-secondary;
+    transform: rotate(45deg) rotate(360deg);
+  }
+
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  // PDF Canvas表示機能（メインキャンパス講座詳細と同じ仕様）
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('PDF.js loaded:', typeof pdfjsLib !== 'undefined');
+    
+    // PDF.jsの設定
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      
+      // PDFリンクを自動的にプレビューに変換
+      const pdfLinks = document.querySelectorAll('.news-article__content a[data-mime-type="application/pdf"]');
+      console.log('PDF links with data-mime-type found:', pdfLinks.length);
+      
+      // data-mime-typeがない場合は、.pdfで終わるリンクを検索
+      if (pdfLinks.length === 0) {
+        const pdfLinksBasic = document.querySelectorAll('.news-article__content a[href$=".pdf"]');
+        console.log('PDF links with .pdf extension found:', pdfLinksBasic.length);
+        
+        pdfLinksBasic.forEach(link => {
+          const pdfUrl = link.href;
+          const fileName = link.textContent.trim();
+          
+          // PDFプレビューブロックを作成
+          const pdfBlock = document.createElement('div');
+          pdfBlock.className = 'pdf-canvas-block';
+          pdfBlock.dataset.pdfUrl = pdfUrl;
+          pdfBlock.innerHTML = `
+            <div class="pdf-canvas-header">
+              <h4>📄 ${fileName}</h4>
+              <div class="pdf-controls">
+                <a href="${pdfUrl}" target="_blank">PDFで開く</a>
+              </div>
+            </div>
+            <div class="pdf-canvas-container">
+              <div class="pdf-loading">PDFを読み込んでいます...</div>
+              <div class="pdf-pages-container"></div>
+            </div>
+          `;
+          
+          // 元のリンクを置き換え
+          link.parentNode.replaceChild(pdfBlock, link);
+        });
+      } else {
+        pdfLinks.forEach(link => {
+          const pdfUrl = link.href;
+          const fileName = link.textContent.trim();
+          
+          // PDFプレビューブロックを作成
+          const pdfBlock = document.createElement('div');
+          pdfBlock.className = 'pdf-canvas-block';
+          pdfBlock.dataset.pdfUrl = pdfUrl;
+          pdfBlock.innerHTML = `
+            <div class="pdf-canvas-header">
+              <h4>📄 ${fileName}</h4>
+              <div class="pdf-controls">
+                <a href="${pdfUrl}" target="_blank">PDFで開く</a>
+              </div>
+            </div>
+            <div class="pdf-canvas-container">
+              <div class="pdf-loading">PDFを読み込んでいます...</div>
+              <div class="pdf-pages-container"></div>
+            </div>
+          `;
+          
+          // 元のリンクを置き換え
+          link.parentNode.replaceChild(pdfBlock, link);
+        });
+      }
+      
+      // PDF Canvas ブロックを処理
+      const pdfCanvasBlocks = document.querySelectorAll('.pdf-canvas-block');
+      
+      pdfCanvasBlocks.forEach(block => {
+        const url = block.dataset.pdfUrl;
+        const pagesContainer = block.querySelector('.pdf-pages-container');
+        const loadingDiv = block.querySelector('.pdf-loading');
+        
+        let pdfDoc = null;
+        
+        // PDFを読み込み
+        pdfjsLib.getDocument(url).promise.then(pdf => {
+          pdfDoc = pdf;
+          const totalPages = pdf.numPages;
+          
+          // ローディング非表示
+          if (loadingDiv) loadingDiv.style.display = 'none';
+          
+          // 全ページを順次描画
+          for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+            renderPage(pageNum, pagesContainer);
+          }
+          
+        }).catch(error => {
+          console.error('PDF読み込みエラー:', error);
+          if (loadingDiv) {
+            loadingDiv.textContent = 'PDFの読み込みに失敗しました';
+          }
+        });
+        
+        // ページ描画関数
+        function renderPage(pageNum, container) {
+          pdfDoc.getPage(pageNum).then(page => {
+            // 新しいキャンバスを作成
+            const canvas = document.createElement('canvas');
+            canvas.className = 'pdf-page-canvas';
+            container.appendChild(canvas);
+            
+            // レスポンシブなスケール計算
+            const containerWidth = block.querySelector('.pdf-canvas-container').clientWidth - 32; // padding分を引く
+            
+            // 基本スケールを設定
+            let baseScale = 1.5;
+            if (window.innerWidth < 768) {
+              baseScale = 1.0; // モバイル
+            } else if (window.innerWidth < 1024) {
+              baseScale = 1.2; // タブレット
+            }
+            
+            const viewport = page.getViewport({ scale: baseScale });
+            
+            // コンテナ幅に合わせてスケール調整
+            let finalScale = baseScale;
+            if (viewport.width > containerWidth) {
+              finalScale = (containerWidth / viewport.width) * baseScale;
+            }
+            
+            const finalViewport = page.getViewport({ scale: finalScale });
+            
+            // キャンバスサイズ設定
+            canvas.width = finalViewport.width;
+            canvas.height = finalViewport.height;
+            
+            // 高DPI対応
+            const devicePixelRatio = window.devicePixelRatio || 1;
+            if (devicePixelRatio > 1) {
+              canvas.width = finalViewport.width * devicePixelRatio;
+              canvas.height = finalViewport.height * devicePixelRatio;
+              canvas.style.width = finalViewport.width + 'px';
+              canvas.style.height = finalViewport.height + 'px';
+              
+              const ctx = canvas.getContext('2d');
+              ctx.scale(devicePixelRatio, devicePixelRatio);
+            }
+            
+            // 描画コンテキスト
+            const renderContext = {
+              canvasContext: canvas.getContext('2d'),
+              viewport: finalViewport
+            };
+            
+            // ページ描画
+            page.render(renderContext);
+            
+          }).catch(error => {
+            console.error('ページ描画エラー:', error);
+          });
+        }
+      });
+      
+      // リサイズ時の再描画
+      let resizeTimeout;
+      window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          const pdfCanvasBlocks = document.querySelectorAll('.pdf-canvas-block');
+          pdfCanvasBlocks.forEach(block => {
+            const pagesContainer = block.querySelector('.pdf-pages-container');
+            if (pagesContainer && pagesContainer.children.length > 0) {
+              // 既存のキャンバスをクリア
+              pagesContainer.innerHTML = '';
+              
+              // ローディング表示
+              const loadingDiv = document.createElement('div');
+              loadingDiv.className = 'pdf-loading';
+              loadingDiv.textContent = 'PDFを読み込んでいます...';
+              block.querySelector('.pdf-canvas-container').appendChild(loadingDiv);
+              
+              // PDF再描画
+              const url = block.dataset.pdfUrl;
+              if (url && typeof pdfjsLib !== 'undefined') {
+                pdfjsLib.getDocument(url).promise.then(pdf => {
+                  loadingDiv.style.display = 'none';
+                  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    renderPage(pageNum, pagesContainer);
+                  }
+                });
+              }
+            }
+          });
+        }, 300);
+      });
+    }
+  });
+</script>

@@ -1,0 +1,366 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import HeroSection from "../../components/HeroSection.astro";
+import Breadcrumb from "../../components/Breadcrumb.astro";
+import { 
+  getGlobalSettings,
+  getNewsItems,
+  getCategoriesWithLabels
+} from '../../lib/microcms';
+
+// データ取得
+const globalSettings = await getGlobalSettings();
+const newsData = await getNewsItems(50); // より多くのアイテムを取得
+const categoriesData = await getCategoriesWithLabels();
+
+// お知らせ用のカテゴリーを取得（トップページと同じロジック）
+const categories = categoriesData.newsCategories;
+
+const newsPosts = newsData.contents;
+
+// パンくずリスト
+const breadcrumbItems = [
+  { href: "/", label: "ホーム" },
+  { label: "お知らせ", current: true }
+];
+---
+
+<BaseLayout title="お知らせ" description="むなかた子ども大学からの最新のお知らせをご覧いただけます。講座の募集開始、イベントの案内、重要な情報などを随時更新しています。">
+  <main>
+    <!-- ヒーローセクション -->
+    <HeroSection 
+      title="お知らせ"
+      subtitle="News"
+      imageSrc="/images/backgrounds/img_bg-hero_news-01.webp"
+      imageAlt="お知らせ"
+    />
+
+    <!-- パンくずリスト -->
+    <Breadcrumb items={breadcrumbItems} />
+
+    <!-- ニュースコンテンツセクション -->
+    <section class="news-content">
+      <div class="news-content__container">
+        
+        <!-- タブセクション -->
+        <div class="news-tabs">
+          <button class="news-tab news-tab--active" data-category="all">すべて</button>
+          {categories.map(category => (
+            <button class="news-tab" data-category={category.id}>
+              {category.nameJa}
+            </button>
+          ))}
+        </div>
+
+        <!-- ニュース一覧 -->
+        <div class="news-list">
+          {newsPosts.map(post => (
+            <article class="news-item">
+              <a href={`/news/${post.id}`} class="news-item__link">
+                
+                <!-- モバイル：縦並び、デスクトップ：横並び -->
+                <div class="news-item__thumbnail">
+                  <img 
+                    src={post.thumbnail?.url || '/images/ui/img_news-no-image.webp'} 
+                    alt={post.title}
+                    loading="lazy"
+                  />
+                </div>
+                
+                <div class="news-item__content">
+                  <div class="news-item__meta">
+                    <time class="news-item__date" datetime={post.publishedAt}>
+                      {new Date(post.publishedAt).toLocaleDateString('ja-JP', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                      }).replace(/\//g, '.')}
+                    </time>
+                    {post.category && (
+                      <span class="news-item__category" data-category={post.category.id}>
+                        {post.category.nameJa}
+                      </span>
+                    )}
+                  </div>
+                  <h2 class="news-item__title">{post.title}</h2>
+                </div>
+                
+              </a>
+            </article>
+          ))}
+        </div>
+
+        <!-- 空状態表示 -->
+        <div class="news-empty" style="display: none;">
+          <p>該当するお知らせはありません。</p>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+  @import "../../styles/index";
+
+  .news-content {
+    padding: rem(60) 0 rem(120);
+    background: $background-primary;
+    
+    @include breakpoint-up(xl) {
+      padding: rem(80) 0 rem(160);
+    }
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 5%;
+      max-width: rem(1200);
+      
+      @include breakpoint-up(xl) {
+        padding: 0 rem(50);
+      }
+    }
+  }
+
+  .news-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: rem(8);
+    margin-bottom: rem(60);
+    justify-content: center;
+    
+    @include breakpoint-up(sm) {
+      gap: rem(12);
+    }
+    
+    @include breakpoint-up(md) {
+      justify-content: flex-start;
+    }
+  }
+
+  .news-tab {
+    @include padding(4, 15);
+    background: transparent;
+    border: 2px solid $text-disabled; // 常に薄いグレーのボーダーを表示
+    color: $text-disabled;
+    @include radius-full;
+    font-size: rem(12);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    @include breakpoint-up(lg) {
+      font-size: rem(14);
+    }
+
+    &:hover {
+      background: $background-secondary;
+    }
+
+    &--active {
+      border-color: $brand-turquoise; // アクティブ時は水色ボーダー
+      color: $brand-turquoise;
+      background: transparent;
+
+      &:hover {
+        background: rgba($brand-turquoise, 0.1);
+      }
+    }
+  }
+
+  .news-list {
+    display: flex;
+    flex-direction: column;
+    // gapを削除してmargin-bottomでスペーシングを制御
+  }
+
+  .news-item {
+    &:not(:last-child) {
+      position: relative;
+      margin-bottom: rem(60); // sm未満では60pxの間隔
+      
+      @include breakpoint-up(sm) {
+        margin-bottom: rem(40); // sm以上では40pxの間隔
+      }
+      
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: rem(-30); // マージンの真ん中（60px / 2 = 30px）
+        left: 0;
+        right: 0;
+        height: 1px;
+        background-color: $border-secondary;
+        
+        @include breakpoint-up(sm) {
+          bottom: rem(-20); // sm以上では（40px / 2 = 20px）
+        }
+      }
+    }
+
+    &__link {
+      display: block;
+      border-radius: $radius-l;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.3s ease;
+
+      @include breakpoint-up(md) {
+        display: flex;
+        gap: rem(24);
+        align-items: center;
+      }
+
+      &:hover {
+        // 浮き上がり効果
+        transform: translateY(-4px);
+        // アンダーラインを明示的に削除
+        text-decoration: none;
+        
+        // 画像のズームアップ
+        .news-item__thumbnail img {
+          transform: scale(1.1);
+        }
+        
+        // >マークを時計回りに1周回転
+        .news-item__content::after {
+          transform: translateY(-50%) rotate(315deg); // -45deg + 360deg = 315deg
+        }
+      }
+    }
+
+    &__thumbnail {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: $radius-m;
+      overflow: hidden;
+      background: $background-tertiary;
+      margin-bottom: rem(16);
+      
+      @include breakpoint-up(md) {
+        width: rem(200);
+        margin-bottom: 0;
+        flex-shrink: 0;
+      }
+      
+      @include breakpoint-up(lg) {
+        width: rem(240);
+      }
+      @include breakpoint-up(xl) {
+        width: rem(340);
+      }
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+      }
+    }
+
+    &__content {
+      flex: 1;
+      position: relative;
+      padding-right: rem(40); // 右側の>マークのスペースを確保
+      
+      // 右側の>マーク
+      &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: rem(16);
+        width: rem(12);
+        height: rem(12);
+        border-right: 2px solid $brand-turquoise;
+        border-bottom: 2px solid $brand-turquoise;
+        transform: translateY(-50%) rotate(-45deg);
+        transition: transform 0.3s ease;
+      }
+    }
+
+    &__meta {
+      display: flex;
+      align-items: center;
+      gap: rem(12);
+      margin-bottom: rem(8);
+      flex-wrap: wrap;
+    }
+
+    &__date {
+      @include font-ja-2s(semibold);
+      color: $text-dark-gray;
+    }
+
+    &__category {
+      @include font-ja-3s(semibold);
+      padding: rem(2) rem(8);
+      background: $brand-primary;
+      color: $text-white;
+      border-radius: $radius-xs;
+    }
+
+    &__title {
+      @include font-ja-s(semibold);
+      color: $text-primary;
+      margin: 0;
+      line-height: 1.5;
+      
+      @include breakpoint-up(lg) {
+        @include font-ja-m(semibold);
+      }
+    }
+  }
+
+  .news-empty {
+    text-align: center;
+    padding: rem(80) rem(20);
+    color: $text-secondary;
+
+    p {
+      @include font-ja-s;
+      margin: 0;
+    }
+  }
+
+</style>
+
+<script>
+  // タブ機能の実装
+  document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('.news-tab');
+    const newsItems = document.querySelectorAll('.news-item');
+    const emptyState = document.querySelector('.news-empty');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', function() {
+        const categoryId = this.getAttribute('data-category');
+        
+        // アクティブタブの切り替え
+        tabs.forEach(t => t.classList.remove('news-tab--active'));
+        this.classList.add('news-tab--active');
+        
+        // ニュース項目のフィルタリング
+        let visibleCount = 0;
+        
+        newsItems.forEach(item => {
+          const itemCategory = item.querySelector('.news-item__category')?.getAttribute('data-category');
+          
+          if (categoryId === 'all' || itemCategory === categoryId) {
+            item.style.display = 'block';
+            visibleCount++;
+          } else {
+            item.style.display = 'none';
+          }
+        });
+        
+        // 空状態の表示切り替え
+        if (visibleCount === 0) {
+          emptyState.style.display = 'block';
+        } else {
+          emptyState.style.display = 'none';
+        }
+      });
+    });
+  });
+</script>

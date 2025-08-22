@@ -242,7 +242,7 @@ export interface NewsMedia {
   id: string;
   status: 'published' | 'draft';
   title: string;
-  content?: string; // 記事本文（詳細ページ用）
+  body?: string; // 記事本文（詳細ページ用）
   excerpt?: string; // 要約（一覧表示用）
   publishedDate: string;
   category: {
@@ -253,7 +253,7 @@ export interface NewsMedia {
     sort?: number; // 表示順
     description?: string; // 説明文
   };
-  image?: {
+  thumbnail?: {
     url: string;
     width: number;
     height: number;
@@ -531,6 +531,9 @@ export async function getNewsMediaById(id: string): Promise<NewsMedia> {
     const data = await client.get({
       endpoint: 'news-media',
       contentId: id,
+      queries: {
+        depth: 1 // カテゴリーのリレーション展開
+      }
     });
     
     return data as NewsMedia;

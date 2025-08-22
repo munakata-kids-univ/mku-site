@@ -565,7 +565,7 @@ document.addEventListener('DOMContentLoaded', function() {
 :global(.news-section__tab) {
   @include padding(4, 15);
   background: transparent;
-  border: 1px solid $text-disabled;
+  border: 2px solid $text-disabled;
   color: $text-disabled;
   @include radius-full;
   font-size: rem(12);
@@ -592,7 +592,7 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 :global(.news-section__tab--active) {
-  border: 2px solid $brand-turquoise;
+  border-color: $brand-turquoise;
   color: $brand-turquoise;
 }
 
@@ -601,7 +601,7 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 :global(.news-section--light .news-section__tab--active) {
-  border: 2px solid $brand-turquoise;
+  border-color: $brand-turquoise;
   color: $brand-turquoise;
   background: transparent;
 }
