@@ -1,0 +1,275 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import HeroSection from "../../components/HeroSection.astro";
+import Breadcrumb from "../../components/Breadcrumb.astro";
+import ContentSectionHeader from "../../components/ContentSectionHeader.astro";
+
+// パンくずリスト
+const breadcrumbItems = [
+  { href: "/", label: "ホーム" },
+  { label: "プライバシーポリシー", current: true }
+];
+---
+
+<BaseLayout title="プライバシーポリシー" description="むなかた子ども大学ウェブサイトの個人情報の取扱いについてご説明します。">
+  <main>
+    <!-- ヒーローセクション -->
+    <HeroSection 
+      title="プライバシー<br class='u-br-sm'>ポリシー"
+      subtitle="Privacy Policy"
+      imageSrc="/images/backgrounds/img_bg-hero_privacy-policy-01.webp"
+      imageAlt="プライバシーポリシー"
+    />
+
+    <!-- パンくずリスト -->
+    <Breadcrumb items={breadcrumbItems} />
+
+    <!-- メインコンテンツセクション -->
+    <section class="privacy-content">
+      <div class="privacy-content__container">
+        
+        <!-- タイトル（ContentSectionHeaderコンポーネント使用） -->
+        <ContentSectionHeader 
+          englishTitle=""
+          title="個人情報の取扱<br class='u-br-sm'>について"
+          customTitleWrapperStyle="courses-title-wrapper"
+          customIconStyle="courses-icon"
+          class="fade-up"
+        />
+
+        <!-- 導入文 -->
+        <div class="privacy-introduction">
+          <p>むなかた子ども大学ウェブサイト上での個人情報の取り扱いは、次のとおりとします。</p>
+          <p>むなかた子ども大学ウェブサイトでは、個人情報の収集・利用・管理について、「宗像市個人情報の保護に関する法律施行条例」に基づき、次のとおり適切に取り扱うとともに、皆様に安心して利用していただけるウェブサイトづくりを行います。</p>
+        </div>
+
+        <!-- プライバシーポリシー条文 -->
+        <div class="privacy-sections">
+          
+          <!-- 1. 個人情報とは -->
+          <section class="privacy-section">
+            <h3 class="course-info__section-title">1. 個人情報とは</h3>
+            <div class="privacy-section__content">
+              <p>ウェブサイトを通じて宗像市に提供され、または宗像市が収集した、住所、氏名、電話番号、E-mailアドレスなど、特定の個人を識別できる情報をいいます。</p>
+            </div>
+          </section>
+
+          <!-- 2. 個人情報の収集の制限 -->
+          <section class="privacy-section">
+            <h3 class="course-info__section-title">2. 個人情報の収集の制限</h3>
+            <div class="privacy-section__content">
+              <p>ウェブサイトを通じて個人情報を収集するときは、事務の目的を明確にし、その目的に必要な範囲内において情報を収集します。また、利用者ご本人の意思による情報の提供（登録）を原則とします。<br>
+                思想、信条、宗教などに関する個人情報は、原則として収集しません。</p>
+            </div>
+          </section>
+
+          <!-- 3. 個人情報の適切な管理 -->
+          <section class="privacy-section">
+            <h3 class="course-info__section-title">3. 個人情報の適切な管理</h3>
+            <div class="privacy-section__content">
+              <p>ウェブサイトを通じて収集した個人情報は、紛失や盗難、誤った利用などを防ぐために、ウェブサイト管理者が適正に管理します。また、必要のなくなった個人情報は、速やかに、かつ、確実に廃棄します。</p>
+            </div>
+          </section>
+
+          <!-- 4. 個人情報の利用・提供の制限 -->
+          <section class="privacy-section">
+            <h3 class="course-info__section-title">4. 個人情報の利用・提供の制限</h3>
+            <div class="privacy-section__content">
+              <p>個人情報は、収集した目的以外には、宗像市個人情報の保護に関する法律施行条例で定める場合を除き、内部での利用や外部への提供は行いません。<br>
+                特に必要があって、個人情報を外部に提供する場合には、提供先に個人情報を適正に取り扱うよう求めます。</p>
+            </div>
+          </section>
+
+          <!-- 5. 適用範囲 -->
+          <section class="privacy-section">
+            <h3 class="course-info__section-title">5. 適用範囲</h3>
+            <div class="privacy-section__content">
+              <p>このプライバシーポリシーは、宗像市が管理・運営するむなかた子ども大学ウェブサイトにおいてのみ適用されます。</p>
+            </div>
+          </section>
+
+          <!-- 6. 免責事項-->
+          <section class="privacy-section">
+            <h3 class="course-info__section-title">6. 免責事項</h3>
+            <div class="privacy-section__content">
+              <p>ウェブサイトに掲載する情報の正確さには万全を期しますが、利用者が本ウェブサイトの情報を用いて行う一切の行為について、宗像市は一切の責任を負わないものとします。<br>
+                宗像市は、利用者が本ウェブサイトを利用したことで発生した利用者の損害及び利用者が第三者に与えた損害について、一切の責任を負わないものとします。</p>
+            </div>
+          </section>
+
+          <!-- 7. Googleアナリティクスの使用 -->
+          <section class="privacy-section">
+            <h3 class="course-info__section-title">7. Googleアナリティクスの使用</h3>
+            <div class="privacy-section__content">
+              <p>本ウェブサイトでは、サービス向上およびウェブサイトの利便性向上のため、Googleアナリティクスを利用しています。これにより、匿名のトラフィックデータが収集されますが、個人を特定するものではありません。<br>Googleアナリティクスの詳細は<a href="https://marketingplatform.google.com/about/analytics/terms/jp/" target="_blank" rel="noopener noreferrer">「Googleアナリティクス利用規約」</a>をご覧ください。</p>
+            </div>
+          </section>
+
+          <!-- 8. お問い合わせ -->
+          <section class="privacy-section">
+            <h3 class="course-info__section-title">8. お問い合わせ</h3>
+            <div class="privacy-section__content">
+              <p>このページに関するお問い合わせは、当ウェブサイトの<a href="/contact">お問い合わせページ</a>までご連絡ください。<br><br>
+                お問い合わせ先：<br>
+                宗像市教育委員会（教育部 教育総務課 地域教育連携室 グローバル人材育成係）</p>
+            </div>
+          </section>
+
+        </div>
+
+
+      </div>
+    </section>
+
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+  @import "../../styles/index";
+
+  .privacy-content {
+    padding: 0 0 rem(120);
+    background: linear-gradient(to bottom, $background-primary 0%, $background-tertiary 100%);
+    
+    @include breakpoint-up(xl) {
+      padding: 0 0 rem(160);
+    }
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 5%;
+      overflow: hidden;
+      @include breakpoint-up(xl) {
+        padding: 0 rem(50);
+      }
+    }
+  }
+
+
+  // 導入文（/about/aimsの.introduction__textと同じスタイル）
+  .privacy-introduction {
+    padding: rem(20) 0 rem(30);
+    margin: 0 0 rem(60) 0;
+    
+    @include breakpoint-up(lg) {
+      margin-bottom: rem(80);
+    }
+
+    p {
+      @include font-ja-s;
+      color: $text-primary;
+      line-height: 1.8;
+      margin: 0 0 rem(20) 0;
+      max-width: rem(1200);
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  // プライバシーセクション
+  .privacy-sections {
+    margin-bottom: rem(60);
+
+    @include breakpoint-up(lg) {
+      margin-bottom: rem(80);
+    }
+  }
+
+  .privacy-section {
+    &:not(:last-child) {
+      margin-bottom: rem(50);
+      
+      @include breakpoint-up(lg) {
+        margin-bottom: rem(60);
+      }
+    }
+  }
+
+  // 特設講座詳細ページと同じセクションタイトル
+  .course-info__section-title {
+    @include font-ja-m(semibold);
+    color: $text-secondary;
+    margin-bottom: rem(16);
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-l(semibold);
+      margin-bottom: rem(24);
+    }
+  }
+
+  .privacy-section__content {
+
+    p {
+      @include font-ja-s;
+      color: $text-primary;
+      line-height: 1.8;
+      margin: 0 0 rem(16) 0;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    ul {
+      margin: rem(16) 0 0 0;
+      padding-left: rem(20);
+
+      li {
+        @include font-ja-s;
+        color: $text-primary;
+        line-height: 1.7;
+        margin-bottom: rem(8);
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+
+    a {
+      @include font-ja-s(semibold);
+      color: $brand-turquoise;
+      text-decoration: underline;
+      
+      &:hover {
+        text-decoration: none;
+      }
+    }
+  }
+
+  // お問い合わせ先
+  .privacy-contact {
+    background: $background-tertiary;
+    border-radius: $radius-m;
+    padding: rem(40) rem(20);
+    
+    @include breakpoint-up(lg) {
+      padding: rem(50) rem(60);
+    }
+  }
+
+  .privacy-contact__info {
+    p {
+      @include font-ja-s;
+      color: $text-primary;
+      line-height: 1.8;
+      margin: 0 0 rem(12) 0;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    strong {
+      @include font-ja-s(semibold);
+    }
+  }
+
+  // courses-title-wrapperの全画面幅でpadding-leftを無効化
+  :global(.content-section__title-wrapper.courses-title-wrapper) {
+    padding-left: 0 !important;
+  }
+
+</style>
