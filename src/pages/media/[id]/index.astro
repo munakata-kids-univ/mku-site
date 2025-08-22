@@ -1,19 +1,18 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import Breadcrumb from "../../../components/Breadcrumb.astro";
-import BaseButton from "../../../components/BaseButton.astro";
-import { getNewsMediaById, getNewsItems } from '../../../lib/microcms';
+import { getNewsMediaById, getMediaItems } from '../../../lib/microcms';
 
 export async function getStaticPaths() {
   try {
-    // 全てのニュース記事を取得してパスを生成
-    const newsData = await getNewsItems(100);
+    // 全てのメディア記事を取得してパスを生成
+    const mediaData = await getMediaItems(100);
     
-    return newsData.contents.map((newsItem) => ({
-      params: { id: newsItem.id }
+    return mediaData.contents.map((mediaItem) => ({
+      params: { id: mediaItem.id }
     }));
   } catch (error) {
-    console.error('静的パス生成時にニュース記事の取得に失敗しました:', error);
+    console.error('静的パス生成時にメディア記事の取得に失敗しました:', error);
     return [];
   }
 }
@@ -22,87 +21,86 @@ export async function getStaticPaths() {
 const { id } = Astro.params;
 
 if (!id) {
-  throw new Error('News ID is required');
+  throw new Error('Media ID is required');
 }
 
-let newsItem;
+let mediaItem;
 let breadcrumbItems;
 
 try {
-  // ニュース記事を取得
-  newsItem = await getNewsMediaById(id);
-  
+  // メディア記事を取得
+  mediaItem = await getNewsMediaById(id);
   
   // パンくずリスト
   breadcrumbItems = [
     { href: "/", label: "ホーム" },
-    { href: "/news", label: "お知らせ" },
-    { label: newsItem.title, current: true }
+    { href: "/media", label: "メディア掲載" },
+    { label: mediaItem.title, current: true }
   ];
 
 } catch (error) {
-  console.error('ニュース記事の取得に失敗しました:', error);
-  return Astro.redirect('/news');
+  console.error('メディア記事の取得に失敗しました:', error);
+  return Astro.redirect('/media');
 }
 ---
 
-<BaseLayout title={newsItem.title} description={newsItem.excerpt || newsItem.title}>
+<BaseLayout title={mediaItem.title} description={mediaItem.excerpt || mediaItem.title}>
   <main>
     <!-- パンくずリスト（グラデーション背景） -->
     <section class="breadcrumb-section">
-      <div class="news-detail__breadcrumb">
+      <div class="media-detail__breadcrumb">
         <Breadcrumb items={breadcrumbItems} />
       </div>
     </section>
 
     <!-- 記事コンテンツセクション（グラデーション背景） -->
-    <section class="news-content-section">
-      <div class="news-content-container">
+    <section class="media-content-section">
+      <div class="media-content-container">
         
         <!-- 記事キャンバス -->
-        <article class="news-article">
+        <article class="media-article">
           
           <!-- メタ情報 -->
-          <div class="news-item__meta">
-            <time class="news-item__date" datetime={newsItem.publishedAt}>
-              {new Date(newsItem.publishedDate).toLocaleDateString('ja-JP', {
+          <div class="media-item__meta">
+            <time class="media-item__date" datetime={mediaItem.publishedAt}>
+              {new Date(mediaItem.publishedDate).toLocaleDateString('ja-JP', {
                 year: 'numeric',
                 month: '2-digit',
                 day: '2-digit'
               }).replace(/\//g, '.')}
             </time>
-            {newsItem.category && (
-              <span class="news-item__category">
-                {newsItem.category.nameJa}
+            {mediaItem.category && (
+              <span class="media-item__category">
+                {mediaItem.category.nameJa}
               </span>
             )}
           </div>
 
           <!-- 記事タイトル -->
-          <h1 class="news-article__title">{newsItem.title}</h1>
+          <h1 class="media-article__title">{mediaItem.title}</h1>
 
           <!-- サムネイル画像 -->
-          {newsItem.thumbnail && (
-            <div class="news-article__thumbnail">
+          {mediaItem.thumbnail && (
+            <div class="media-article__thumbnail">
               <img 
-                src={newsItem.thumbnail.url} 
-                alt={newsItem.title}
-                width={newsItem.thumbnail.width}
-                height={newsItem.thumbnail.height}
+                src={mediaItem.thumbnail.url} 
+                alt={mediaItem.title}
+                width={mediaItem.thumbnail.width}
+                height={mediaItem.thumbnail.height}
               />
             </div>
           )}
 
           <!-- 記事本文 -->
-          <div class="news-article__content" set:html={newsItem.body} />
+          <div class="media-article__content" set:html={mediaItem.body} />
 
           <!-- 戻るボタン -->
-          <div class="news-article__actions">
-            <a href="/news" class="back-button">
-              <span class="back-button__text">お知らせ一覧に戻る</span>
-              <div class="back-button__icon">
+          <div class="media-article__actions">
+            <a href="/media" class="back-button">
+              <span class="back-button__icon">
                 <div class="back-button__icon-arrow"></div>
-              </div>
+              </span>
+              <span class="back-button__text">メディア掲載一覧に戻る</span>
             </a>
           </div>
 
@@ -130,7 +128,7 @@ try {
   }
 
   // パンくずリスト（他の下層ページと同じpadding仕様）
-  .news-detail__breadcrumb {
+  .media-detail__breadcrumb {
     :global(.breadcrumb) {
       background: transparent;
     }
@@ -141,7 +139,7 @@ try {
   }
 
   // 記事コンテンツセクション
-  .news-content-section {
+  .media-content-section {
     background: linear-gradient(to bottom, $background-tertiary 0%, $background-secondary 100%);
     padding: 0 0 rem(120);
     
@@ -150,7 +148,7 @@ try {
     }
   }
 
-  .news-content-container {
+  .media-content-container {
     margin: 0 auto;
     padding: 0 5%;
     max-width: rem(1200);
@@ -161,7 +159,7 @@ try {
   }
 
   // 記事キャンバス
-  .news-article {
+  .media-article {
     background: $background-primary;
     border-radius: $radius-l;
     padding: rem(40) rem(20);
@@ -174,8 +172,8 @@ try {
     }
   }
 
-  // メタ情報（既存のニュース一覧と同じスタイル）
-  .news-item__meta {
+  // メタ情報（既存のメディア一覧と同じスタイル）
+  .media-item__meta {
     display: flex;
     align-items: center;
     gap: rem(12);
@@ -183,12 +181,12 @@ try {
     flex-wrap: wrap;
   }
 
-  .news-item__date {
+  .media-item__date {
     @include font-ja-2s(semibold);
     color: $text-dark-gray;
   }
 
-  .news-item__category {
+  .media-item__category {
     @include font-ja-3s(semibold);
     padding: rem(2) rem(8);
     background: $brand-primary;
@@ -197,7 +195,7 @@ try {
   }
 
   // 記事タイトル
-  .news-article__title {
+  .media-article__title {
     font-size: rem(24);
     font-weight: 600;
     color: $text-primary;
@@ -211,7 +209,7 @@ try {
   }
 
   // サムネイル画像
-  .news-article__thumbnail {
+  .media-article__thumbnail {
     width: 100%;
     aspect-ratio: 16 / 9;
     border-radius: $radius-m;
@@ -231,7 +229,7 @@ try {
   }
 
   // 記事本文
-  .news-article__content {
+  .media-article__content {
     @include font-ja-s;
     color: $text-primary;
     line-height: 1.8;
@@ -386,7 +384,7 @@ try {
   }
 
   // アクションエリア
-  .news-article__actions {
+  .media-article__actions {
     text-align: center;
   }
 
@@ -422,8 +420,8 @@ try {
 
   .back-button__text {
     flex: 1;
-    padding-right: rem(10);
-    text-align: left;
+    padding-left: rem(68); // 左側アイコン分のスペース確保
+    text-align: center;
   }
 
   .back-button__icon {
@@ -451,13 +449,6 @@ try {
     transition: all 0.5s ease;
   }
 
-  // ボタンテキスト（左側にアイコンがあるのでパディング調整）
-  .back-button__text {
-    flex: 1;
-    padding-left: rem(68); // 左側アイコン分のスペース確保
-    text-align: center;
-  }
-
   // ホバー時のアニメーション（BaseButtonと同じ）
   .back-button:hover .back-button__icon {
     background-color: $brand-primary;
@@ -482,12 +473,12 @@ try {
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       
       // PDFリンクを自動的にプレビューに変換
-      const pdfLinks = document.querySelectorAll('.news-article__content a[data-mime-type="application/pdf"]');
+      const pdfLinks = document.querySelectorAll('.media-article__content a[data-mime-type="application/pdf"]');
       console.log('PDF links with data-mime-type found:', pdfLinks.length);
       
       // data-mime-typeがない場合は、.pdfで終わるリンクを検索
       if (pdfLinks.length === 0) {
-        const pdfLinksBasic = document.querySelectorAll('.news-article__content a[href$=".pdf"]');
+        const pdfLinksBasic = document.querySelectorAll('.media-article__content a[href$=".pdf"]');
         console.log('PDF links with .pdf extension found:', pdfLinksBasic.length);
         
         pdfLinksBasic.forEach(link => {

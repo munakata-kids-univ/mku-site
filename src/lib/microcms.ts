@@ -856,33 +856,54 @@ export async function getNewsItems(limit = 10, offset = 0): Promise<MicroCMSList
 }
 
 // メディア掲載用のカテゴリーでフィルタリング（type="media"のカテゴリーのみ）
-export async function getMediaItems(limit = 10): Promise<MicroCMSListResponse<NewsMedia>> {
+export async function getMediaItems(limit = 10, offset = 0): Promise<MicroCMSListResponse<NewsMedia>> {
   try {
-    const queries = {
-      limit: 50, // より多くのデータを取得してからフィルタリング
-      orders: '-publishedDate',
-      depth: 1,
-      filters: 'category[exists]'
-    };
+    // microCMSから全てのデータを取得（複数回APIコールで100件ずつ）
+    let allContents: NewsMedia[] = [];
+    let currentOffset = 0;
+    const batchSize = 100;
+    let hasMore = true;
     
-    const allData = await getNewsMediaList(queries);
+    while (hasMore) {
+      const queries = {
+        limit: batchSize,
+        offset: currentOffset,
+        orders: '-publishedDate',
+        depth: 1,
+        filters: 'category[exists]'
+      };
+      
+      const batchData = await getNewsMediaList(queries);
+      allContents = [...allContents, ...batchData.contents];
+      
+      // 次のバッチがあるかチェック
+      hasMore = batchData.contents.length === batchSize;
+      currentOffset += batchSize;
+      
+      // 無限ループ防止（最大500件まで）
+      if (currentOffset >= 500) break;
+    }
     
     // type="メディア掲載"のカテゴリーを持つ記事のみフィルタリング
-    const filteredContents = allData.contents.filter(item => {
+    const filteredContents = allContents.filter(item => {
       if (!item.category) return false;
       const type = Array.isArray(item.category.type) ? item.category.type[0] : item.category.type;
       return type === 'メディア掲載';
     });
     
+    // offsetとlimitを適用
+    const paginatedContents = filteredContents.slice(offset, offset + limit);
+    
     return {
-      ...allData,
-      contents: filteredContents.slice(0, limit),
-      totalCount: filteredContents.length
+      contents: paginatedContents,
+      totalCount: filteredContents.length,
+      offset: offset,
+      limit: limit
     };
   } catch (error) {
     console.error('メディア掲載の取得に失敗しました:', error);
     // フォールバック
-    return getNewsMediaList({ limit });
+    return { contents: [], totalCount: 0, offset: 0, limit };
   }
 }
 

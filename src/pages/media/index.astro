@@ -1,0 +1,564 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import HeroSection from "../../components/HeroSection.astro";
+import Breadcrumb from "../../components/Breadcrumb.astro";
+import { 
+  getGlobalSettings,
+  getMediaItems,
+  getCategoriesWithLabels
+} from '../../lib/microcms';
+
+// データ取得
+const globalSettings = await getGlobalSettings();
+const initialMediaData = await getMediaItems(50); // 初期50件を取得
+const categoriesData = await getCategoriesWithLabels();
+
+// メディア掲載用のカテゴリーを取得（トップページと同じロジック）
+const categories = categoriesData.mediaCategories;
+
+const initialMediaPosts = initialMediaData.contents;
+const totalCount = initialMediaData.totalCount;
+
+// デバッグ情報
+console.log('初期メディア記事数:', initialMediaPosts.length);
+console.log('総メディア記事数:', totalCount);
+console.log('最初のメディア記事:', initialMediaPosts[0]);
+
+// パンくずリスト
+const breadcrumbItems = [
+  { href: "/", label: "ホーム" },
+  { label: "メディア掲載", current: true }
+];
+---
+
+<BaseLayout title="メディア掲載" description="むなかた子ども大学のメディア掲載情報をご覧いただけます。新聞、雑誌、テレビなどの取材記事や報道をまとめています。">
+  <main>
+    <!-- ヒーローセクション -->
+    <HeroSection 
+      title="メディア掲載"
+      subtitle="Media"
+      imageSrc="/images/backgrounds/img_bg-hero_media-01.webp"
+      imageAlt="メディア掲載"
+    />
+
+    <!-- パンくずリスト -->
+    <Breadcrumb items={breadcrumbItems} />
+
+    <!-- メディアコンテンツセクション -->
+    <section class="media-content">
+      <div class="media-content__container">
+        
+        <!-- タブセクション -->
+        <div class="media-tabs">
+          <button class="media-tab media-tab--active" data-category="all">すべて</button>
+          {categories.map(category => (
+            <button class="media-tab" data-category={category.id}>
+              {category.nameJa}
+            </button>
+          ))}
+        </div>
+
+        <!-- メディア一覧 -->
+        <div class="media-list" id="media-list">
+          {initialMediaPosts.length > 0 ? (
+            initialMediaPosts.map(post => (
+              <article class="media-item">
+                <a href={`/media/${post.id}`} class="media-item__link">
+                  
+                  <!-- モバイル：縦並び、デスクトップ：横並び -->
+                  <div class="media-item__thumbnail">
+                    <img 
+                      src={post.thumbnail?.url || '/images/ui/img_news-no-image.webp'} 
+                      alt={post.title}
+                      loading="lazy"
+                    />
+                  </div>
+                  
+                  <div class="media-item__content">
+                    <div class="media-item__meta">
+                      <time class="media-item__date" datetime={post.publishedDate}>
+                        {new Date(post.publishedDate).toLocaleDateString('ja-JP', {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit'
+                        }).replace(/\//g, '.')}
+                      </time>
+                      {post.category && (
+                        <span class="media-item__category" data-category={post.category.id}>
+                          {post.category.nameJa}
+                        </span>
+                      )}
+                    </div>
+                    <h2 class="media-item__title">{post.title}</h2>
+                  </div>
+                  
+                </a>
+              </article>
+            ))
+          ) : (
+            <div class="media-empty">
+              <p>メディア掲載はまだありません。</p>
+            </div>
+          )}
+        </div>
+
+        <!-- ローディング表示 -->
+        <div class="loading-indicator" id="loading-indicator" style="display: none;">
+          <div class="loading-spinner"></div>
+          <p>記事を読み込んでいます...</p>
+        </div>
+
+        <!-- 空状態表示 -->
+        <div class="media-empty" style="display: none;">
+          <p>該当するメディア掲載はありません。</p>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+  @import "../../styles/index";
+
+  .media-content {
+    padding: 0 0 rem(120);
+    background: $background-primary;
+    
+    @include breakpoint-up(xl) {
+      padding: 0 0 rem(160);
+    }
+
+    &__container {
+      margin: 0 auto;
+      padding: 0 5%;
+      max-width: rem(1200);
+      
+      @include breakpoint-up(xl) {
+        padding: 0 rem(50);
+      }
+    }
+  }
+
+  .media-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: rem(8);
+    margin-bottom: rem(60);
+    justify-content: center;
+    
+    @include breakpoint-up(sm) {
+      gap: rem(12);
+    }
+    
+    @include breakpoint-up(md) {
+      justify-content: flex-start;
+    }
+  }
+
+  .media-tab {
+    @include padding(4, 15);
+    background: transparent;
+    border: 2px solid $text-disabled; // 常に薄いグレーのボーダーを表示
+    color: $text-disabled;
+    @include radius-full;
+    font-size: rem(12);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    @include breakpoint-up(lg) {
+      font-size: rem(14);
+    }
+
+    &:hover {
+      background: $background-secondary;
+    }
+
+    &--active {
+      border-color: $brand-turquoise; // アクティブ時は水色ボーダー
+      color: $brand-turquoise;
+      background: transparent;
+
+      &:hover {
+        background: rgba($brand-turquoise, 0.1);
+      }
+    }
+  }
+
+  .media-list {
+    display: flex;
+    flex-direction: column;
+    // gapを削除してmargin-bottomでスペーシングを制御
+  }
+
+  .media-item {
+    &:not(:last-child) {
+      position: relative;
+      margin-bottom: rem(60); // sm未満では60pxの間隔
+      
+      @include breakpoint-up(sm) {
+        margin-bottom: rem(40); // sm以上では40pxの間隔
+      }
+      
+      @include breakpoint-up(xl) {
+        margin-bottom: rem(60); // xl以上では60pxの間隔
+      }
+      
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: rem(-30); // マージンの真ん中（60px / 2 = 30px）
+        left: 0;
+        right: 0;
+        height: 1px;
+        background-color: $border-secondary;
+        
+        @include breakpoint-up(sm) {
+          bottom: rem(-20); // sm以上では（40px / 2 = 20px）
+        }
+        
+        @include breakpoint-up(xl) {
+          bottom: rem(-30); // xl以上では（60px / 2 = 30px）
+        }
+      }
+    }
+
+    &__link {
+      display: block;
+      border-radius: $radius-l;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.3s ease;
+
+      @include breakpoint-up(md) {
+        display: flex;
+        gap: rem(24);
+        align-items: center;
+      }
+
+      &:hover {
+        // 浮き上がり効果
+        transform: translateY(-4px);
+        // アンダーラインを明示的に削除
+        text-decoration: none;
+        
+        // 画像のズームアップ
+        .media-item__thumbnail img {
+          transform: scale(1.1);
+        }
+        
+        // >マークを時計回りに1周回転
+        .media-item__content::after {
+          transform: translateY(-50%) rotate(315deg); // -45deg + 360deg = 315deg
+        }
+      }
+    }
+
+    &__thumbnail {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: $radius-m;
+      overflow: hidden;
+      background: $background-tertiary;
+      margin-bottom: rem(16);
+      
+      @include breakpoint-up(md) {
+        width: rem(200);
+        margin-bottom: 0;
+        flex-shrink: 0;
+      }
+      
+      @include breakpoint-up(lg) {
+        width: rem(240);
+      }
+      @include breakpoint-up(xl) {
+        width: rem(340);
+      }
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+      }
+    }
+
+    &__content {
+      flex: 1;
+      position: relative;
+      padding-right: rem(40); // 右側の>マークのスペースを確保
+      
+      // 右側の>マーク
+      &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: rem(16);
+        width: rem(12);
+        height: rem(12);
+        border-right: 2px solid $brand-turquoise;
+        border-bottom: 2px solid $brand-turquoise;
+        transform: translateY(-50%) rotate(-45deg);
+        transition: transform 0.3s ease;
+      }
+    }
+
+    &__meta {
+      display: flex;
+      align-items: center;
+      gap: rem(12);
+      margin-bottom: rem(12);
+      flex-wrap: wrap;
+    }
+
+    &__date {
+      @include font-ja-2s(semibold);
+      color: $text-dark-gray;
+    }
+
+    &__category {
+      @include padding(1, 8);
+      background: $brand-primary;
+      color: $text-white;
+      @include radius-xs;
+      @include font-ja-3s(semibold);
+      
+      @include breakpoint-up(lg) {
+        @include padding(1, 10, 2);
+      }
+    }
+
+    &__title {
+      @include font-ja-s(semibold);
+      color: $text-primary;
+      margin: 0;
+      line-height: 1.5;
+      
+      @include breakpoint-up(lg) {
+        @include font-ja-m(semibold);
+      }
+    }
+  }
+
+  .media-empty {
+    text-align: center;
+    padding: rem(80) rem(20);
+    color: $text-secondary;
+
+    p {
+      @include font-ja-s;
+      margin: 0;
+    }
+  }
+
+  // ローディング表示
+  .loading-indicator {
+    text-align: center;
+    padding: rem(40) rem(20);
+    color: $text-secondary;
+
+    p {
+      @include font-ja-s;
+      margin: rem(12) 0 0 0;
+    }
+  }
+
+  .loading-spinner {
+    width: rem(24);
+    height: rem(24);
+    border: 2px solid $border-secondary;
+    border-top-color: $brand-turquoise;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+</style>
+
+<script define:vars={{ totalCount }} is:inline>
+  // グローバル変数
+  let currentOffset = 50; // 次に読み込む記事のオフセット
+  let isLoading = false; // ローディング中フラグ
+  let hasMoreArticles = totalCount > 50; // さらに記事があるかどうか
+  let currentCategoryFilter = 'all'; // 現在のカテゴリーフィルター
+  let allLoadedArticles = []; // 読み込まれた全記事を保持
+
+  // 記事HTMLを生成する関数
+  function createMediaItemHTML(post) {
+    const publishedDate = new Date(post.publishedAt || post.publishedDate).toLocaleDateString('ja-JP', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).replace(/\//g, '.');
+    
+    const categoryHTML = post.category 
+      ? `<span class="media-item__category" data-category="${post.category.id}">${post.category.nameJa}</span>`
+      : '';
+    
+    return `
+      <article class="media-item">
+        <a href="/media/${post.id}" class="media-item__link">
+          <div class="media-item__thumbnail">
+            <img 
+              src="${post.thumbnail?.url || '/images/ui/img_news-no-image.webp'}" 
+              alt="${post.title}"
+              loading="lazy"
+            />
+          </div>
+          <div class="media-item__content">
+            <div class="media-item__meta">
+              <time class="media-item__date" datetime="${post.publishedAt || post.publishedDate}">
+                ${publishedDate}
+              </time>
+              ${categoryHTML}
+            </div>
+            <h2 class="media-item__title">${post.title}</h2>
+          </div>
+        </a>
+      </article>
+    `;
+  }
+
+  // 追加記事を読み込む関数
+  async function loadMoreArticles() {
+    if (isLoading || !hasMoreArticles) return;
+    
+    isLoading = true;
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const mediaList = document.getElementById('media-list');
+    
+    // ローディング表示
+    loadingIndicator.style.display = 'block';
+    
+    try {
+      const response = await fetch(`/api/media?offset=${currentOffset}&limit=50`);
+      
+      if (!response.ok) {
+        throw new Error('記事の取得に失敗しました');
+      }
+      
+      const data = await response.json();
+      
+      if (data.contents && data.contents.length > 0) {
+        // 全記事リストに追加
+        allLoadedArticles = [...allLoadedArticles, ...data.contents];
+        
+        // 新しい記事をHTMLとして追加
+        data.contents.forEach(post => {
+          const articleHTML = createMediaItemHTML(post);
+          mediaList.insertAdjacentHTML('beforeend', articleHTML);
+        });
+        
+        currentOffset += 50;
+        hasMoreArticles = data.contents.length === 50 && currentOffset < totalCount;
+        
+        // 現在のフィルターを再適用
+        applyCurrentFilter();
+      } else {
+        hasMoreArticles = false;
+      }
+    } catch (error) {
+      console.error('記事読み込みエラー:', error);
+      hasMoreArticles = false;
+    } finally {
+      isLoading = false;
+      loadingIndicator.style.display = 'none';
+    }
+  }
+
+  // 現在のフィルターを適用する関数
+  function applyCurrentFilter() {
+    const mediaItems = document.querySelectorAll('.media-item');
+    const emptyState = document.querySelector('.media-empty');
+    let visibleCount = 0;
+    
+    mediaItems.forEach(item => {
+      const itemCategory = item.querySelector('.media-item__category')?.getAttribute('data-category');
+      
+      if (currentCategoryFilter === 'all' || itemCategory === currentCategoryFilter) {
+        item.style.display = 'block';
+        visibleCount++;
+      } else {
+        item.style.display = 'none';
+      }
+    });
+    
+    // 空状態の表示切り替え
+    if (visibleCount === 0) {
+      emptyState.style.display = 'block';
+    } else {
+      emptyState.style.display = 'none';
+    }
+  }
+
+  // 無限スクロールの実装
+  function setupInfiniteScroll() {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && hasMoreArticles && !isLoading) {
+          loadMoreArticles();
+        }
+      });
+    }, {
+      rootMargin: '200px' // 200px手前で読み込み開始
+    });
+
+    // 監視対象要素を設定（最後の記事要素）
+    const observeLastItem = () => {
+      const mediaItems = document.querySelectorAll('.media-item');
+      if (mediaItems.length > 0) {
+        const lastItem = mediaItems[mediaItems.length - 1];
+        observer.observe(lastItem);
+      }
+    };
+
+    // 初期監視開始
+    observeLastItem();
+    
+    // 記事追加後に監視対象を更新
+    const originalLoadMore = loadMoreArticles;
+    loadMoreArticles = async function() {
+      const result = await originalLoadMore();
+      // 新しい最後の要素を監視
+      observer.disconnect();
+      observeLastItem();
+      return result;
+    };
+  }
+
+  // DOM読み込み後の処理
+  document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('.media-tab');
+    
+    // 初期の記事を全記事リストに追加（サーバーサイドでレンダリングされた記事）
+    const initialItems = document.querySelectorAll('.media-item');
+    // この時点では allLoadedArticles は空のままでOK（初期記事はすでにHTMLに含まれているため）
+    
+    // タブ機能の実装
+    tabs.forEach(tab => {
+      tab.addEventListener('click', function() {
+        currentCategoryFilter = this.getAttribute('data-category');
+        
+        // アクティブタブの切り替え
+        tabs.forEach(t => t.classList.remove('media-tab--active'));
+        this.classList.add('media-tab--active');
+        
+        // フィルター適用
+        applyCurrentFilter();
+      });
+    });
+    
+    // 無限スクロールの設定
+    if (hasMoreArticles) {
+      setupInfiniteScroll();
+    }
+  });
+</script>
