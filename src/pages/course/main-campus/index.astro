@@ -23,6 +23,11 @@ if (!currentYearValue) {
 }
 const courses = await getMainCampusCourses(currentYearValue.toString());
 
+// デバッグ情報
+console.log('Current Year Value:', currentYearValue);
+console.log('取得された講座数:', courses.length);
+console.log('最初の3件の講座:', courses.slice(0, 3).map(c => ({ id: c.id, title: c.title, year: c.year })));
+
 // 過去の実績セクション用：全年度の講座データを取得
 const allCourses = await getMainCampusCourses();
 

@@ -1,83 +1,34 @@
 ---
-// パートナーロゴデータ
-const topRowLogos = [
-  { name: "企業ロゴ1", logoSrc: null }, // 将来的に実際のロゴパスに置き換え
-  { name: "企業ロゴ2", logoSrc: null },
-  { name: "企業ロゴ3", logoSrc: null },
-  { name: "企業ロゴ4", logoSrc: null },
-  { name: "企業ロゴ5", logoSrc: null },
-  { name: "企業ロゴ6", logoSrc: null }
-];
-
-const bottomRowLogos = [
-  { name: "企業ロゴ7", logoSrc: null },
-  { name: "企業ロゴ8", logoSrc: null },
-  { name: "企業ロゴ9", logoSrc: null },
-  { name: "企業ロゴ10", logoSrc: null },
-  { name: "企業ロゴ11", logoSrc: null },
-  { name: "企業ロゴ12", logoSrc: null }
-];
-
-// コンテンツデータ
-const content = {
-  title: "ご協力いただいている皆さま",
-  titleBreak: "皆さま",
-  subtitle: "Partners Supporting Our Mission",
-  description: "むなかた子ども大学は、多くの大学・企業・団体等の皆さまのご協力によって支えられています。<br>子どもたちの未来のために、本物の学びと体験を提供してくださる皆さまに心より感謝申し上げます。"
-};
+// パートナーロゴデータをインポート
+import { partnerLogos, partnersContent } from '../../data/partnerLogos.js';
 ---
 
 <section class="partners">
   <div class="partners__header fade-up">
-    <h2 class="partners__title">ご協力いただいている<span class="partners__title-break">{content.titleBreak}</span></h2>
-    <h3 class="partners__subtitle">{content.subtitle}</h3>
+    <h2 class="partners__title">ご協力いただいている<span class="partners__title-break">{partnersContent.titleBreak}</span></h2>
+    <h3 class="partners__subtitle">{partnersContent.subtitle}</h3>
   </div>
   
-  <p class="partners__description" set:html={content.description}></p>
+  <p class="partners__description" set:html={partnersContent.description}></p>
 
   <div class="partners__slider">
-    <!-- 上段：左から右へスクロール -->
-    <div class="partners__track partners__track--top">
-      {topRowLogos.map((logo) => (
+    <!-- 右から左へスクロール -->
+    <div class="partners__track">
+      {partnerLogos.map((logo) => (
         <div class="partner-logo">
-          {logo.logoSrc ? (
-            <img src={logo.logoSrc} alt={logo.name} class="partner-logo__image" />
-          ) : (
-            <div class="partner-logo__placeholder">{logo.name}</div>
-          )}
+          <img src={logo.logoSrc} alt={logo.alt} class="partner-logo__image" />
         </div>
       ))}
       <!-- 無限ループ用の複製 -->
-      {topRowLogos.map((logo) => (
+      {partnerLogos.map((logo) => (
         <div class="partner-logo">
-          {logo.logoSrc ? (
-            <img src={logo.logoSrc} alt={logo.name} class="partner-logo__image" />
-          ) : (
-            <div class="partner-logo__placeholder">{logo.name}</div>
-          )}
+          <img src={logo.logoSrc} alt={logo.alt} class="partner-logo__image" />
         </div>
       ))}
-    </div>
-
-    <!-- 下段：右から左へスクロール -->
-    <div class="partners__track partners__track--bottom">
-      {bottomRowLogos.map((logo) => (
+      <!-- さらなる滑らかさのための3セット目 -->
+      {partnerLogos.map((logo) => (
         <div class="partner-logo">
-          {logo.logoSrc ? (
-            <img src={logo.logoSrc} alt={logo.name} class="partner-logo__image" />
-          ) : (
-            <div class="partner-logo__placeholder">{logo.name}</div>
-          )}
-        </div>
-      ))}
-      <!-- 無限ループ用の複製 -->
-      {bottomRowLogos.map((logo) => (
-        <div class="partner-logo">
-          {logo.logoSrc ? (
-            <img src={logo.logoSrc} alt={logo.name} class="partner-logo__image" />
-          ) : (
-            <div class="partner-logo__placeholder">{logo.name}</div>
-          )}
+          <img src={logo.logoSrc} alt={logo.alt} class="partner-logo__image" />
         </div>
       ))}
     </div>
@@ -178,9 +129,6 @@ const content = {
   &__slider {
     overflow: hidden;
     position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: rem(32);
     width: 100vw;
     margin-left: calc(-50vw + 50%);
     margin-top: rem(70);
@@ -188,83 +136,42 @@ const content = {
 
   &__track {
     display: flex;
-    width: calc(200% + rem(40)); // 2倍の幅で無限ループ
-    
-    &--top {
-      animation: slideHorizontalLeft 30s linear infinite;
-    }
-    
-    &--bottom {
-      animation: slideHorizontalRight 30s linear infinite;
-    }
+    width: calc(300%); // 3倍の幅で無限ループ（3セット分）
+    animation: slidePartnerLogos 48s linear infinite; // 右から左へのスクロール（1.25倍速）
   }
 }
 
 .partner-logo {
-  flex: 0 0 rem(200);
-  height: rem(40);
+  flex: 0 0 auto;
+  height: rem(60);
   margin-right: rem(40);
   display: flex;
   align-items: center;
   justify-content: center;
-  filter: grayscale(100%);
-  opacity: 0.7;
-  transition: all 0.3s ease;
   
-  @include breakpoint-up(md) {
-    // flex: 0 0 rem(240);
-    // height: rem(120);
-    // margin-right: rem(48);
-  }
-  
-  &:hover {
-    filter: grayscale(0%);
-    opacity: 1;
-    transform: scale(1.05);
+  @include breakpoint-up(lg) {
+    margin-right: rem(60);
   }
 
   &__image {
-    width: 100%;
     height: 100%;
+    width: auto;
+    max-width: rem(200);
     object-fit: contain;
-  }
-
-  &__placeholder {
-    width: 100%;
-    height: 100%;
-    background: $background-secondary;
-    border: 2px solid $border-secondary;
-    @include radius-m;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: rem(14);
-    color: $text-tertiary;
-    font-weight: 500;
     
-    @include breakpoint-up(md) {
-      font-size: rem(16);
+    @include breakpoint-up(lg) {
+      max-width: rem(240);
     }
   }
 }
 
-// 横スライダーのアニメーション（左から右へ）
-@keyframes slideHorizontalLeft {
+// パートナーロゴスライダーのアニメーション（右から左へ）
+@keyframes slidePartnerLogos {
   0% {
     transform: translateX(0);
   }
   100% {
-    transform: translateX(-50%); // 半分移動すると元の位置に戻る（無限ループ効果）
-  }
-}
-
-// 横スライダーのアニメーション（右から左へ）
-@keyframes slideHorizontalRight {
-  0% {
-    transform: translateX(-50%);
-  }
-  100% {
-    transform: translateX(0); // 逆方向のスクロール
+    transform: translateX(-33.333%); // 1/3移動すると元の位置に戻る（3セット分の無限ループ効果）
   }
 }
 </style>

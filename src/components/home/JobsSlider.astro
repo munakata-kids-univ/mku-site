@@ -92,27 +92,6 @@ const jobIcons = [
     overflow-y: visible;
     position: relative;
     
-    // フェードアウト効果（左右端）
-    &::before,
-    &::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      width: rem(60);
-      z-index: 2;
-      pointer-events: none;
-    }
-    
-    &::before {
-      left: 0;
-      background: linear-gradient(to right, $background-tertiary, transparent);
-    }
-    
-    &::after {
-      right: 0;
-      background: linear-gradient(to left, $background-tertiary, transparent);
-    }
     
     &__track {
       display: flex;

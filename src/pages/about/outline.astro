@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { Image } from "astro:assets";
+import { partnerLogos } from '../../data/partnerLogos.js';
 ---
 
 <BaseLayout title="団体概要" description="むなかた子ども大学の基本情報、沿革、協力パートナーについてご紹介します。2021年の開学以来の歩みと、社会とともに進めるキャリア教育の現在地をご覧ください。">
@@ -256,87 +257,25 @@ import { Image } from "astro:assets";
         </div>
         
         <div class="partners__slider">
-          <!-- 上段：左から右へスクロール -->
-          <div class="partners__track partners__track--top">
-            <!-- サンプルロゴ（実際のロゴは後から追加） -->
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ1</div>
-            </div>
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ2</div>
-            </div>
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ3</div>
-            </div>
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ4</div>
-            </div>
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ5</div>
-            </div>
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ6</div>
-            </div>
+          <!-- 右から左へスクロール -->
+          <div class="partners__track">
+            {partnerLogos.map((logo) => (
+              <div class="partner-logo">
+                <img src={logo.logoSrc} alt={logo.alt} class="partner-logo__image" />
+              </div>
+            ))}
             <!-- 無限ループ用の複製 -->
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ1</div>
-            </div>
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ2</div>
-            </div>
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ3</div>
-            </div>
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ4</div>
-            </div>
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ5</div>
-            </div>
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ6</div>
-            </div>
-          </div>
-          <!-- 下段：右から左へスクロール -->
-          <div class="partners__track partners__track--bottom">
-            <!-- サンプルロゴ（実際のロゴは後から追加） -->
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ7</div>
-            </div>
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ8</div>
-            </div>
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ9</div>
-            </div>
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ10</div>
-            </div>
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ11</div>
-            </div>
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ12</div>
-            </div>
-            <!-- 無限ループ用の複製 -->
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ7</div>
-            </div>
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ8</div>
-            </div>
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ9</div>
-            </div>
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ10</div>
-            </div>
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ11</div>
-            </div>
-            <div class="partner-logo">
-              <div class="partner-logo__placeholder">企業ロゴ12</div>
-            </div>
+            {partnerLogos.map((logo) => (
+              <div class="partner-logo">
+                <img src={logo.logoSrc} alt={logo.alt} class="partner-logo__image" />
+              </div>
+            ))}
+            <!-- さらなる滑らかさのための3セット目 -->
+            {partnerLogos.map((logo) => (
+              <div class="partner-logo">
+                <img src={logo.logoSrc} alt={logo.alt} class="partner-logo__image" />
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -1027,9 +966,6 @@ import { Image } from "astro:assets";
   .partners__slider {
     overflow: hidden;
     position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: rem(32);
     width: 100vw;
     margin-left: calc(-50vw + 50%);
     margin-top: rem(70);
@@ -1037,76 +973,41 @@ import { Image } from "astro:assets";
 
   .partners__track {
     display: flex;
-    width: calc(200% + rem(40)); // 2倍の幅で無限ループ
-    
-    &--top {
-      animation: slideHorizontalLeft 30s linear infinite;
-    }
-    
-    &--bottom {
-      animation: slideHorizontalRight 30s linear infinite;
-    }
+    width: calc(300%); // 3倍の幅で無限ループ（3セット分）
+    animation: slidePartnerLogos 48s linear infinite; // 右から左へのスクロール（1.25倍速）
   }
 
   .partner-logo {
-    flex: 0 0 rem(200);
-    height: rem(40);
+    flex: 0 0 auto;
+    height: rem(60);
     margin-right: rem(40);
     display: flex;
     align-items: center;
     justify-content: center;
-    filter: grayscale(100%);
-    opacity: 0.7;
-    transition: all 0.3s ease;
     
-    @include breakpoint-up(md) {
-      // flex: 0 0 rem(240);
-      // height: rem(120);
-      // margin-right: rem(48);
-    }
-    
-    &:hover {
-      filter: grayscale(0%);
-      opacity: 1;
-      transform: scale(1.05);
+    @include breakpoint-up(lg) {
+      margin-right: rem(60);
     }
 
-    &__placeholder {
-      width: 100%;
+    &__image {
       height: 100%;
-      background: $background-secondary;
-      border: 2px solid $border-secondary;
-      border-radius: $radius-m;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: rem(14);
-      color: $text-tertiary;
-      font-weight: 500;
+      width: auto;
+      max-width: rem(200);
+      object-fit: contain;
       
-      @include breakpoint-up(md) {
-        font-size: rem(16);
+      @include breakpoint-up(lg) {
+        max-width: rem(240);
       }
     }
   }
 
-  // 横スライダーのアニメーション（左から右へ）
-  @keyframes slideHorizontalLeft {
+  // パートナーロゴスライダーのアニメーション（右から左へ）
+  @keyframes slidePartnerLogos {
     0% {
       transform: translateX(0);
     }
     100% {
-      transform: translateX(-50%); // 半分移動すると元の位置に戻る（無限ループ効果）
-    }
-  }
-
-  // 横スライダーのアニメーション（右から左へ）
-  @keyframes slideHorizontalRight {
-    0% {
-      transform: translateX(-50%);
-    }
-    100% {
-      transform: translateX(0); // 逆方向のスクロール
+      transform: translateX(-33.333%); // 1/3移動すると元の位置に戻る（3セット分の無限ループ効果）
     }
   }
 </style>

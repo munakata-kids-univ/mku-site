@@ -115,7 +115,7 @@ const currentPath = Astro.url.pathname;
             <div class="header__mobile-nav-wrapper">
               <a 
                 href={item.href} 
-                class={`header__mobile-nav-link ${currentPath === item.href ? 'header__mobile-nav-link--active' : ''}`}
+                class="header__mobile-nav-link"
               >
                 {item.name}
               </a>
@@ -133,7 +133,7 @@ const currentPath = Astro.url.pathname;
                   <li class="header__mobile-nav-submenu-item">
                     <a 
                       href={subitem.href} 
-                      class={`header__mobile-nav-submenu-link ${currentPath === subitem.href ? 'header__mobile-nav-submenu-link--active' : ''}`}
+                      class="header__mobile-nav-submenu-link"
                     >
                       {subitem.name}
                     </a>
@@ -702,8 +702,7 @@ const currentPath = Astro.url.pathname;
         padding-bottom: rem(30);
       }
       
-      &:hover,
-      &--active {
+      &:hover {
         color: $brand-secondary;
         transform: translateX(rem(8));
         text-decoration: none;
@@ -806,8 +805,7 @@ const currentPath = Astro.url.pathname;
           }
         }
         
-        &:hover,
-        &--active {
+        &:hover {
           color: $brand-secondary;
           transform: translateX(rem(8));
           text-decoration: none;

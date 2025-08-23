@@ -1,0 +1,194 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { Image } from "astro:assets";
+---
+
+<BaseLayout title="お探しのページが見つかりません" description="404エラー - お探しのページが見つかりませんでした。">
+  <main class="error-page">
+    <div class="error-page__container">
+      <!-- エラータイトル -->
+      <h1 class="error-page__title">エラー404</h1>
+      
+      <!-- 画像 -->
+      <div class="error-page__image">
+        <Image
+          src="/images/content/img_muk-kids-01.webp"
+          alt="むなかた子ども大学のキャラクター"
+          width={400}
+          height={300}
+          format="webp"
+          quality={85}
+          loading="eager"
+        />
+      </div>
+      
+      <!-- エラーメッセージ -->
+      <div class="error-page__message">
+        <p>申し訳ございません。お探しのページが見つかりませんでした。<br>
+        探されているページが見つからない可能性として、<br>
+        ページ・記事が削除されたか、アドレスが間違っているなどが考えられます。</p>
+      </div>
+      
+      <!-- 戻るボタン -->
+      <div class="error-page__actions">
+        <a href="/" class="back-button">
+          <span class="back-button__text">トップページに戻る</span>
+          <div class="back-button__icon">
+            <div class="back-button__icon-arrow"></div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+  @import "../styles/index";
+  
+  .error-page {
+    min-height: calc(100vh - 140px);
+    background: $background-primary;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: rem(40) 0;
+    
+    &__container {
+      text-align: center;
+      max-width: rem(800);
+      margin: 0 auto;
+      padding: rem(80) 5%;
+      
+      @include breakpoint-up(lg) {
+        padding: rem(100) rem(50);
+      }
+      @include breakpoint-up(xl) {
+        padding: rem(120) rem(50);
+      }
+    }
+    
+    &__title {
+      @include font-ja-l(semibold);
+      color: $text-secondary;
+      margin: 0 0 rem(40) 0;
+      
+      @include breakpoint-up(lg) {
+        @include font-ja-2l(semibold);
+        margin-bottom: rem(60);
+      }
+    }
+    
+    &__image {
+      margin: 0 auto rem(40);
+      max-width: rem(300);
+      
+      @include breakpoint-up(md) {
+        max-width: rem(400);
+        margin-bottom: rem(60);
+      }
+      
+      img,
+      :global(img) {
+        width: 100%;
+        height: auto;
+        border-radius: rem(16);
+      }
+    }
+    
+    &__message {
+      margin-bottom: rem(60);
+      text-align: left;
+      
+      @include breakpoint-up(sm) {
+        text-align: center;
+      }
+      
+      p {
+        @include font-ja-s;
+        color: $text-primary;
+        line-height: 1.6;
+        margin: 0 0 rem(8) 0;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+    
+    &__actions {
+      text-align: center;
+    }
+  }
+  
+  // 戻るボタンのスタイル（お知らせ記事ページと同じ）
+  .back-button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 100%; // スマホ時は100%幅
+    max-width: rem(320); // 最大幅を制限
+    height: rem(78);
+    padding: rem(10) rem(30) rem(10) rem(10);
+    box-sizing: border-box;
+    text-decoration: none;
+    @include font-ja-s(semibold);
+    border-radius: rem(39); // full radius
+    background-color: $brand-primary;
+    color: $text-white;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    
+    @include breakpoint-up(md) {
+      width: auto; // デスクトップ時は元のサイズ
+      min-width: rem(320);
+    }
+    
+    &:hover {
+      background-color: $brand-secondary;
+      color: $text-primary;
+      text-decoration: none;
+    }
+  }
+  
+  .back-button__text {
+    flex: 1;
+    padding-left: rem(68); // 左側アイコン分のスペース確保
+    text-align: center;
+  }
+  
+  .back-button__icon {
+    position: absolute;
+    left: rem(10); // 左側に配置
+    width: rem(58);
+    height: rem(58);
+    background-color: $background-primary;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.5s ease;
+  }
+  
+  // 基本設定（左向き矢印）
+  .back-button__icon-arrow {
+    width: rem(10); // 14.14px / √2 ≈ 10px (対角線を考慮)
+    height: rem(10); // 14.14px / √2 ≈ 10px (対角線を考慮)
+    border-top: 0;
+    border-right: 0;
+    border-left: 2px solid $brand-primary; // 左向き矢印用
+    border-bottom: 2px solid $brand-primary; // 左向き矢印用
+    transform: rotate(45deg); // 左向き矢印用の角度
+    transition: all 0.5s ease;
+  }
+  
+  // ホバー時のアニメーション
+  .back-button:hover .back-button__icon {
+    background-color: $brand-primary;
+    transform: rotate(360deg);
+  }
+  
+  .back-button:hover .back-button__icon-arrow {
+    border-color: $brand-secondary;
+    transform: rotate(45deg) rotate(360deg);
+  }
+</style>

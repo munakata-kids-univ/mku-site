@@ -14,7 +14,7 @@ const breadcrumbItems = [
 <BaseLayout title="むなかた子ども大学について" description="むなかた子ども大学について詳しく知るためのページです。ねらい・目的、学長・副学長からのメッセージ、運営元である宗像市地域教育連携室の概要をご紹介しています。">
   <main>
     <HeroSection 
-      title="むなかた子ども大学について"
+      title="むなかた子ども<br class='u-br-sm'>大学について"
       subtitle="About Us"
       imageSrc="/images/backgrounds/img_bg-hero_about-01.webp"
       imageAlt="むなかた子ども大学について"
@@ -39,10 +39,10 @@ const breadcrumbItems = [
                   quality={85}
                   loading="lazy"
                 />
-                <div class="about-menu__english-title">Our Aims & Approach</div>
+                <div class="about-menu__english-title">Aims & Approach</div>
               </div>
               <div class="about-menu__content">
-                <div class="about-menu__english-title-mobile">Our Aims & Approach</div>
+                <div class="about-menu__english-title-mobile">Aims & Approach</div>
                 <div class="about-menu__title-wrapper">
                   <h3 class="about-menu__title">ねらい・目的</h3>
                   <div class="about-menu__arrow">
@@ -291,6 +291,8 @@ const breadcrumbItems = [
     &__container {
       margin: 0 auto;
       padding: 0 5% 0;
+      overflow: hidden;
+      
       @include breakpoint-up(md) {
         overflow: hidden;
       }
@@ -364,6 +366,8 @@ const breadcrumbItems = [
     &__content {
       position: relative;
       padding-left: rem(10);
+      overflow: hidden;
+      margin-right: -5%;
       
       @include breakpoint-up(md) {
         paddinng-left: 0;
@@ -373,6 +377,10 @@ const breadcrumbItems = [
         justify-content: center;
         height: 100%;
         min-height: 0;
+        overflow: hidden;
+      }
+      @include breakpoint-up(xl) {
+        margin-right: rem(-50);
       }
     }
 
@@ -382,10 +390,10 @@ const breadcrumbItems = [
 
     &__english-title-mobile {
       position: absolute;
-      bottom: rem(-40);
-      left: calc(-5% - #{rem(20)});
-      right: calc(-5% - #{rem(20)});
-      @include font-en-4l(semibold);
+      bottom: 0;
+      left: 0;
+      width: calc(100% + 5% + #{rem(40)});
+      @include font-en-3l(semibold);
       // font-size: rem(26);
       // font-weight: 500;
       background: linear-gradient(90deg, rgba($background-accent, 0.3) 0%, rgba($background-accent, 0.7) 100%);
@@ -466,6 +474,10 @@ const breadcrumbItems = [
       color: $text-primary;
       margin: 0;
       line-height: 1.6;
+      margin-bottom: rem(50);
+      @include breakpoint-up(md) {
+        margin-bottom: 0;
+      }
     }
 
     // md以降のレイアウト
