@@ -31,7 +31,7 @@ export default defineConfig({
     inlineStylesheets: 'auto'
   },
   compressHTML: true,
-  output: 'hybrid',
+  output: 'static',
   image: {
     service: {
       entrypoint: 'astro/assets/services/sharp'
