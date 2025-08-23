@@ -12,7 +12,16 @@ const { title, description, ogImage } = Astro.props;
 
 // ナビゲーションメニュー
 const navigation = [
-  { name: 'むなかた子ども大学について', href: '/about' },
+  { 
+    name: 'むなかた子ども大学について', 
+    href: '/about',
+    hasSubmenu: true,
+    submenu: [
+      { name: 'ねらい・目的', href: '/about/aims' },
+      { name: '代表者メッセージ', href: '/about/message' },
+      { name: '団体概要', href: '/about/outline' }
+    ]
+  },
   { name: '年間スケジュール', href: '/schedule' },
   { 
     name: '講座内容', 
@@ -522,6 +531,34 @@ const currentPath = Astro.url.pathname;
           }
         }
         
+        // 「むなかた子ども大学について」サブメニューのカラー設定
+        &[href="/about/aims"] {
+          background-color: $brand-primary;
+          &:hover {
+            background-color: #8fa8e2;
+            color: $text-primary;
+            text-decoration: none !important;
+          }
+        }
+        
+        &[href="/about/message"] {
+          background-color: $brand-primary;
+          &:hover {
+            background-color: #8fa8e2;
+            color: $text-primary;
+            text-decoration: none !important;
+          }
+        }
+        
+        &[href="/about/outline"] {
+          background-color: $brand-primary;
+          &:hover {
+            background-color: #8fa8e2;
+            color: $text-primary;
+            text-decoration: none !important;
+          }
+        }
+        
         // 右側の矢印アイコン
         &::after {
           content: '';
@@ -531,6 +568,7 @@ const currentPath = Astro.url.pathname;
           background-position: center;
           background-size: contain;
           transform: rotate(-90deg);
+          transition: transform 0.5s ease;
         }
         
         // デフォルト状態の>アイコン（白色）
@@ -538,9 +576,10 @@ const currentPath = Astro.url.pathname;
           background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L12 15L18 9'/%3E%3C/svg%3E");
         }
         
-        // ホバー状態の>アイコン（text-primary色）
+        // ホバー状態の>アイコン（text-primary色 + 1周回転）
         &:hover::after {
           background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' stroke='%23212121' stroke-width='2' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L12 15L18 9'/%3E%3C/svg%3E");
+          transform: rotate(-90deg) rotate(360deg);
         }
       }
     }
@@ -661,6 +700,7 @@ const currentPath = Astro.url.pathname;
       border-bottom: 2px dotted $border-secondary;
       padding-bottom: rem(18);
       
+      &:nth-child(1),
       &:nth-child(3) {
         padding-bottom: 0;
       }
@@ -698,6 +738,7 @@ const currentPath = Astro.url.pathname;
       padding: rem(12) 0;
       list-style-type: none;
       
+      .header__mobile-nav-item:nth-child(1) &,
       .header__mobile-nav-item:nth-child(3) & {
         padding-bottom: rem(30);
       }
@@ -716,6 +757,7 @@ const currentPath = Astro.url.pathname;
       cursor: pointer;
       color: $text-white;
       transition: color 0.3s ease;
+      transform: translateY(2px);
       
       &:hover {
         color: $brand-secondary;
