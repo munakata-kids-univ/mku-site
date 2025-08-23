@@ -490,6 +490,16 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
               class="process-section__image process-section__image--pc"
             />
           </div>
+          
+          <!-- お問い合わせボタン -->
+          <div class="process-section__contact-button">
+            <a href="/contact" class="base-button base-button--blue">
+              <span class="base-button__text">お問い合わせフォーム</span>
+              <div class="base-button__icon">
+                <div class="base-button__icon-arrow"></div>
+              </div>
+            </a>
+          </div>
         </div>
       </div>
     </section>
@@ -1446,6 +1456,33 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
       color: $text-primary;
       line-height: 1.7;
       margin: 0;
+    }
+  }
+  
+  &__contact-button {
+    margin-top: rem(40);
+    text-align: center;
+    
+    @include breakpoint-up(md) {
+      margin-top: rem(48);
+    }
+    
+    @include breakpoint-up(lg) {
+      margin-top: rem(56);
+    }
+    
+    .base-button {
+      text-decoration: none;
+      color: $text-white !important;
+      
+      &:hover {
+        text-decoration: none;
+        color: $text-white !important;
+      }
+      
+      .base-button__text {
+        color: $text-white !important;
+      }
     }
   }
   

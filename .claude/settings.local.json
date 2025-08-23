@@ -32,7 +32,8 @@
       "Bash(gtimeout:*)",
       "Bash(git push:*)",
       "mcp__ide__getDiagnostics",
-      "WebFetch(domain:localhost)"
+      "WebFetch(domain:localhost)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

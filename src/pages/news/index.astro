@@ -68,7 +68,7 @@ const breadcrumbItems = [
                   <!-- モバイル：縦並び、デスクトップ：横並び -->
                   <div class="news-item__thumbnail">
                     <img 
-                      src={post.thumbnail?.url || '/images/ui/img_news-no-image.webp'} 
+                      src={post.thumbnail?.url || '/images/ui/img_news-no-image-01.webp'} 
                       alt={post.title}
                       loading="lazy"
                     />
@@ -123,11 +123,11 @@ const breadcrumbItems = [
   @import "../../styles/index";
 
   .news-content {
-    padding: rem(60) 0 rem(120);
+    padding: 0 0 rem(120);
     background: $background-primary;
     
     @include breakpoint-up(xl) {
-      padding: rem(80) 0 rem(160);
+      padding: 0 0 rem(160);
     }
 
     &__container {
@@ -404,7 +404,7 @@ const breadcrumbItems = [
         <a href="/news/${post.id}" class="news-item__link">
           <div class="news-item__thumbnail">
             <img 
-              src="${post.thumbnail?.url || '/images/ui/img_news-no-image.webp'}" 
+              src="${post.thumbnail?.url || '/images/ui/img_news-no-image-01.webp'}" 
               alt="${post.title}"
               loading="lazy"
             />
