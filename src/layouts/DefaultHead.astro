@@ -9,7 +9,7 @@ const { title, description, ogImage } = Astro.props;
 
 // デフォルトのサイト情報
 const siteTitle = "むなかた子ども大学";
-const siteUrl = import.meta.env.PUBLIC_SITE_URL || "https://munakata-kids-university.vercel.app";
+const siteUrl = import.meta.env.PUBLIC_SITE_URL || "https://munakata-kids-unv.jp";
 const defaultOgImage = `${siteUrl}/og-image.png`;
 
 // ページタイトルの組み立て
@@ -27,8 +27,11 @@ const finalOgImage = ogImage || defaultOgImage;
 <title>{pageTitle}</title>
 
 <!-- ファビコン -->
-<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+<link rel="icon" type="image/png" href="/favicon/favicon.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon/icon-192.png" />
+<link rel="icon" type="image/png" sizes="512x512" href="/favicon/icon-512.png" />
 
 <!-- OGP -->
 <meta property="og:type" content="website" />
@@ -68,8 +71,8 @@ const finalOgImage = ogImage || defaultOgImage;
   "@context": "https://schema.org",
   "@type": "Organization",
   "name": "むなかた子ども大学",
-  "url": "https://munakata-kids-university.vercel.app",
-  "logo": "https://munakata-kids-university.vercel.app/logo.png",
+  "url": "https://munakata-kids-unv.jp",
+  "logo": "https://munakata-kids-unv.jp/logos/logo-del_mku_aside-color1.svg",
   "description": "宗像市の子どもたちに学びの機会を提供する教育プログラム",
   "address": {
     "@type": "PostalAddress",

@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+
+# サイトマップの場所
+Sitemap: https://munakata-kids-unv.jp/sitemap-index.xml
+
+# クロール頻度の調整（推奨）
+Crawl-delay: 1
+
+# 不要なディレクトリを除外（該当する場合）
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_vercel/
+Disallow: /.well-known/
+
+# 画像・動画ファイルの直接アクセスを許可
+Allow: /images/
+Allow: /logos/
+Allow: /movie/
