@@ -1,4 +1,7 @@
 function doPost(e) {
+  console.log('doPost関数が呼び出されました');
+  console.log('受信データ:', e);
+  
   try {
     // スプレッドシート設定
     const SHEET_ID = '1PKCWIFPMsNwToKhcbtUQgJ_5uEBptWTMsapOdGXLCI4';
@@ -6,8 +9,26 @@ function doPost(e) {
 
     const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
 
-    // フォームデータの取得
-    const data = JSON.parse(e.postData.contents);
+    // フォームデータの取得（安全なエラーハンドリング）
+    let data;
+    
+    if (!e || !e.postData) {
+      // 手動実行時やpostDataが存在しない場合
+      data = e?.parameter || {};
+    } else {
+      const contentType = e.postData.type;
+      
+      if (contentType === 'application/x-www-form-urlencoded') {
+        // FormDataで送信された場合（GASが自動パース）
+        data = e.parameter;
+      } else if (contentType === 'application/json') {
+        // JSON形式の場合
+        data = JSON.parse(e.postData.contents);
+      } else {
+        // その他の形式の場合はパラメータを使用
+        data = e.parameter;
+      }
+    }
 
     // 新しい行を2行目に挿入（既存データを下にスライド）
     sheet.insertRowBefore(2);
@@ -66,4 +87,11 @@ function doGet() {
   return ContentService
     .createTextOutput(JSON.stringify({result: 'success', message: 'Google Apps Script is working!'}))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// OPTIONS リクエスト対応（CORS プリフライト）
+function doOptions() {
+  return ContentService
+    .createTextOutput('')
+    .setMimeType(ContentService.MimeType.TEXT);
 }

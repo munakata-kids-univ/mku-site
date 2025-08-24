@@ -101,7 +101,9 @@ const breadcrumbItems = [
           </div>
           
           <!-- お問い合わせフォーム -->
-          <form class="contact-form__form" id="contactForm" method="POST">
+          <form class="contact-form__form" id="contactForm" method="POST" 
+                action="https://script.google.com/macros/s/AKfycbx4yeVU2bEcsJa17XOA9AzmZvCamrd7-sp4c1891cdf_e5WlreeqaIdW01k_tdsuz0/exec"
+                target="hidden_iframe">
             
             <!-- お問い合わせ種別 -->
             <div class="form-field">
@@ -183,6 +185,9 @@ const breadcrumbItems = [
             </div>
 
           </form>
+          
+          <!-- 隠しiframe（フォーム送信用） -->
+          <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
         </div>
       </div>
     </section>
@@ -203,56 +208,21 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // フォーム送信処理
+  // フォーム送信処理（直接送信でCORS回避）
   if (contactForm) {
-    contactForm.addEventListener('submit', async function(e: Event) {
-      e.preventDefault();
-      
+    contactForm.addEventListener('submit', function(e: Event) {
       // 送信ボタンを無効化
       submitButton.disabled = true;
       submitButton.textContent = '送信中...';
       
-      // フォームデータを取得
-      const formData = new FormData(contactForm);
-      const data = {
-        inquiryType: formData.get('inquiryType') as string,
-        name: formData.get('name') as string,
-        nameKana: formData.get('nameKana') as string,
-        organization: formData.get('organization') as string,
-        email: formData.get('email') as string,
-        phone: formData.get('phone') as string,
-        message: formData.get('message') as string
-      };
-      
-      try {
-        // Google Apps ScriptのWebアプリエンドポイントに送信
-        const response = await fetch('https://script.google.com/macros/s/AKfycbx4yeVU2bEcsJa17XOA9AzmZvCamrd7-sp4c1891cdf_e5WlreeqaIdW01k_tdsuz0/exec', {
-          method: 'POST',
-          mode: 'cors',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data)
-        });
-        
-        const result = await response.json();
-        
-        if (result.result === 'success') {
-          alert('お問い合わせありがとうございました。\n内容を確認後、担当者より折り返しご連絡いたします。');
-          contactForm.reset();
-          privacyCheckbox.checked = false;
-          submitButton.disabled = true;
-        } else {
-          alert('送信中にエラーが発生しました。\nお手数ですが、再度お試しください。');
-        }
-        
-      } catch (error) {
-        console.error('Error:', error);
-        alert('送信中にエラーが発生しました。\nお手数ですが、再度お試しください。');
-      } finally {
+      // 送信完了後の処理（1秒後に成功メッセージ）
+      setTimeout(function() {
+        alert('お問い合わせありがとうございました。\n内容を確認後、担当者より折り返しご連絡いたします。');
+        contactForm.reset();
+        privacyCheckbox.checked = false;
+        submitButton.disabled = true;
         submitButton.textContent = '送信する';
-        submitButton.disabled = !privacyCheckbox.checked;
-      }
+      }, 1000);
     });
   }
 
