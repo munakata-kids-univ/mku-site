@@ -1,10 +1,12 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
+import vercel from '@astrojs/vercel/serverless';
 
 export default defineConfig({
   site: 'https://munakata-kids-unv.jp',
   integrations: [react(), sitemap()],
+  adapter: vercel(),
   // trailingSlash: 'always',
   vite: {
     server: {
@@ -27,7 +29,7 @@ export default defineConfig({
     inlineStylesheets: 'auto'
   },
   compressHTML: true,
-  output: 'static',
+  output: 'hybrid',
   image: {
     service: {
       entrypoint: 'astro/assets/services/sharp'

@@ -33,7 +33,10 @@
       "Bash(git push:*)",
       "mcp__ide__getDiagnostics",
       "WebFetch(domain:localhost)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(git fetch:*)",
+      "Bash(git config:*)"
     ],
     "deny": []
   }
