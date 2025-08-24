@@ -62,7 +62,7 @@ function doPost(e) {
 }
 
 // GET リクエスト対応（接続テスト用）
-function doGet() {
+function doGet(e) {
   return ContentService
     .createTextOutput(JSON.stringify({result: 'success', message: 'Google Apps Script is working!'}))
     .setMimeType(ContentService.MimeType.JSON);

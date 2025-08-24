@@ -228,6 +228,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Google Apps ScriptのWebアプリエンドポイントに送信
         const response = await fetch('https://script.google.com/macros/s/AKfycbx4yeVU2bEcsJa17XOA9AzmZvCamrd7-sp4c1891cdf_e5WlreeqaIdW01k_tdsuz0/exec', {
           method: 'POST',
+          mode: 'cors',
           headers: {
             'Content-Type': 'application/json',
           },
