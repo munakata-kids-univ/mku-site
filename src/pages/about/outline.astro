@@ -256,23 +256,13 @@ import { partnerLogos } from '../../data/partnerLogos.js';
           </div>
         </div>
         
-        <div class="partners__slider">
-          <!-- 右から左へスクロール -->
-          <div class="partners__track">
+        <div class="partners__slider swiper">
+          <!-- Swiper CSS -->
+          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+          
+          <div class="partners__track swiper-wrapper">
             {partnerLogos.map((logo) => (
-              <div class="partner-logo">
-                <img src={logo.logoSrc} alt={logo.alt} class="partner-logo__image" />
-              </div>
-            ))}
-            <!-- 無限ループ用の複製 -->
-            {partnerLogos.map((logo) => (
-              <div class="partner-logo">
-                <img src={logo.logoSrc} alt={logo.alt} class="partner-logo__image" />
-              </div>
-            ))}
-            <!-- さらなる滑らかさのための3セット目 -->
-            {partnerLogos.map((logo) => (
-              <div class="partner-logo">
+              <div class="partner-logo swiper-slide">
                 <img src={logo.logoSrc} alt={logo.alt} class="partner-logo__image" />
               </div>
             ))}
@@ -972,22 +962,15 @@ import { partnerLogos } from '../../data/partnerLogos.js';
   }
 
   .partners__track {
-    display: flex;
-    width: calc(300%); // 3倍の幅で無限ループ（3セット分）
-    animation: slidePartnerLogos 48s linear infinite; // 右から左へのスクロール（1.25倍速）
+    // Swiperのwrapperとして機能
   }
 
   .partner-logo {
-    flex: 0 0 auto;
     height: rem(60);
-    margin-right: rem(40);
     display: flex;
     align-items: center;
     justify-content: center;
-    
-    @include breakpoint-up(lg) {
-      margin-right: rem(60);
-    }
+    width: auto; // SwiperのslidesPerView: 'auto'で自動幅
 
     &__image {
       height: 100%;
@@ -1000,21 +983,75 @@ import { partnerLogos } from '../../data/partnerLogos.js';
       }
     }
   }
-
-  // パートナーロゴスライダーのアニメーション（右から左へ）
-  @keyframes slidePartnerLogos {
-    0% {
-      transform: translateX(0);
-    }
-    100% {
-      transform: translateX(-33.333%); // 1/3移動すると元の位置に戻る（3セット分の無限ループ効果）
-    }
-  }
 </style>
 
 <script>
+  import { Swiper } from 'swiper';
+  import { Autoplay, FreeMode } from 'swiper/modules';
+
   // スムーススクロール
   document.addEventListener('DOMContentLoaded', function() {
+    // Partners Swiperの初期化
+    const partnersSlider = new Swiper('.partners__slider', {
+      modules: [Autoplay, FreeMode],
+      
+      // 基本設定
+      direction: 'horizontal',
+      loop: true,
+      centeredSlides: false,
+      freeMode: {
+        enabled: true,
+        momentum: false,
+      },
+      
+      // レスポンシブなスライド数
+      slidesPerView: 'auto',
+      spaceBetween: 40,
+      
+      // 自動再生設定
+      autoplay: {
+        delay: 0,
+        pauseOnMouseEnter: false,
+        disableOnInteraction: false,
+        reverseDirection: false,
+      },
+      
+      // 速度設定（レスポンシブ）
+      speed: window.innerWidth < 640 ? 8000 : 12000, // sm未満時はより速く
+      
+      // レスポンシブ設定
+      breakpoints: {
+        640: {
+          speed: 12000, // sm以降は通常速度
+        },
+        1024: {
+          spaceBetween: 60, // lg以上は60pxの間隔
+          speed: 12000,
+        },
+      },
+      
+      // 無限ループの設定
+      allowTouchMove: false,
+      simulateTouch: false,
+      watchOverflow: false,
+      
+      // CSS関連
+      cssMode: false,
+    });
+    
+    // ウィンドウリサイズ時の速度調整
+    let resizeTimer: number;
+    window.addEventListener('resize', function() {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function() {
+        const newSpeed = window.innerWidth < 640 ? 8000 : 12000;
+        if (partnersSlider.autoplay) {
+          partnersSlider.autoplay.stop();
+          partnersSlider.params.speed = newSpeed;
+          partnersSlider.autoplay.start();
+        }
+      }, 250);
+    });
     // スクロールアニメーション用のIntersection Observer
     const observerOptions = {
       threshold: 0.1, // 要素の10%が見えたら発火

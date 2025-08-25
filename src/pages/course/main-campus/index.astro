@@ -38,7 +38,7 @@ const pageDescription = `${currentYearValue}のメインキャンパス講座一
 // パンくずリスト
 const breadcrumbItems = [
   { label: 'ホーム', href: '/' },
-  { label: '講座', href: '/course' },
+  { label: '講座内容', href: '/course' },
   { label: 'メインキャンパス' }
 ];
 
@@ -267,7 +267,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
           <!-- メインキャンパス 3つのポイント -->
           <div class="intro-section__points">
             <h2 class="intro-section__points-title">
-              メインキャンパス <span class="intro-section__points-number">3</span>つのポイント
+              メインキャンパス<br class="u-br-sm"> <span class="intro-section__points-number">3</span>つのポイント
             </h2>
             
             <div class="intro-section__points-grid">
@@ -397,7 +397,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
 
         <ContentSectionHeader 
           englishTitle=""
-          title={`${currentYearValue} <br class="u-br-sm">開講コース`}
+          title={`${currentYearValue} コース一覧`}
           customTitleWrapperStyle="courses-title-wrapper"
           customIconStyle="courses-icon"
           class="fade-up"
@@ -900,13 +900,14 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   
   &__point-image {
     flex-shrink: 0;
-    width: rem(130);
-    aspect-ratio: 4/3;
+    width: rem(150);
+    height: rem(150);
     overflow: hidden;
     
     @include breakpoint-up(lg) {
       width: 100%;
       aspect-ratio: 4/3;
+      height: auto;
       margin: 0 auto;
     }
     

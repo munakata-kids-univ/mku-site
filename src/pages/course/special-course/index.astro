@@ -31,7 +31,7 @@ const pageDescription = `${currentYearValue}の特設講座一覧。月に1〜2�
 // パンくずリスト
 const breadcrumbItems = [
   { label: 'ホーム', href: '/' },
-  { label: '講座', href: '/course' },
+  { label: '講座内容', href: '/course' },
   { label: '特設講座' }
 ];
 
@@ -387,7 +387,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
 
         <ContentSectionHeader 
           englishTitle=""
-          title={`${currentYearValue} <br class="u-br-sm">開講コース`}
+          title={`${currentYearValue} コース一覧`}
           customTitleWrapperStyle="courses-title-wrapper"
           customIconStyle="courses-icon"
           class="fade-up"
@@ -802,8 +802,8 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   
   &__point-image {
     flex-shrink: 0;
-    width: rem(130);
-    height: rem(130);
+    width: rem(150);
+    height: rem(150);
     
     @include breakpoint-up(lg) {
       width: 100%;

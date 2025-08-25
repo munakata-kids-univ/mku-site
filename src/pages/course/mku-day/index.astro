@@ -29,7 +29,7 @@ const pageDescription = `${currentYearValue}のむなかた子ども大学の日
 // パンくずリスト
 const breadcrumbItems = [
   { label: 'ホーム', href: '/' },
-  { label: '講座', href: '/course' },
+  { label: '講座内容', href: '/course' },
   { label: 'むなかた子ども大学の日' }
 ];
 ---
@@ -127,7 +127,7 @@ const breadcrumbItems = [
       <div class="content-section__container">
         <ContentSectionHeader 
           englishTitle=""
-          title={`${currentYearValue} <br class="u-br-sm">活動内容`}
+          title={`${currentYearValue} 活動内容`}
           customTitleWrapperStyle="courses-title-wrapper"
           customIconStyle="courses-icon"
           class="fade-up"
@@ -533,8 +533,8 @@ const breadcrumbItems = [
   
   &__point-image {
     flex-shrink: 0;
-    width: rem(130);
-    height: rem(130);
+    width: rem(150);
+    height: rem(150);
     
     @include breakpoint-up(lg) {
       width: 100%;
@@ -745,8 +745,15 @@ const breadcrumbItems = [
     vertical-align: middle;
     width: rem(40);
     max-width: rem(40);
+    // デフォルトは縦書き（従来通り）
     writing-mode: vertical-rl;
     text-orientation: upright;
+    
+    // スマホ・タブレット時のみ横書きに変更
+    @include breakpoint-down(md) {
+      writing-mode: horizontal-tb;
+      text-orientation: mixed;
+    }
     
     @include breakpoint-up(md) {
       padding: rem(16) rem(12);

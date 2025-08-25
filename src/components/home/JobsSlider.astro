@@ -37,33 +37,14 @@ const jobIcons = [
 ---
 
 <section class="jobs-slider-section">
-  <div class="jobs-slider">
-    <div class="jobs-slider__track">
-      <!-- アイコン一覧（1セットのみ） -->
+  <!-- Swiper CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+  
+  <div class="jobs-slider swiper">
+    <div class="jobs-slider__track swiper-wrapper">
+      <!-- アイコン一覧（Swiperスライド） -->
       {jobIcons.map((job) => (
-        <div class="jobs-icon">
-          <img 
-            src={job.icon.src} 
-            alt={job.label} 
-            class="jobs-icon__image" 
-          />
-        </div>
-      ))}
-      
-      <!-- 無限ループ用の複製（2セット目） -->
-      {jobIcons.map((job) => (
-        <div class="jobs-icon">
-          <img 
-            src={job.icon.src} 
-            alt={job.label} 
-            class="jobs-icon__image" 
-          />
-        </div>
-      ))}
-      
-      <!-- 無限ループ用の複製（3セット目） -->
-      {jobIcons.map((job) => (
-        <div class="jobs-icon">
+        <div class="jobs-icon swiper-slide">
           <img 
             src={job.icon.src} 
             alt={job.label} 
@@ -87,39 +68,32 @@ const jobIcons = [
   }
 
   .jobs-slider {
-    width: 100%;
-    overflow-x: hidden;
-    overflow-y: visible;
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    overflow: hidden;
     position: relative;
-    
-    
-    &__track {
-      display: flex;
-      margin-top: rem(40);
-      margin-bottom: rem(40);
-      width: calc(300%); // 3倍の幅で無限ループ
-      animation: slideJobsRight 45s linear infinite; // 右から左へ
-    }
+    padding: rem(40) 0;
+  }
+
+  .jobs-slider__track {
+    // Swiperのwrapperとして機能
   }
 
   .jobs-icon {
-    flex: 0 0 rem(50);
+    width: rem(50);
     height: rem(50);
-    margin-right: rem(20);
     display: flex;
     align-items: center;
     justify-content: center;
     
     @include breakpoint-up(lg) {
-      flex: 0 0 rem(60);
+      width: rem(60);
       height: rem(60);
-      margin-right: rem(30);
     }
     
     @include breakpoint-up(xl) {
-      flex: 0 0 rem(80);
+      width: rem(80);
       height: rem(80);
-      margin-right: rem(40);
     }
     
     // 個別のプカプカアニメーション（遅延を使って自然な動きに）
@@ -155,16 +129,6 @@ const jobIcons = [
     }
   }
 
-  // 右から左へのスライダーアニメーション
-  @keyframes slideJobsRight {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-33.333%); // 1/3移動すると元の位置に戻る（無限ループ効果）
-    }
-  }
-
   // 上下プカプカアニメーション
   @keyframes floatUp {
     0%, 100% {
@@ -175,3 +139,76 @@ const jobIcons = [
     }
   }
 </style>
+
+<script>
+import { Swiper } from 'swiper';
+import { Autoplay, FreeMode } from 'swiper/modules';
+
+document.addEventListener('DOMContentLoaded', function() {
+  const jobsSlider = new Swiper('.jobs-slider', {
+    modules: [Autoplay, FreeMode],
+    
+    // 基本設定
+    direction: 'horizontal',
+    loop: true,
+    centeredSlides: false,
+    freeMode: {
+      enabled: true,
+      momentum: false,
+    },
+    
+    // レスポンシブなスライド数
+    slidesPerView: 'auto',
+    spaceBetween: 20,
+    
+    // 自動再生設定
+    autoplay: {
+      delay: 0,
+      pauseOnMouseEnter: false,
+      disableOnInteraction: false,
+      reverseDirection: false,
+    },
+    
+    // 速度設定（レスポンシブ）
+    speed: window.innerWidth < 640 ? 8000 : 9000, // スマホ時は1.5倍速、sm以上は更に速く
+    
+    // レスポンシブ設定
+    breakpoints: {
+      640: {
+        spaceBetween: 20,
+        speed: 9000, // sm以降はより速く
+      },
+      1024: {
+        spaceBetween: 30,
+        speed: 9000,
+      },
+      1280: {
+        spaceBetween: 40,
+        speed: 9000,
+      },
+    },
+    
+    // 無限ループの設定
+    allowTouchMove: false,
+    simulateTouch: false,
+    watchOverflow: false,
+    
+    // CSS関連
+    cssMode: false,
+  });
+  
+  // ウィンドウリサイズ時の速度調整
+  let resizeTimer: number;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function() {
+      const newSpeed = window.innerWidth < 640 ? 8000 : 9000;
+      if (jobsSlider.autoplay) {
+        jobsSlider.autoplay.stop();
+        jobsSlider.params.speed = newSpeed;
+        jobsSlider.autoplay.start();
+      }
+    }, 250);
+  });
+});
+</script>

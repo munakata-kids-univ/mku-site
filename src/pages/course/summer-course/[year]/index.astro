@@ -325,7 +325,7 @@ function getGradeColorClass(grade: string): string {
       <div class="content-section__container">
         <ContentSectionHeader 
           englishTitle=""
-          title={`${actualYear} <br class="u-br-sm">開講コース`}
+          title={`${actualYear} コース一覧`}
           customTitleWrapperStyle="courses-title-wrapper"
           customIconStyle="courses-icon"
           class="fade-up"
@@ -2153,5 +2153,10 @@ document.addEventListener('DOMContentLoaded', function() {
   @include breakpoint-up(md) {
     display: none;
   }
+}
+
+// courses-title-wrapperの全画面幅でpadding-leftを無効化
+:global(.content-section__title-wrapper.courses-title-wrapper) {
+  padding-left: 0 !important;
 }
 </style>
