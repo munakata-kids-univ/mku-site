@@ -20,12 +20,14 @@ const {
       muted 
       loop 
       playsinline 
-      preload="metadata" 
+      preload="auto" 
       class="hero__video"
       id="hero-video"
       x-webkit-airplay="deny"
       webkit-playsinline
-      defaultmuted
+      controls={false}
+      disablepictureinpicture
+      data-object-fit="cover"
     >
       <source src={videoSrc} type="video/mp4">
       お使いのブラウザは動画の再生に対応していません。
@@ -95,6 +97,31 @@ const {
       height: 100%;
       object-fit: cover;
       border-bottom-right-radius: rem(60);
+      
+      // ビデオコントロールを完全に非表示
+      &::-webkit-media-controls {
+        display: none !important;
+      }
+      
+      &::-webkit-media-controls-panel {
+        display: none !important;
+      }
+      
+      &::-webkit-media-controls-play-button {
+        display: none !important;
+      }
+      
+      &::-webkit-media-controls-start-playback-button {
+        display: none !important;
+      }
+      
+      &::-moz-media-controls {
+        display: none !important;
+      }
+      
+      // ポインタイベントを無効化してクリック不可に
+      pointer-events: none;
+      
       @include breakpoint-up(lg) {
         border-bottom-right-radius: rem(72);
       }
@@ -206,68 +233,110 @@ document.addEventListener('DOMContentLoaded', function() {
   const video = document.getElementById('hero-video') as HTMLVideoElement;
   
   if (video) {
+    // コントロールを完全に無効化
+    video.controls = false;
+    video.setAttribute('controls', 'false');
+    video.removeAttribute('controls');
+    
     // 動画の設定を確実に適用
     video.muted = true;
     video.autoplay = true;
     video.loop = true;
     video.playsInline = true;
-    video.defaultMuted = true;
+    video.preload = 'auto';
     
-    // 動画読み込み完了時に再生を強制実行
-    video.addEventListener('loadeddata', function() {
+    // CSS でもコントロールを隠す
+    video.style.pointerEvents = 'none';
+    
+    // 即座に再生開始を試行
+    const attemptPlay = () => {
+      video.muted = true; // 確実にミュート
       const playPromise = video.play();
       
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
-            // 自動再生成功
             console.log('Hero video autoplay started successfully');
+            video.style.pointerEvents = 'none'; // 成功後も操作を無効化
           })
           .catch((error) => {
-            // 自動再生失敗時の対処
             console.warn('Hero video autoplay failed:', error);
-            // 少し待って再試行
+            // より積極的な再試行
             setTimeout(() => {
+              video.muted = true;
               video.play().catch(() => {
-                // 再試行も失敗した場合は諦める
                 console.warn('Hero video play retry failed');
+                // 最終手段：ユーザー操作待ち
+                video.style.pointerEvents = 'auto';
+                setupUserInteractionFallback();
               });
-            }, 500);
+            }, 100);
           });
       }
-    });
+    };
+    
+    // ユーザー操作時のフォールバック設定
+    const setupUserInteractionFallback = () => {
+      const startVideoOnInteraction = (e: Event) => {
+        e.preventDefault();
+        video.muted = true;
+        video.play().then(() => {
+          video.style.pointerEvents = 'none'; // 再生開始後は操作無効化
+          document.removeEventListener('touchstart', startVideoOnInteraction);
+          document.removeEventListener('click', startVideoOnInteraction);
+          document.removeEventListener('scroll', startVideoOnInteraction);
+        }).catch(() => {
+          console.warn('User interaction video play failed');
+        });
+      };
+      
+      // 複数のイベントでフォールバック
+      document.addEventListener('touchstart', startVideoOnInteraction, { once: true });
+      document.addEventListener('click', startVideoOnInteraction, { once: true });
+      document.addEventListener('scroll', startVideoOnInteraction, { once: true });
+    };
+    
+    // 複数のタイミングで再生を試行
+    video.addEventListener('loadedmetadata', attemptPlay);
+    video.addEventListener('loadeddata', attemptPlay);
+    video.addEventListener('canplay', attemptPlay);
+    video.addEventListener('canplaythrough', attemptPlay);
     
     // 既に読み込み済みの場合は即座に再生
-    if (video.readyState >= 2) {
-      video.play().catch((error) => {
-        console.warn('Hero video immediate play failed:', error);
-      });
+    if (video.readyState >= 1) {
+      attemptPlay();
     }
+    
+    // ページ読み込み完了後にも再試行
+    window.addEventListener('load', () => {
+      setTimeout(attemptPlay, 100);
+    });
     
     // ページの可視性が変わった時の処理
     document.addEventListener('visibilitychange', function() {
       if (!document.hidden && video.paused) {
+        video.muted = true;
         video.play().catch(() => {
           // 再生失敗は無視
         });
       }
     });
     
-    // ユーザー操作時に確実に再生開始（フォールバック）
-    const startVideoOnInteraction = function() {
-      if (video.paused) {
-        video.play().catch(() => {
-          // 再生失敗は無視
+    // Intersection Observer で画面に表示された時に再生
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && video.paused) {
+            video.muted = true;
+            video.play().catch(() => {
+              console.warn('Intersection observer video play failed');
+            });
+          }
         });
-      }
-      // 一度実行したらイベントリスナーを削除
-      document.removeEventListener('touchstart', startVideoOnInteraction);
-      document.removeEventListener('click', startVideoOnInteraction);
-    };
-    
-    // タッチ・クリック時のフォールバック
-    document.addEventListener('touchstart', startVideoOnInteraction, { once: true });
-    document.addEventListener('click', startVideoOnInteraction, { once: true });
+      }, { threshold: 0.1 });
+      
+      observer.observe(video);
+    }
   }
 });
 </script>
