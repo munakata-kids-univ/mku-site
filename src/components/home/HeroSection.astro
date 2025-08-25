@@ -15,7 +15,18 @@ const {
 <section class="hero">
   <!-- 背景動画 -->
   <div class="hero__video-bg">
-    <video autoplay muted loop playsinline preload="metadata" class="hero__video">
+    <video 
+      autoplay 
+      muted 
+      loop 
+      playsinline 
+      preload="metadata" 
+      class="hero__video"
+      id="hero-video"
+      x-webkit-airplay="deny"
+      webkit-playsinline
+      defaultmuted
+    >
       <source src={videoSrc} type="video/mp4">
       お使いのブラウザは動画の再生に対応していません。
     </video>
@@ -118,6 +129,9 @@ const {
       @include font-ja-m(semibold);
       margin-bottom: 0;
       line-height: 1.4;
+      @include breakpoint-up(md) {
+        @include font-ja-l(semibold);
+      }
       
       @include breakpoint-up(lg) {
         @include font-ja-2l(semibold);
@@ -185,3 +199,75 @@ const {
     }
   }
 </style>
+
+<script>
+// ヒーロー動画の確実な自動再生
+document.addEventListener('DOMContentLoaded', function() {
+  const video = document.getElementById('hero-video') as HTMLVideoElement;
+  
+  if (video) {
+    // 動画の設定を確実に適用
+    video.muted = true;
+    video.autoplay = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.defaultMuted = true;
+    
+    // 動画読み込み完了時に再生を強制実行
+    video.addEventListener('loadeddata', function() {
+      const playPromise = video.play();
+      
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            // 自動再生成功
+            console.log('Hero video autoplay started successfully');
+          })
+          .catch((error) => {
+            // 自動再生失敗時の対処
+            console.warn('Hero video autoplay failed:', error);
+            // 少し待って再試行
+            setTimeout(() => {
+              video.play().catch(() => {
+                // 再試行も失敗した場合は諦める
+                console.warn('Hero video play retry failed');
+              });
+            }, 500);
+          });
+      }
+    });
+    
+    // 既に読み込み済みの場合は即座に再生
+    if (video.readyState >= 2) {
+      video.play().catch((error) => {
+        console.warn('Hero video immediate play failed:', error);
+      });
+    }
+    
+    // ページの可視性が変わった時の処理
+    document.addEventListener('visibilitychange', function() {
+      if (!document.hidden && video.paused) {
+        video.play().catch(() => {
+          // 再生失敗は無視
+        });
+      }
+    });
+    
+    // ユーザー操作時に確実に再生開始（フォールバック）
+    const startVideoOnInteraction = function() {
+      if (video.paused) {
+        video.play().catch(() => {
+          // 再生失敗は無視
+        });
+      }
+      // 一度実行したらイベントリスナーを削除
+      document.removeEventListener('touchstart', startVideoOnInteraction);
+      document.removeEventListener('click', startVideoOnInteraction);
+    };
+    
+    // タッチ・クリック時のフォールバック
+    document.addEventListener('touchstart', startVideoOnInteraction, { once: true });
+    document.addEventListener('click', startVideoOnInteraction, { once: true });
+  }
+});
+</script>

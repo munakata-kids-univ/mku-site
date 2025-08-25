@@ -15,7 +15,7 @@ const breadcrumbItems = [
   <main>
     <!-- ヒーローセクション -->
     <HeroSection 
-      title="お問い合わせ<br class='u-br-sm'>ページ"
+      title="お問い合わせ"
       subtitle="Contact"
       imageSrc="/images/backgrounds/img_bg-hero_contact-01.webp"
       imageAlt="お問い合わせ"
@@ -451,7 +451,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   .contact-phone__list {
-    margin: 0 auto;
+    margin: rem(40) auto 0;
     padding: 0;
     width: fit-content;
     text-align: center;
@@ -828,7 +828,15 @@ document.addEventListener('DOMContentLoaded', function() {
     visibility: hidden;
     transition: all 0.3s ease;
     backdrop-filter: blur(4px);
-    padding: rem(20);
+    padding: rem(24) rem(20);
+
+    @include breakpoint-up(sm) {
+      padding: rem(40) rem(32);
+    }
+
+    @include breakpoint-up(lg) {
+      padding: rem(60);
+    }
 
     &--show {
       opacity: 1;
