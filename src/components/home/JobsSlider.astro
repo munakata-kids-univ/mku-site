@@ -37,21 +37,34 @@ const jobIcons = [
 ---
 
 <section class="jobs-slider-section">
-  <!-- Swiper CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+  <!-- CSS Animationで実装 -->
   
-  <div class="jobs-slider swiper">
-    <div class="jobs-slider__track swiper-wrapper">
-      <!-- アイコン一覧（Swiperスライド） -->
-      {jobIcons.map((job) => (
-        <div class="jobs-icon swiper-slide">
-          <img 
-            src={job.icon.src} 
-            alt={job.label} 
-            class="jobs-icon__image" 
-          />
-        </div>
-      ))}
+  <div class="jobs-slider">
+    <div class="jobs-slider__slides" data-duration="20" data-duration-sm="40">
+      <!-- 第1セット -->
+      <div class="jobs-slider__slide">
+        {jobIcons.map((job) => (
+          <div class="jobs-icon">
+            <img 
+              src={job.icon.src} 
+              alt={job.label} 
+              class="jobs-icon__image" 
+            />
+          </div>
+        ))}
+      </div>
+      <!-- 第2セット（シームレスループ用） -->
+      <div class="jobs-slider__slide">
+        {jobIcons.map((job) => (
+          <div class="jobs-icon">
+            <img 
+              src={job.icon.src} 
+              alt={job.label} 
+              class="jobs-icon__image" 
+            />
+          </div>
+        ))}
+      </div>
     </div>
   </div>
 </section>
@@ -75,8 +88,27 @@ const jobIcons = [
     padding: rem(40) 0;
   }
 
-  .jobs-slider__track {
-    // Swiperのwrapperとして機能
+  .jobs-slider__slides {
+    display: flex;
+    width: 200%; // 2セット分の幅
+  }
+  
+  .jobs-slider__slide {
+    flex-basis: 50%; // 各セットが50%の幅
+    display: flex;
+    align-items: center;
+    gap: rem(20); // アイコン間の間隔を統一
+    padding: 0 rem(10); // 左右端の余白
+    
+    @include breakpoint-up(sm) {
+      gap: rem(30);
+      padding: 0 rem(15);
+    }
+    
+    @include breakpoint-up(lg) {
+      gap: rem(40);
+      padding: 0 rem(20);
+    }
   }
 
   .jobs-icon {
@@ -85,6 +117,7 @@ const jobIcons = [
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0; // flexアイテムが縮まないように
     
     @include breakpoint-up(lg) {
       width: rem(60);
@@ -141,74 +174,45 @@ const jobIcons = [
 </style>
 
 <script>
-import { Swiper } from 'swiper';
-import { Autoplay, FreeMode } from 'swiper/modules';
-
-document.addEventListener('DOMContentLoaded', function() {
-  const jobsSlider = new Swiper('.jobs-slider', {
-    modules: [Autoplay, FreeMode],
-    
-    // 基本設定
-    direction: 'horizontal',
-    loop: true,
-    centeredSlides: false,
-    freeMode: {
-      enabled: true,
-      momentum: false,
-    },
-    
-    // レスポンシブなスライド数
-    slidesPerView: 'auto',
-    spaceBetween: 20,
-    
-    // 自動再生設定
-    autoplay: {
-      delay: 0,
-      pauseOnMouseEnter: false,
-      disableOnInteraction: false,
-      reverseDirection: false,
-    },
-    
-    // 速度設定（レスポンシブ）
-    speed: window.innerWidth < 640 ? 8000 : 9000, // スマホ時は1.5倍速、sm以上は更に速く
-    
-    // レスポンシブ設定
-    breakpoints: {
-      640: {
-        spaceBetween: 20,
-        speed: 9000, // sm以降はより速く
-      },
-      1024: {
-        spaceBetween: 30,
-        speed: 9000,
-      },
-      1280: {
-        spaceBetween: 40,
-        speed: 9000,
-      },
-    },
-    
-    // 無限ループの設定
-    allowTouchMove: false,
-    simulateTouch: false,
-    watchOverflow: false,
-    
-    // CSS関連
-    cssMode: false,
-  });
+window.addEventListener('DOMContentLoaded', (event) => {
+  const slides = document.getElementsByClassName('jobs-slider__slides');
   
-  // ウィンドウリサイズ時の速度調整
-  let resizeTimer: number;
-  window.addEventListener('resize', function() {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(function() {
-      const newSpeed = window.innerWidth < 640 ? 8000 : 9000;
-      if (jobsSlider.autoplay) {
-        jobsSlider.autoplay.stop();
-        jobsSlider.params.speed = newSpeed;
-        jobsSlider.autoplay.start();
+  for (let i = 0; i < slides.length; ++i) {
+    const target = slides[i];
+    // sm以降はより遅い速度を使用
+    const isSmUp = window.innerWidth >= 640;
+    const durationAttr = isSmUp ? target.dataset.durationSm : target.dataset.duration;
+    const duration = parseInt(durationAttr || target.dataset.duration) * 1000 || 20000;
+    const childNum = target.firstElementChild.children.length; // 1つ目のスライド内のアイコン数
+    const iconWidth = ((100 / childNum)).toFixed(2);
+    
+    // CSS変数としてアイコン幅を設定
+    target.style.setProperty('--icon-width', `${iconWidth}%`);
+
+    let startTime = 0;
+    let elapsed = 0;
+    let progress = 0;
+
+    const loop = (currentTime) => {
+      if (!startTime) startTime = currentTime;
+      
+      elapsed = currentTime - startTime;
+      progress = elapsed / duration;
+      
+      if (progress >= 1) {
+        // 1周完了、リセット
+        progress = 0;
+        startTime = currentTime;
       }
-    }, 250);
-  });
+      
+      // シームレスな移動（50%移動すれば元の位置に戻る）
+      const translateX = -(progress * 50);
+      target.style.transform = `translateX(${translateX}%)`;
+      
+      requestAnimationFrame(loop);
+    };
+    
+    requestAnimationFrame(loop);
+  }
 });
 </script>
