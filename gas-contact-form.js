@@ -67,7 +67,7 @@ function doPost(e) {
       `※スプレッドシートで詳細を確認できます：\n` +
       `https://docs.google.com/spreadsheets/d/1PKCWIFPMsNwToKhcbtUQgJ_5uEBptWTMsapOdGXLCI4/edit`;
 
-    MailApp.sendEmail('naocreate52@gmail.com', subject, emailBody);
+    MailApp.sendEmail('naocreate52@gmail.com,tkr@city.munakata.lg.jp', subject, emailBody);
 
     // 成功レスポンス
     return ContentService

@@ -620,6 +620,19 @@ document.addEventListener('DOMContentLoaded', function() {
   margin-top: auto; // 自動的に下部に配置
 }
 
+:global(.news-section__actions .base-button) {
+  width: 100%;
+  max-width: 100%; // 親要素の幅を超えない
+  min-width: 0; // min-widthを無効化
+  box-sizing: border-box; // paddingを含めた幅計算
+  
+  @include breakpoint-up(lg) {
+    width: auto; // PCでは元の幅
+    max-width: none; // PCでは最大幅制限なし
+    min-width: auto; // PCでは元のmin-width
+  }
+}
+
 
 :global(.news-item) {
   padding: rem(15) rem(10) rem(15) 0;

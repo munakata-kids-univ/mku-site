@@ -167,10 +167,13 @@ const {
 
     &__title-line {
       display: inline;
-      background: linear-gradient(to bottom, transparent 15%, $background-primary 15%, $background-primary 93%, transparent 93%);
+      background: linear-gradient(to bottom, transparent 8%, $background-primary 8%, $background-primary 98%, transparent 98%);
       color: $text-primary;
       line-height: 1.6;
       padding: rem(2) rem(3);
+      @include breakpoint-up(xl) {
+        background: linear-gradient(to bottom, transparent 15%, $background-primary 15%, $background-primary 93%, transparent 93%);
+      }
       
       &--sm {
         @include breakpoint-up(sm) {

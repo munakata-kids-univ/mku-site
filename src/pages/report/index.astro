@@ -282,22 +282,24 @@ import { Image } from "astro:assets";
 
     &__buttons {
       display: flex;
-      flex-direction: column;
-      gap: rem(20);
+      justify-content: center;
+      gap: rem(16);
+      flex-wrap: wrap;
       max-width: rem(800);
       margin: 0 auto;
-
+      
       @include breakpoint-up(md) {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: rem(30);
+        gap: rem(24);
+        justify-content: flex-start;
       }
 
       :global(.base-button) {
-        width: 100%;
+        color: $text-white;
+        text-decoration: none;
         
-        @include breakpoint-up(md) {
-          min-width: auto;
+        &:hover {
+          text-decoration: none;
+          color: $text-primary;
         }
       }
     }
