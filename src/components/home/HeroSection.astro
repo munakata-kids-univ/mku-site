@@ -238,13 +238,6 @@ document.addEventListener('DOMContentLoaded', function() {
     video.setAttribute('controls', 'false');
     video.removeAttribute('controls');
     
-    // 動画の設定を確実に適用
-    video.muted = true;
-    video.autoplay = true;
-    video.loop = true;
-    video.playsInline = true;
-    video.preload = 'auto';
-    
     // CSS でもコントロールを隠す
     video.style.pointerEvents = 'none';
     
