@@ -7,6 +7,7 @@ import {
   getMediaItems,
   getCategoriesWithLabels
 } from '../../lib/microcms';
+import { formatDateForNews } from '../../utils/dateUtils';
 
 // データ取得
 const globalSettings = await getGlobalSettings();
@@ -77,11 +78,7 @@ const breadcrumbItems = [
                   <div class="media-item__content">
                     <div class="media-item__meta">
                       <time class="media-item__date" datetime={post.publishedDate}>
-                        {new Date(post.publishedDate).toLocaleDateString('ja-JP', {
-                          year: 'numeric',
-                          month: '2-digit',
-                          day: '2-digit'
-                        }).replace(/\//g, '.')}
+                        {formatDateForNews(post.publishedDate)}
                       </time>
                       {post.category && (
                         <span class="media-item__category" data-category={post.category.id}>
@@ -393,11 +390,7 @@ const breadcrumbItems = [
 
   // 記事HTMLを生成する関数
   function createMediaItemHTML(post) {
-    const publishedDate = new Date(post.publishedAt || post.publishedDate).toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    }).replace(/\//g, '.');
+    const publishedDate = formatDateForNews(post.publishedAt || post.publishedDate);
     
     const categoryHTML = post.category 
       ? `<span class="media-item__category" data-category="${post.category.id}">${post.category.nameJa}</span>`
