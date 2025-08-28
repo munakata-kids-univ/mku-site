@@ -17,13 +17,13 @@ const buttons = mainCampusSettings.buttons?.filter((button: any) => {
   return button.visible && (buttonType === "1次当選者発表" || buttonType === "最終申込状況発表");
 }) || [];
 
-// 特設講座データを取得してボタンが存在するもののみフィルタリング（1次当選者発表と最終申込状況発表のみ）
+// 特設講座データを取得してボタンが存在するもののみフィルタリング
 const specialCourses = await getSpecialCourses();
 const specialCoursesWithButtons = specialCourses.filter((course: any) => {
   if (!course.buttons) return false;
   const filteredButtons = course.buttons.filter((button: any) => {
     const buttonType = Array.isArray(button.type) ? button.type[0] : button.type;
-    return button.visible && (buttonType === "1次当選者発表" || buttonType === "最終申込状況発表");
+    return button.visible && buttonType !== "参加意向確認";
   });
   return filteredButtons.length > 0;
 });
