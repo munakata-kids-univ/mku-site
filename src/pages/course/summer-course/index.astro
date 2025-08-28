@@ -10,7 +10,7 @@ import {
   getSummerCategories
 } from '../../../lib/microcms';
 import { convertYearToPath } from '../../../utils/yearConverter';
-import { formatDateForCourse } from '../../../utils/dateUtils';
+import { formatDateForCourse, convertUTCToJST, extractJSTDateParts } from '../../../utils/dateUtils';
 
 // データ取得
 const globalSettings = await getGlobalSettings();
@@ -265,10 +265,10 @@ function getGradeColorClass(grade: string): string {
   return 'special';
 }
 
-// 日付フォーマット関数（タイムゾーンに依存しない）
-function formatExecutedDate(dateString: string): string {
-  if (!dateString) return '';
-  return formatDateForCourse(dateString);
+// UTC実施日をJSTに変換してフォーマットする関数
+function formatExecutedDate(utcDateString: string): string {
+  if (!utcDateString) return '';
+  return formatDateForCourse(utcDateString);
 }
 
 // 学年の整列順序関数（scheduleページと同様）
@@ -2376,6 +2376,38 @@ div.courses-grid a.course-card.course-card--体験活動 {
 </style>
 
 <script>
+// クライアントサイド用のUTC→JST変換関数
+function convertUTCToJST(utcDateString) {
+  if (!utcDateString) return null;
+  try {
+    const utcDate = new Date(utcDateString);
+    if (isNaN(utcDate.getTime())) return null;
+    // UTC時刻に+9時間を追加してJSTに変換
+    const jstDate = new Date(utcDate.getTime() + (9 * 60 * 60 * 1000));
+    return jstDate;
+  } catch (error) {
+    console.error('Error converting UTC to JST:', error);
+    return null;
+  }
+}
+
+// クライアントサイド用のJST日付部分抽出関数
+function extractJSTDateParts(jstDate) {
+  if (!jstDate || isNaN(jstDate.getTime())) return null;
+  try {
+    // JSTに変換済みのDateオブジェクトからUTCメソッドで値を取得
+    // (すでに+9時間されているため、UTCメソッドでJSTの値が取得できる)
+    return {
+      year: jstDate.getUTCFullYear(),
+      month: jstDate.getUTCMonth() + 1, // 0ベースなので+1
+      day: jstDate.getUTCDate()
+    };
+  } catch (error) {
+    console.error('Error extracting JST date parts:', error);
+    return null;
+  }
+}
+
 // 自動スクロール機能
 document.addEventListener('DOMContentLoaded', function() {
   const navLinks = document.querySelectorAll('.page-nav__link');
@@ -2430,17 +2462,19 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
   
-  // 日付フォーマット関数
-  function formatDateForDisplay(dateString) {
-    if (!dateString) return '';
+  // UTC日付をJSTに変換してフォーマットする関数
+  function formatDateForDisplay(utcDateString) {
+    if (!utcDateString) return '';
     
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
+    const jstDate = convertUTCToJST(utcDateString);
+    if (!jstDate) return '';
     
+    const dateParts = extractJSTDateParts(jstDate);
+    if (!dateParts) return '';
+    
+    const { year, month, day } = dateParts;
     const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
-    const weekday = weekdays[date.getDay()];
+    const weekday = weekdays[jstDate.getUTCDay()];
     
     return `${year}年${month}月${day}日(${weekday})`;
   }
@@ -2499,9 +2533,9 @@ document.addEventListener('DOMContentLoaded', function() {
       if (b === '随時開催') return -1;
       
       // 両方とも日付の場合は日付順
-      const dateA = new Date(groups[a][0].dataset.scheduleDate);
-      const dateB = new Date(groups[b][0].dataset.scheduleDate);
-      return dateA - dateB;
+      const jstDateA = convertUTCToJST(groups[a][0].dataset.scheduleDate);
+      const jstDateB = convertUTCToJST(groups[b][0].dataset.scheduleDate);
+      return jstDateA - jstDateB;
     });
     
     console.log('sortedDates:', sortedDates);
@@ -2670,13 +2704,17 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  // 日付を時期に分類する関数
-  function getDatePeriod(dateString) {
-    if (!dateString) return null;
+  // UTC日付をJSTに変換して時期に分類する関数
+  function getDatePeriod(utcDateString) {
+    if (!utcDateString) return null;
     
-    const date = new Date(dateString);
-    const month = date.getMonth() + 1; // 0ベースなので+1
-    const day = date.getDate();
+    const jstDate = convertUTCToJST(utcDateString);
+    if (!jstDate) return null;
+    
+    const dateParts = extractJSTDateParts(jstDate);
+    if (!dateParts) return null;
+    
+    const { month, day } = dateParts;
     
     if (month === 7 && day >= 15) {
       return 'late-july';

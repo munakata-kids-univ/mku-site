@@ -11,6 +11,7 @@ import {
   getMkuDays,
   getSummerCourses
 } from '../../lib/microcms';
+import { convertUTCToJST, extractJSTDateParts } from '../../utils/dateUtils';
 
 // データ取得
 const globalSettings = await getGlobalSettings();
@@ -63,20 +64,22 @@ interface DisplayEvent {
   monthRowspan: number;
 }
 
-function parseDate(dateString: string): Date | null {
-  if (!dateString) return null;
+function parseDate(utcDateString: string): Date | null {
+  if (!utcDateString) return null;
   try {
-    const date = new Date(dateString);
-    return isNaN(date.getTime()) ? null : date;
+    // UTC日付文字列をJSTに変換
+    return convertUTCToJST(utcDateString);
   } catch {
     return null;
   }
 }
 
-function formatDateForDisplay(date: Date): string {
-  const day = date.getDate();
+function formatDateForDisplay(jstDate: Date): string {
+  // JST変換済みのDateオブジェクトからUTC時刻として日付部分を取得
+  // （既にJSTに変換済みなので、getUTCXXXメソッドでJSTの日付が取得される）
+  const day = jstDate.getUTCDate();
   const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
-  const dayOfWeek = dayNames[date.getDay()];
+  const dayOfWeek = dayNames[jstDate.getUTCDay()];
   return `${day}日(${dayOfWeek})`;
 }
 
@@ -214,7 +217,7 @@ if (mainCampusSettings?.executedDate) {
     if (itemYear === yearCode && item.date) {
       const executedDate = parseDate(item.date);
       if (executedDate) {
-        const month = executedDate.getMonth() + 1;
+        const month = executedDate.getUTCMonth() + 1;
         const monthIndex = scheduleData.findIndex(scheduleItem => scheduleItem.month === month);
         if (monthIndex !== -1) {
           scheduleData[monthIndex].events.push({
@@ -244,7 +247,7 @@ if (specialCourses && specialCourses.length > 0) {
     if (courseYear === yearCode && course.executedDate) {
       const courseDate = parseDate(course.executedDate);
       if (courseDate) {
-        const month = courseDate.getMonth() + 1;
+        const month = courseDate.getUTCMonth() + 1;
         const monthIndex = scheduleData.findIndex(scheduleItem => scheduleItem.month === month);
         if (monthIndex !== -1) {
           // 対象学年の処理
@@ -297,7 +300,7 @@ if (mkuDays && mkuDays.length > 0) {
   mkuDaysByDate.forEach((schools, dateKey) => {
     const mkuDayDate = parseDate(dateKey);
     if (mkuDayDate) {
-      const month = mkuDayDate.getMonth() + 1;
+      const month = mkuDayDate.getUTCMonth() + 1;
       const monthIndex = scheduleData.findIndex(scheduleItem => scheduleItem.month === month);
       if (monthIndex !== -1) {
         scheduleData[monthIndex].events.push({
@@ -357,7 +360,7 @@ if (summerCourses && summerCourses.length > 0) {
       const targetDisplay = [...formattedGrades.sortedGrades, '※市外にお住まいの方も参加可'];
       
       // 最早日のスケジュール追加
-      const earliestMonth = earliestDate.getMonth() + 1;
+      const earliestMonth = earliestDate.getUTCMonth() + 1;
       const earliestMonthIndex = scheduleData.findIndex(scheduleItem => scheduleItem.month === earliestMonth);
       if (earliestMonthIndex !== -1 && scheduleData[earliestMonthIndex]) {
         scheduleData[earliestMonthIndex].events.push({
@@ -369,7 +372,7 @@ if (summerCourses && summerCourses.length > 0) {
       
       // 最遅日が最早日と異なる場合のみ追加
       if (latestDate.getTime() !== earliestDate.getTime()) {
-        const latestMonth = latestDate.getMonth() + 1;
+        const latestMonth = latestDate.getUTCMonth() + 1;
         const latestMonthIndex = scheduleData.findIndex(scheduleItem => scheduleItem.month === latestMonth);
         if (latestMonthIndex !== -1 && scheduleData[latestMonthIndex]) {
           scheduleData[latestMonthIndex].events.push({

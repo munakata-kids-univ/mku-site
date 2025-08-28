@@ -7,9 +7,11 @@ import CourseCard from '@/components/CourseCard.astro';
 import AfterImagesSlider from '@/components/AfterImagesSlider.astro';
 import { 
   getGlobalSettings,
+  getMainCampusSettings,
   getMainCampusCourses
 } from '@/lib/microcms';
 import { convertYearToPath, convertPathToYear } from '@/utils/yearConverter';
+import { formatDateForCourse } from '@/utils/dateUtils';
 
 // 静的パス生成
 export async function getStaticPaths() {
@@ -69,6 +71,18 @@ const courses = await getMainCampusCourses(actualYear);
 if (!courses || courses.length === 0) {
   return Astro.redirect('/404');
 }
+
+// メインキャンパス設定を取得して開催日データを抽出
+const mainCampusSettings = await getMainCampusSettings();
+const executedDates = mainCampusSettings.executedDate?.filter(item => {
+  const itemYear = Array.isArray(item.year) ? item.year[0] : item.year;
+  return itemYear === actualYear;
+});
+
+// 最初の開催日を表示用にフォーマット
+const displayExecutedDate = executedDates && executedDates.length > 0 
+  ? formatDateForCourse(executedDates[0].date) 
+  : null;
 
 // ページ情報
 const pageTitle = `過去の実績（${actualYear}）- メインキャンパス`;
@@ -184,7 +198,13 @@ function getGradeColorClass(grade: string): string {
         />
         
         {courseCards.length > 0 ? (
-          <div class="courses-grid">
+          <>
+            {displayExecutedDate && (
+              <div class="executed-date-display">
+                開催日：{displayExecutedDate}
+              </div>
+            )}
+            <div class="courses-grid">
             {courseCards.map(course => (
               <a href={course.href} class="course-card">
                 <div class="course-card__image">
@@ -229,6 +249,7 @@ function getGradeColorClass(grade: string): string {
               </a>
             ))}
           </div>
+          </>
         ) : (
           <div class="empty-state">
             <div class="empty-state__icon">
@@ -414,6 +435,23 @@ function getGradeColorClass(grade: string): string {
 /* 講座セクション */
 .courses-section {
   background: $background-quaternary;
+}
+
+/* 開催日表示 */
+.executed-date-display {
+  @include font-ja-m(semibold);
+  color: $text-secondary;
+  text-align: left;
+  margin: 0 0 rem(16) 0;
+  
+  @include breakpoint-up(md) {
+    // margin-bottom: rem(40);
+  }
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-l(semibold);
+    // margin-bottom: rem(48);
+  }
 }
 
 /* 講座グリッド */

@@ -1,108 +1,104 @@
 /**
  * 日付関連のユーティリティ関数
- * タイムゾーンに依存しない安全な日付処理を提供
+ * UTC日付データを明示的にJST(Asia/Tokyo)に変換して安全な日付処理を提供
  */
 
 /**
- * ISO日付文字列またはタイムスタンプをタイムゾーンに関係なく安全にパースする
- * @param dateString - ISO形式の日付文字列（例: "2024-01-20" または "2024-01-20T15:00:00.000Z"）
+ * UTC日付文字列を明示的にJST(Asia/Tokyo)タイムゾーンに変換する
+ * @param utcDateString - UTC形式の日付文字列（例: "2024-01-20T15:00:00.000Z"）
+ * @returns JST変換済みのDateオブジェクト
+ */
+export function convertUTCToJST(utcDateString: string): Date | null {
+  if (!utcDateString) return null;
+  
+  try {
+    // UTC日付文字列をDateオブジェクトに変換
+    const utcDate = new Date(utcDateString);
+    
+    // 無効な日付チェック
+    if (isNaN(utcDate.getTime())) {
+      console.warn(`Invalid UTC date string: ${utcDateString}`);
+      return null;
+    }
+    
+    // JST(Asia/Tokyo)タイムゾーンに変換
+    // UTCから+9時間（JST = UTC+9）
+    const jstDate = new Date(utcDate.getTime() + (9 * 60 * 60 * 1000));
+    
+    return jstDate;
+  } catch (error) {
+    console.error(`Error converting UTC to JST: ${utcDateString}`, error);
+    return null;
+  }
+}
+
+/**
+ * JST変換済みのDateオブジェクトから年、月、日を抽出する
+ * @param jstDate - JST変換済みのDateオブジェクト
  * @returns パースされた年、月、日を含むオブジェクト
  */
-export function parseISODateString(dateString: string): { year: number; month: number; day: number } | null {
-  if (!dateString) return null;
+export function extractJSTDateParts(jstDate: Date): { year: number; month: number; day: number } | null {
+  if (!jstDate || isNaN(jstDate.getTime())) return null;
   
-  // タイムスタンプ形式の場合、日付部分のみを抽出
-  let cleanDateString = dateString;
-  if (dateString.includes('T')) {
-    cleanDateString = dateString.split('T')[0];
-  }
-  
-  // ISO日付形式（YYYY-MM-DD）の検証
-  const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
-  if (!isoDatePattern.test(cleanDateString)) {
-    console.warn(`Invalid ISO date string: ${dateString}`);
-    return null;
-  }
-  
-  const [yearStr, monthStr, dayStr] = cleanDateString.split('-');
-  const year = parseInt(yearStr, 10);
-  const month = parseInt(monthStr, 10);
-  const day = parseInt(dayStr, 10);
-  
-  // 基本的な日付バリデーション
-  if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
-    console.warn(`Invalid date values: ${dateString}`);
-    return null;
-  }
+  // JST変換済みDateオブジェクトからUTC時刻として年月日を取得
+  // （既にJSTに変換済みなので、getUTCXXXメソッドでJSTの年月日が取得される）
+  const year = jstDate.getUTCFullYear();
+  const month = jstDate.getUTCMonth() + 1; // getUTCMonthは0ベースなので+1
+  const day = jstDate.getUTCDate();
   
   return { year, month, day };
 }
 
 /**
- * 日付文字列を「YYYY.MM.DD」形式にフォーマット（ニュース用）
- * @param dateString - ISO形式の日付文字列
- * @returns フォーマットされた日付文字列
+ * UTC日付文字列をJSTに変換して「YYYY.MM.DD」形式にフォーマット（ニュース用）
+ * @param utcDateString - UTC形式の日付文字列
+ * @returns JST変換済みフォーマット文字列
  */
-export function formatDateForNews(dateString: string): string {
-  const parsed = parseISODateString(dateString);
-  if (!parsed) return dateString; // フォールバック
+export function formatDateForNews(utcDateString: string): string {
+  const jstDate = convertUTCToJST(utcDateString);
+  if (!jstDate) return utcDateString; // フォールバック
   
-  const { year, month, day } = parsed;
+  const dateParts = extractJSTDateParts(jstDate);
+  if (!dateParts) return utcDateString; // フォールバック
+  
+  const { year, month, day } = dateParts;
   return `${year}.${month.toString().padStart(2, '0')}.${day.toString().padStart(2, '0')}`;
 }
 
 /**
- * 日付文字列を「YYYY年M月D日(曜)」形式にフォーマット（講座用）
- * @param dateString - ISO形式の日付文字列
- * @returns フォーマットされた日付文字列
+ * UTC日付文字列をJSTに変換して「YYYY年M月D日(曜)」形式にフォーマット（講座用）
+ * @param utcDateString - UTC形式の日付文字列
+ * @returns JST変換済みフォーマット文字列
  */
-export function formatDateForCourse(dateString: string): string {
-  const parsed = parseISODateString(dateString);
-  if (!parsed) return dateString; // フォールバック
+export function formatDateForCourse(utcDateString: string): string {
+  const jstDate = convertUTCToJST(utcDateString);
+  if (!jstDate) return utcDateString; // フォールバック
   
-  const { year, month, day } = parsed;
+  const dateParts = extractJSTDateParts(jstDate);
+  if (!dateParts) return utcDateString; // フォールバック
   
-  // 曜日を計算（Zellerの公式を使用してタイムゾーンに依存しない）
+  const { year, month, day } = dateParts;
+  
+  // 曜日を計算（JST変換済み日付で）
   const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
-  const weekday = calculateWeekday(year, month, day);
+  const weekday = jstDate.getUTCDay(); // JST変換済みDateなのでgetUTCDay()でJSTの曜日が取得される
   const weekdayStr = weekdays[weekday];
   
   return `${year}年${month}月${day}日(${weekdayStr})`;
 }
 
 /**
- * Zellerの公式を使用して曜日を計算（タイムゾーンに依存しない）
- * @param year - 年
- * @param month - 月
- * @param day - 日
- * @returns 曜日（0=日曜日, 1=月曜日, ..., 6=土曜日）
+ * UTC日付文字列をJSTに変換して比較用数値に変換（YYYYMMDD形式）
+ * @param utcDateString - UTC形式の日付文字列
+ * @returns JST変換済み比較用の数値（例: 20240120）
  */
-function calculateWeekday(year: number, month: number, day: number): number {
-  // Zellerの公式では1月と2月を前年の13月、14月として扱う
-  if (month < 3) {
-    month += 12;
-    year -= 1;
-  }
+export function dateToNumber(utcDateString: string): number {
+  const jstDate = convertUTCToJST(utcDateString);
+  if (!jstDate) return 0;
   
-  const k = year % 100; // 年の下2桁
-  const j = Math.floor(year / 100); // 年の上2桁
+  const dateParts = extractJSTDateParts(jstDate);
+  if (!dateParts) return 0;
   
-  // Zellerの公式
-  const h = (day + Math.floor((13 * (month + 1)) / 5) + k + Math.floor(k / 4) + Math.floor(j / 4) - 2 * j) % 7;
-  
-  // Zellerの公式の結果を日曜日=0の形式に変換
-  return (h + 5) % 7;
-}
-
-/**
- * 日付比較用：日付文字列を数値に変換（YYYYMMDD形式）
- * @param dateString - ISO形式の日付文字列
- * @returns 比較用の数値（例: 20240120）
- */
-export function dateToNumber(dateString: string): number {
-  const parsed = parseISODateString(dateString);
-  if (!parsed) return 0;
-  
-  const { year, month, day } = parsed;
+  const { year, month, day } = dateParts;
   return year * 10000 + month * 100 + day;
 }

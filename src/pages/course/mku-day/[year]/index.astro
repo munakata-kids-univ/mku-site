@@ -10,6 +10,7 @@ import {
   getMkuDays
 } from '@/lib/microcms';
 import { convertYearToPath, convertPathToYear } from '@/utils/yearConverter';
+import { formatDateForCourse } from '@/utils/dateUtils';
 
 // 静的パス生成
 export async function getStaticPaths() {
@@ -168,13 +169,9 @@ function getGradeColorClass(grade: string): string {
                 <h3 class="school-item__name">{event.schoolName?.name || event.schoolName}</h3>
                 {event.eventDates && event.eventDates.length > 0 && (
                   <p class="school-item__dates">
-                    実施日：{event.eventDates.map(dateItem => (
-                      new Date(dateItem.date).toLocaleDateString('ja-JP', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })
-                    )).join('、')}
+                    実施日：{event.eventDates.map(dateItem => 
+                      formatDateForCourse(dateItem.date)
+                    ).join('、')}
                   </p>
                 )}
                 

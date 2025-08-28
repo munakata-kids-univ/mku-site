@@ -47,18 +47,23 @@ const filteredCourses = courses.filter(course => {
 
 // 講座カード用のデータ変換
 const currentYearPath = convertYearToPath(currentYearValue.toString());
-const courseCards = filteredCourses.map(course => ({
-  id: course.id,
-  title: course.title,
-  thumbImg: course.thumbImg,
-  status: course.status,
-  year: course.year,
-  executedDate: course.executedDate,
-  href: `/course/special-course/${currentYearPath}/${course.id}`,
-  providerNames: course.providerItem?.map(item => item.providerName).join('、') || '',
-  targetGrades: Array.isArray(course.targetGrades) ? course.targetGrades : (course.targetGrades ? [course.targetGrades] : []),
-  hasReport: !!(course.afterImages?.length || course.instructor || course.afterReport || course.afterMovieUrl)
-}));
+const courseCards = filteredCourses.map(course => {
+  console.log(`Course: ${course.title}, providerItem:`, course.providerItem);
+  return {
+    id: course.id,
+    title: course.title,
+    thumbImg: course.thumbImg,
+    status: course.status,
+    year: course.year,
+    executedDate: course.executedDate,
+    href: `/course/special-course/${currentYearPath}/${course.id}`,
+    providerNames: course.providerInfo?.map(item => item.providerName).join('、') || '',
+    providerItem: course.providerItem, // デバッグ用
+    providerInfo: course.providerInfo, // デバッグ用
+    targetGrades: Array.isArray(course.targetGrades) ? course.targetGrades : (course.targetGrades ? [course.targetGrades] : []),
+    hasReport: !!(course.afterImages?.length || course.instructor || course.afterReport || course.afterMovieUrl)
+  };
+});
 
 
 // フェーズに応じたメッセージ（後で実装）
@@ -173,10 +178,10 @@ function getGradeColorClass(grade: string): string {
   return 'special';
 }
 
-// 日付フォーマット関数（タイムゾーンに依存しない）
-function formatExecutedDate(dateString: string): string {
-  if (!dateString) return '';
-  return formatDateForCourse(dateString);
+// UTC実施日をJSTに変換してフォーマットする関数
+function formatExecutedDate(utcDateString: string): string {
+  if (!utcDateString) return '';
+  return formatDateForCourse(utcDateString);
 }
 
 // 学年の整列順序関数（scheduleページと同様）
@@ -422,9 +427,9 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
                     <h3 class="course-card__title">{course.title}</h3>
                     <div class="course-card__arrow"></div>
                   </div>
-                  {course.providerNames && (
-                    <p class="course-card__provider">{course.providerNames}</p>
-                  )}
+                  <p class="course-card__provider">
+                    {course.providerNames || `Debug: providerInfo = ${JSON.stringify(course.providerInfo)}, providerItem = ${JSON.stringify(course.providerItem)}`}
+                  </p>
                   {course.targetGrades.length > 0 && (
                     <div class="course-card__grades">
                       {(() => {

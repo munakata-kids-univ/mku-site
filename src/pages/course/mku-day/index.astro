@@ -7,6 +7,7 @@ import {
   getGlobalSettings, 
   getMkuDays
 } from '../../../lib/microcms';
+import { formatDateForCourse } from '../../../utils/dateUtils';
 
 // データ取得
 const globalSettings = await getGlobalSettings();
@@ -140,13 +141,9 @@ const breadcrumbItems = [
                 <h3 class="school-item__name">{event.schoolName?.name || event.schoolName}</h3>
                 {event.eventDates && event.eventDates.length > 0 && (
                   <p class="school-item__dates">
-                    実施日：{event.eventDates.map(dateItem => (
-                      new Date(dateItem.date).toLocaleDateString('ja-JP', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })
-                    )).join('、')}
+                    実施日：{event.eventDates.map(dateItem => 
+                      formatDateForCourse(dateItem.date)
+                    ).join('、')}
                   </p>
                 )}
                 

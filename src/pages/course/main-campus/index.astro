@@ -10,6 +10,7 @@ import {
   getMainCampusCourses 
 } from '../../../lib/microcms';
 import { convertYearToPath } from '../../../utils/yearConverter';
+import { formatDateForCourse } from '../../../utils/dateUtils';
 
 // データ取得
 const globalSettings = await getGlobalSettings();
@@ -86,6 +87,17 @@ const getPhaseMessage = (phase: string) => {
 
 const phase = Array.isArray(mainCampusSettings.phase) ? mainCampusSettings.phase[0] : mainCampusSettings.phase;
 const phaseMessage = getPhaseMessage(phase || '');
+
+// 開催日データを抽出（現在年度に該当するものを取得）
+const executedDates = mainCampusSettings.executedDate?.filter(item => {
+  const itemYear = Array.isArray(item.year) ? item.year[0] : item.year;
+  return itemYear === currentYearValue;
+});
+
+// 最初の開催日を表示用にフォーマット
+const displayExecutedDate = executedDates && executedDates.length > 0 
+  ? formatDateForCourse(executedDates[0].date) 
+  : null;
 
 
 // ステータス別の背景色クラス取得関数
@@ -404,7 +416,13 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
         />
         
         {courseCards.length > 0 ? (
-          <div class="courses-grid">
+          <>
+            {displayExecutedDate && (
+              <div class="executed-date-display">
+                開催日：{displayExecutedDate}
+              </div>
+            )}
+            <div class="courses-grid">
             {courseCards.map(course => (
               <a href={course.href} class="course-card">
                 <div class="course-card__image">
@@ -454,6 +472,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
               </a>
             ))}
           </div>
+          </>
         ) : (
           <div class="empty-state">
             <div class="empty-state__icon">
@@ -1066,6 +1085,23 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   
   &::after {
     background: linear-gradient(to bottom, $background-primary 50%, $background-secondary 50%);
+  }
+}
+
+/* 開催日表示 */
+.executed-date-display {
+  @include font-ja-m(semibold);
+  color: $text-secondary;
+  text-align: left;
+  margin: 0 0 rem(16) 0;
+  
+  @include breakpoint-up(md) {
+    // margin-bottom: rem(40);
+  }
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-l(semibold);
+    // margin-bottom: rem(48);
   }
 }
 

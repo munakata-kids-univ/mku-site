@@ -84,9 +84,9 @@ export default function NewsSection({ newsItems, allItems, categoryData, categor
     };
   }, []);
 
-  // 日付をフォーマット（タイムゾーンに依存しない）
-  const formatDate = (dateString: string) => {
-    return formatDateForNews(dateString);
+  // UTC日付をJSTに変換してフォーマット
+  const formatDate = (utcDateString: string) => {
+    return formatDateForNews(utcDateString);
   };
 
   return (

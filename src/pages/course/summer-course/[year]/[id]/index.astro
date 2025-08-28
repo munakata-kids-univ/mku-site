@@ -7,6 +7,7 @@ import {
   getGlobalSettings,
 } from '@/lib/microcms';
 import { convertYearToPath, convertPathToYear } from '@/utils/yearConverter';
+import { formatDateForCourse } from '@/utils/dateUtils';
 
 // 静的パス生成
 export async function getStaticPaths() {
@@ -225,15 +226,9 @@ function getGradeColorClass(grade: string): string {
   return 'special';
 }
 
-// 日付フォーマット関数
-function formatJapaneseDate(dateString: string): string {
-  const date = new Date(dateString);
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const weekday = ['日', '月', '火', '水', '木', '金', '土'][date.getDay()];
-  
-  return `${year}年${month}月${day}日(${weekday})`;
+// UTC日付をJSTに変換して日本語フォーマットの日付を生成
+function formatJapaneseDate(utcDateString: string): string {
+  return formatDateForCourse(utcDateString);
 }
 
 // parentJoin値の表示用変換

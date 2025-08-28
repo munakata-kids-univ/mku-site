@@ -11,7 +11,7 @@ import {
   getSummerCategories
 } from '@/lib/microcms';
 import { convertYearToPath, convertPathToYear } from '@/utils/yearConverter';
-import { formatDateForCourse } from '@/utils/dateUtils';
+import { formatDateForCourse, convertUTCToJST, extractJSTDateParts } from '@/utils/dateUtils';
 
 // 静的パス生成
 export async function getStaticPaths() {
@@ -200,10 +200,10 @@ function formatYear(year) {
   return year.replace('令和', '').replace('年度', '');
 }
 
-// 日付フォーマット関数（タイムゾーンに依存しない）
-function formatExecutedDate(dateString: string): string {
-  if (!dateString) return '';
-  return formatDateForCourse(dateString);
+// UTC実施日をJSTに変換してフォーマットする関数
+function formatExecutedDate(utcDateString: string): string {
+  if (!utcDateString) return '';
+  return formatDateForCourse(utcDateString);
 }
 
 // 学年の整列順序関数（scheduleページと同様）
