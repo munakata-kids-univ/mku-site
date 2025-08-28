@@ -36,7 +36,8 @@
       "Bash(grep:*)",
       "Bash(git remote set-url:*)",
       "Bash(git fetch:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "WebFetch(domain:digipress.info)"
     ],
     "deny": []
   }
