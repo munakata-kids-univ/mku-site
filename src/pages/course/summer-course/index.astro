@@ -1337,7 +1337,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     @include breakpoint-up(lg) {
       width: rem(8);
       height: rem(8);
-      transform: rotate(45deg) translateY(rem(-4));
+      transform: rotate(45deg) translateY(rem(-2));
     }
   }
 }
@@ -1480,6 +1480,8 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     top: rem(8);
     left: rem(8);
     z-index: 2;
+    display: inline-block;
+    line-height: 1;
     @include breakpoint-up(md) {
       top: rem(10);
       left: rem(10);
@@ -2828,7 +2830,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (width >= 1024) { // lg以上
           arrow.style.width = '8px';
           arrow.style.height = '8px';
-          arrow.style.transform = 'rotate(45deg) translateY(-4px)';
+          arrow.style.transform = 'rotate(45deg) translateY(-2px)';
         } else {
           arrow.style.width = '6px';
           arrow.style.height = '6px';
@@ -2922,7 +2924,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (width >= 1024) { // lg以上
           arrow.style.width = '8px';
           arrow.style.height = '8px';
-          arrow.style.transform = 'rotate(45deg) translateY(-4px)';
+          arrow.style.transform = 'rotate(45deg) translateY(-2px)';
         } else {
           arrow.style.width = '6px';
           arrow.style.height = '6px';

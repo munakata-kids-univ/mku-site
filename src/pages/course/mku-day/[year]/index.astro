@@ -7,7 +7,8 @@ import CourseCard from '@/components/CourseCard.astro';
 import AfterImagesSlider from '@/components/AfterImagesSlider.astro';
 import { 
   getGlobalSettings,
-  getMkuDays
+  getMkuDays,
+  getSchoolMaster
 } from '@/lib/microcms';
 import { convertYearToPath, convertPathToYear } from '@/utils/yearConverter';
 import { formatDateForCourse } from '@/utils/dateUtils';
@@ -70,6 +71,9 @@ const events = await getMkuDays(actualYear);
 if (!events || events.length === 0) {
   return Astro.redirect('/404');
 }
+
+// 学校マスターデータを取得
+const schoolMaster = await getSchoolMaster();
 
 // ページ情報
 const pageTitle = `過去の実績（${actualYear}）- むなかた子ども大学の日`;
@@ -163,9 +167,32 @@ function getGradeColorClass(grade: string): string {
         />
         
         {events.length > 0 ? (
-          <div class="schools-list">
-            {events.map(event => (
-              <div class="school-item">
+          <>
+            <!-- 学校別スクロールリンク -->
+            <div class="school-scroll-links" id="school-scroll-links">
+              {events.map(event => {
+                // 学校名から対応するスラッグを見つける
+                const schoolName = event.schoolName?.name || event.schoolName;
+                const matchedSchool = schoolMaster.find(school => school.name === schoolName);
+                const schoolSlug = matchedSchool?.slug || '';
+                
+                return matchedSchool && (
+                  <a href={`#school-${schoolSlug}`} class="period-link">
+                    {schoolName}
+                  </a>
+                );
+              })}
+            </div>
+            
+            <div class="schools-list">
+            {events.map(event => {
+              // 学校名から対応するスラッグを見つける
+              const schoolName = event.schoolName?.name || event.schoolName;
+              const matchedSchool = schoolMaster.find(school => school.name === schoolName);
+              const schoolSlug = matchedSchool?.slug || '';
+              
+              return (
+              <div class="school-item" id={schoolSlug ? `school-${schoolSlug}` : ''}>
                 <h3 class="school-item__name">{event.schoolName?.name || event.schoolName}</h3>
                 {event.eventDates && event.eventDates.length > 0 && (
                   <p class="school-item__dates">
@@ -226,8 +253,10 @@ function getGradeColorClass(grade: string): string {
                   </div>
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
+          </>
         ) : (
           <div class="empty-state">
             <div class="empty-state__icon">
@@ -425,6 +454,57 @@ function getGradeColorClass(grade: string): string {
   /* 活動内容セクション */
   .activities-section {
     background: $brand-sub-purple-low;
+  }
+
+  /* 学校スクロールリンク */
+  .school-scroll-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: rem(8);
+    justify-content: center;
+    margin: rem(16) 0 rem(24) 0;
+    
+    @include breakpoint-up(md) {
+      justify-content: flex-start !important;
+    }
+    
+    @include breakpoint-up(lg) {
+      gap: rem(12);
+      margin: rem(20) 0 rem(32) 0;
+    }
+  }
+
+  .period-link {
+    display: inline-flex;
+    align-items: center;
+    gap: rem(3);
+    @include font-ja-3s(semibold);
+    padding: rem(2) rem(6);
+    border: 1px solid $brand-black;
+    border-radius: rem(7);
+    white-space: nowrap;
+    color: $text-secondary;
+    background-color: $background-primary;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    
+    @include breakpoint-up(md) {
+      padding: rem(3) rem(8);
+    }
+    
+    @include breakpoint-up(lg) {
+      @include font-ja-2s(semibold);
+    }
+    
+    &:hover {
+      background-color: $brand-primary;
+      color: $background-primary;
+      text-decoration: none;
+    }
+    
+    &__arrow {
+      // JavaScriptで動的にスタイリング
+    }
   }
 
   /* 学校リスト */
@@ -692,6 +772,90 @@ document.addEventListener('DOMContentLoaded', function() {
   const fadeUpElements = document.querySelectorAll('.fade-up');
   fadeUpElements.forEach(element => {
     observer.observe(element);
+  });
+
+  // 学校スクロールリンクの機能を追加
+  const schoolLinks = document.querySelectorAll('.period-link');
+  schoolLinks.forEach(link => {
+    // スムーズスクロール機能
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const href = (this as HTMLAnchorElement).getAttribute('href');
+      if (href && href.startsWith('#')) {
+        const targetId = href.substring(1);
+        const targetElement = document.getElementById(targetId);
+        
+        if (targetElement) {
+          const width = window.innerWidth;
+          const headerHeight = width >= 1280 ? 120 : 100; // xl以降は20px上に
+          const elementPosition = targetElement.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
+          
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+        }
+      }
+    });
+    
+    // リンクのスタイリング（レスポンシブ対応）
+    const linkElement = link as HTMLElement;
+    const updateLinkStyles = () => {
+      const width = window.innerWidth;
+      linkElement.style.display = 'inline-flex';
+      linkElement.style.alignItems = 'center';
+      linkElement.style.gap = '6px';
+      linkElement.style.fontWeight = '600';
+      linkElement.style.border = '1px solid #1c0083';
+      linkElement.style.borderRadius = '10px';
+      linkElement.style.whiteSpace = 'nowrap';
+      linkElement.style.color = '#1c0083';
+      linkElement.style.backgroundColor = '#ffffff';
+      linkElement.style.textDecoration = 'none';
+      linkElement.style.transition = 'all 0.2s ease';
+      linkElement.style.cursor = 'pointer';
+      
+      if (width >= 1024) { // lg以上
+        linkElement.style.fontSize = '14px'; // lg以上は大きめ
+        linkElement.style.padding = '4px 12px 4px 8px';
+      } else {
+        linkElement.style.fontSize = '12px'; // モバイルは小さめ
+        linkElement.style.padding = '4px 12px 4px 8px';
+      }
+    };
+    updateLinkStyles();
+    window.addEventListener('resize', updateLinkStyles);
+    
+    // アロー要素を作成（夏の課外授業と全く同じ方法）
+    const arrow = document.createElement('span');
+    arrow.className = 'period-link__arrow';
+    
+    // アローのレスポンシブスタイリング
+    const updateArrowStyles = () => {
+      const width = window.innerWidth;
+      if (width >= 1024) { // lg以上
+        arrow.style.width = '8px';
+        arrow.style.height = '8px';
+        arrow.style.transform = 'rotate(45deg) translateY(-2px)';
+      } else {
+        arrow.style.width = '6px';
+        arrow.style.height = '6px';
+        arrow.style.transform = 'rotate(45deg) translateY(-2px)';
+      }
+      arrow.style.borderRight = '2px solid currentColor';
+      arrow.style.borderBottom = '2px solid currentColor';
+      arrow.style.borderTop = 'none';
+      arrow.style.borderLeft = 'none';
+      arrow.style.backgroundColor = 'transparent';
+      arrow.style.flexShrink = '0';
+      arrow.style.marginLeft = '0px';
+    };
+    updateArrowStyles();
+    window.addEventListener('resize', updateArrowStyles);
+    
+    // アローを追加（夏の課外授業と同じ方法）
+    link.appendChild(arrow);
   });
 });
 </script>
