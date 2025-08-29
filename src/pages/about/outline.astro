@@ -257,25 +257,23 @@ import { partnerLogos } from '../../data/partnerLogos.js';
         </div>
         
         <div class="partners__slider">
-          <!-- 右から左へスクロール -->
-          <div class="partners__track">
-            {partnerLogos.map((logo) => (
-              <div class="partner-logo">
-                <img src={logo.logoSrc} alt={logo.alt} class="partner-logo__image" />
-              </div>
-            ))}
-            <!-- 無限ループ用の複製 -->
-            {partnerLogos.map((logo) => (
-              <div class="partner-logo">
-                <img src={logo.logoSrc} alt={logo.alt} class="partner-logo__image" />
-              </div>
-            ))}
-            <!-- さらなる滑らかさのための3セット目 -->
-            {partnerLogos.map((logo) => (
-              <div class="partner-logo">
-                <img src={logo.logoSrc} alt={logo.alt} class="partner-logo__image" />
-              </div>
-            ))}
+          <div class="partners__slides" data-duration="20" data-duration-sm="35">
+            <!-- 第1セット -->
+            <div class="partners__slide">
+              {partnerLogos.map((logo) => (
+                <div class="partner-logo">
+                  <img src={logo.logoSrc} alt={logo.alt} class="partner-logo__image" />
+                </div>
+              ))}
+            </div>
+            <!-- 第2セット（シームレスループ用） -->
+            <div class="partners__slide">
+              {partnerLogos.map((logo) => (
+                <div class="partner-logo">
+                  <img src={logo.logoSrc} alt={logo.alt} class="partner-logo__image" />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -892,7 +890,7 @@ import { partnerLogos } from '../../data/partnerLogos.js';
     &::before {
       content: '';
       position: absolute;
-      left: rem(-10);
+      left: rem(-9);
       top: rem(10);
       width: 0;
       height: 0;
@@ -905,7 +903,7 @@ import { partnerLogos } from '../../data/partnerLogos.js';
       }
       
       @include breakpoint-up(lg) {
-        left: rem(-12);
+        left: rem(-11);
         border-top: rem(12) solid transparent;
         border-bottom: rem(12) solid transparent;
         border-right: rem(12) solid $background-primary;
@@ -971,22 +969,27 @@ import { partnerLogos } from '../../data/partnerLogos.js';
     margin-top: rem(70);
   }
 
-  .partners__track {
+  .partners__slides {
     display: flex;
-    width: calc(300%); // 3倍の幅で無限ループ（3セット分）
-    animation: slidePartnerLogos 48s linear infinite; // 右から左へのスクロール（1.25倍速）
+    width: 200%; // 2セット分の幅
+  }
+  
+  .partners__slide {
+    flex-basis: 50%; // 各セットが50%の幅
+    display: flex;
+    align-items: center;
   }
 
   .partner-logo {
-    flex: 0 0 auto;
     height: rem(60);
-    margin-right: rem(40);
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+    padding: 0 rem(20); // 左右に均等な余白
     
     @include breakpoint-up(lg) {
-      margin-right: rem(60);
+      padding: 0 rem(30); // lg以上は30pxずつの余白
     }
 
     &__image {
@@ -1000,21 +1003,55 @@ import { partnerLogos } from '../../data/partnerLogos.js';
       }
     }
   }
-
-  // パートナーロゴスライダーのアニメーション（右から左へ）
-  @keyframes slidePartnerLogos {
-    0% {
-      transform: translateX(0);
-    }
-    100% {
-      transform: translateX(-33.333%); // 1/3移動すると元の位置に戻る（3セット分の無限ループ効果）
-    }
-  }
 </style>
 
 <script>
-  // スムーススクロール
+  // DigiPress式無限ループスライダーを使用
+
+  // パートナーズスライダーの初期化
   document.addEventListener('DOMContentLoaded', function() {
+    // DigiPress式無限ループスライダー
+    const slides = document.getElementsByClassName('partners__slides');
+    
+    for (let i = 0; i < slides.length; ++i) {
+      const target = slides[i];
+      // sm以降はより遅い速度を使用
+      const isSmUp = window.innerWidth >= 640;
+      const durationAttr = isSmUp ? target.dataset.durationSm : target.dataset.duration;
+      const duration = parseInt(durationAttr || target.dataset.duration) * 1000 || 25000;
+      const childNum = target.firstElementChild.children.length; // 1つ目のスライド内のロゴ数
+      const logoWidth = ((100 / childNum)).toFixed(2);
+      
+      // CSS変数としてロゴ幅を設定
+      target.style.setProperty('--logo-width', `${logoWidth}%`);
+
+      let startTime = 0;
+      let elapsed = 0;
+      let progress = 0;
+
+      const loop = (currentTime) => {
+        if (!startTime) startTime = currentTime;
+        
+        elapsed = currentTime - startTime;
+        progress = elapsed / duration;
+        
+        if (progress >= 1) {
+          // 1周完了、リセット
+          progress = 0;
+          startTime = currentTime;
+        }
+        
+        // シームレスな移動（50%移動すれば元の位置に戻る）
+        const translateX = -(progress * 50);
+        target.style.transform = `translateX(${translateX}%)`;
+        
+        requestAnimationFrame(loop);
+      };
+      
+      requestAnimationFrame(loop);
+    }
+  
+    // スムーススクロール
     // スクロールアニメーション用のIntersection Observer
     const observerOptions = {
       threshold: 0.1, // 要素の10%が見えたら発火

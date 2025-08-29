@@ -10,6 +10,7 @@ import {
   getSpecialCourses
 } from '@/lib/microcms';
 import { convertYearToPath, convertPathToYear } from '@/utils/yearConverter';
+import { formatDateForCourse } from '@/utils/dateUtils';
 
 // 静的パス生成
 export async function getStaticPaths() {
@@ -89,6 +90,7 @@ const courseCards = courses.map(course => ({
   thumbImg: course.thumbImg,
   status: '募集終了', // 過去年度は全て募集終了
   year: course.year,
+  executedDate: course.executedDate,
   href: `/course/special-course/${year}/${course.id}`,
   providerNames: course.providerInfo?.map(item => item.providerName).join('、') || '',
   targetGrades: Array.isArray(course.targetGrades) ? course.targetGrades : (course.targetGrades ? [course.targetGrades] : []),
@@ -139,6 +141,12 @@ function getGradeColorClass(grade: string): string {
   // その他
   return 'special';
 }
+
+// UTC実施日をJSTに変換してフォーマットする関数
+function formatExecutedDate(utcDateString: string): string {
+  if (!utcDateString) return '';
+  return formatDateForCourse(utcDateString);
+}
 ---
 
 <BaseLayout title={pageTitle} description={pageDescription}>
@@ -170,7 +178,7 @@ function getGradeColorClass(grade: string): string {
       <div class="content-section__container">
         <ContentSectionHeader 
           englishTitle=""
-          title={`${actualYear} 開講コース`}
+          title={`${actualYear} コース一覧`}
           class="fade-up"
         />
         
@@ -199,6 +207,9 @@ function getGradeColorClass(grade: string): string {
                   )}
                 </div>
                 <div class="course-card__content">
+                  {course.executedDate && (
+                    <p class="course-card__executed-date">{formatExecutedDate(course.executedDate)}</p>
+                  )}
                   <div class="course-card__header">
                     <h3 class="course-card__title">{course.title}</h3>
                     <div class="course-card__arrow"></div>
@@ -500,6 +511,8 @@ function getGradeColorClass(grade: string): string {
       top: rem(8);
       left: rem(8);
       z-index: 2;
+      display: inline-block;
+      line-height: 1;
       @include breakpoint-up(md) {
         top: rem(10);
         left: rem(10);
@@ -555,6 +568,20 @@ function getGradeColorClass(grade: string): string {
       
       @include breakpoint-up(lg) {
         padding: rem(20) rem(20) rem(30);
+      }
+    }
+    
+    &__executed-date {
+      @include font-ja-3s(semibold);
+      color: $text-dark-gray;
+      margin: 0 0 rem(8) 0;
+      line-height: 1.4;
+      @include breakpoint-up(md) {
+        @include font-ja-2s(semibold);
+        margin-bottom: rem(10);
+      }
+      @include breakpoint-up(lg) {
+        margin-bottom: rem(12);
       }
     }
     

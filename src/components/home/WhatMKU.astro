@@ -78,10 +78,11 @@ const content = {
     <!-- 縦スライダー画像 -->
     <div class="what-mku__image-slider">
       <div class="what-mku__slider-track">
+        <!-- 1セット目（元画像） -->
         {sliderImages.map((image) => (
           <img src={image.src} alt={image.alt} class="what-mku__slide-image" />
         ))}
-        <!-- 無限ループ用の複製 -->
+        <!-- 2セット目（無限ループ用の複製） -->
         {sliderImages.map((image) => (
           <img src={image.src} alt={image.alt} class="what-mku__slide-image" />
         ))}
@@ -175,8 +176,8 @@ const content = {
     display: flex;
     flex-direction: column;
     row-gap: rem(16);
-    height: calc(100% * 2); // 2倍の高さで無限ループ効果
-    animation: slideVertical 20s linear infinite;
+    height: fit-content; // 自然な高さ
+    will-change: transform;
     
     @include breakpoint-up(sm) {
       row-gap: rem(24);
@@ -295,14 +296,97 @@ const content = {
     }
   }
 }
-
-// 縦スライダーのアニメーション
-@keyframes slideVertical {
-  0% {
-    transform: translateY(0);
-  }
-  100% {
-    transform: translateY(-50%); // 半分移動すると元の位置に戻る（無限ループ効果）
-  }
-}
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const track = document.querySelector('.what-mku__slider-track') as HTMLElement;
+  if (!track) return;
+  
+  let translateY = 0;
+  const speed = 0.5; // px/frame
+  let oneSetHeight = 0;
+  let isCalculated = false;
+  
+  // 正確な1セット分の高さを一度だけ計算
+  function calculateOneSetHeight() {
+    if (isCalculated) return oneSetHeight;
+    
+    const images = track.querySelectorAll('.what-mku__slide-image') as NodeListOf<HTMLImageElement>;
+    const totalImages = images.length;
+    const oneSetCount = totalImages / 2; // 2セット構成
+    
+    // 実際のDOM要素の高さとgapを正確に測定
+    let totalHeight = 0;
+    
+    for (let i = 0; i < oneSetCount; i++) {
+      const image = images[i];
+      if (image) {
+        const rect = image.getBoundingClientRect();
+        totalHeight += rect.height;
+        
+        // 最後の要素以外はgapを追加
+        if (i < oneSetCount - 1) {
+          const computedStyle = window.getComputedStyle(track);
+          const gap = parseFloat(computedStyle.rowGap) || 0;
+          totalHeight += gap;
+        }
+      }
+    }
+    
+    oneSetHeight = totalHeight;
+    isCalculated = true;
+    return oneSetHeight;
+  }
+  
+  function animate() {
+    // 初回のみ高さを計算
+    if (!isCalculated) {
+      calculateOneSetHeight();
+    }
+    
+    // 上方向に移動（negative方向）
+    translateY -= speed;
+    
+    // ピクセル精度でのリセット判定
+    // 1セット分を完全に移動したら即座に0に戻す
+    if (Math.abs(translateY) >= oneSetHeight) {
+      // 余剰分を考慮してピクセル精度でリセット
+      const excess = Math.abs(translateY) - oneSetHeight;
+      translateY = -excess; // 余剰分だけマイナス位置から開始
+    }
+    
+    // transform適用（小数点も含めて適用）
+    track.style.transform = `translateY(${translateY}px)`;
+    
+    requestAnimationFrame(animate);
+  }
+  
+  // 画像の読み込み完了を待ってから開始
+  const images = track.querySelectorAll('.what-mku__slide-image') as NodeListOf<HTMLImageElement>;
+  let loadedImages = 0;
+  
+  function checkAllImagesLoaded() {
+    loadedImages++;
+    if (loadedImages >= images.length / 2) { // 1セット分の画像が読み込まれたら
+      // 少し遅延してから開始（レンダリング完了を確実にする）
+      setTimeout(() => {
+        animate();
+      }, 100);
+    }
+  }
+  
+  // 各画像の読み込みを監視
+  images.forEach((img, index) => {
+    if (index < images.length / 2) { // 1セット目のみ監視
+      if (img.complete) {
+        checkAllImagesLoaded();
+      } else {
+        img.addEventListener('load', checkAllImagesLoaded);
+        img.addEventListener('error', checkAllImagesLoaded); // エラーでも進行
+      }
+    }
+  });
+});
+</script>
+

@@ -3,6 +3,7 @@ import BaseLayout from "../../../layouts/BaseLayout.astro";
 import Breadcrumb from "../../../components/Breadcrumb.astro";
 import BaseButton from "../../../components/BaseButton.astro";
 import { getNewsMediaById, getNewsItems } from '../../../lib/microcms';
+import { formatDateForNews } from '../../../utils/dateUtils';
 
 export async function getStaticPaths() {
   try {
@@ -65,11 +66,7 @@ try {
           <!-- メタ情報 -->
           <div class="news-item__meta">
             <time class="news-item__date" datetime={newsItem.publishedAt}>
-              {new Date(newsItem.publishedDate).toLocaleDateString('ja-JP', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit'
-              }).replace(/\//g, '.')}
+              {formatDateForNews(newsItem.publishedDate)}
             </time>
             {newsItem.category && (
               <span class="news-item__category">

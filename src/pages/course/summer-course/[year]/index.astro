@@ -11,6 +11,7 @@ import {
   getSummerCategories
 } from '@/lib/microcms';
 import { convertYearToPath, convertPathToYear } from '@/utils/yearConverter';
+import { formatDateForCourse, convertUTCToJST, extractJSTDateParts } from '@/utils/dateUtils';
 
 // 静的パス生成
 export async function getStaticPaths() {
@@ -199,19 +200,10 @@ function formatYear(year) {
   return year.replace('令和', '').replace('年度', '');
 }
 
-// 日付フォーマット関数
-function formatExecutedDate(dateString: string): string {
-  if (!dateString) return '';
-  
-  const date = new Date(dateString);
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  
-  const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
-  const weekday = weekdays[date.getDay()];
-  
-  return `${year}年${month}月${day}日(${weekday})`;
+// UTC実施日をJSTに変換してフォーマットする関数
+function formatExecutedDate(utcDateString: string): string {
+  if (!utcDateString) return '';
+  return formatDateForCourse(utcDateString);
 }
 
 // 学年の整列順序関数（scheduleページと同様）
@@ -325,7 +317,7 @@ function getGradeColorClass(grade: string): string {
       <div class="content-section__container">
         <ContentSectionHeader 
           englishTitle=""
-          title={`${actualYear} <br class="u-br-sm">開講コース`}
+          title={`${actualYear} コース一覧`}
           customTitleWrapperStyle="courses-title-wrapper"
           customIconStyle="courses-icon"
           class="fade-up"
@@ -875,7 +867,7 @@ function getGradeColorClass(grade: string): string {
     @include breakpoint-up(lg) {
       width: rem(8);
       height: rem(8);
-      transform: rotate(45deg) translateY(rem(-4));
+      transform: rotate(45deg) translateY(rem(-2));
     }
   }
 }
@@ -962,6 +954,8 @@ function getGradeColorClass(grade: string): string {
     top: rem(8);
     left: rem(8);
     z-index: 2;
+    display: inline-block;
+    line-height: 1;
     @include breakpoint-up(md) {
       top: rem(10);
       left: rem(10);
@@ -1938,7 +1932,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (width >= 1024) { // lg以上
           arrow.style.width = '8px';
           arrow.style.height = '8px';
-          arrow.style.transform = 'rotate(45deg) translateY(-4px)';
+          arrow.style.transform = 'rotate(45deg) translateY(-2px)';
         } else {
           arrow.style.width = '6px';
           arrow.style.height = '6px';
@@ -2032,7 +2026,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (width >= 1024) { // lg以上
           arrow.style.width = '8px';
           arrow.style.height = '8px';
-          arrow.style.transform = 'rotate(45deg) translateY(-4px)';
+          arrow.style.transform = 'rotate(45deg) translateY(-2px)';
         } else {
           arrow.style.width = '6px';
           arrow.style.height = '6px';
@@ -2153,5 +2147,10 @@ document.addEventListener('DOMContentLoaded', function() {
   @include breakpoint-up(md) {
     display: none;
   }
+}
+
+// courses-title-wrapperの全画面幅でpadding-leftを無効化
+:global(.content-section__title-wrapper.courses-title-wrapper) {
+  padding-left: 0 !important;
 }
 </style>

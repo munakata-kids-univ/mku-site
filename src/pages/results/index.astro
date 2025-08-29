@@ -10,11 +10,11 @@ const breadcrumbItems = [
   { label: "当選者発表" }
 ];
 
-// メインキャンパス設定からbuttonsデータを取得（参加意向確認以外）
+// メインキャンパス設定からbuttonsデータを取得（1次当選者発表と最終申込状況発表のみ）
 const mainCampusSettings = await getMainCampusSettings();
 const buttons = mainCampusSettings.buttons?.filter((button: any) => {
   const buttonType = Array.isArray(button.type) ? button.type[0] : button.type;
-  return button.visible && buttonType !== "参加意向確認";
+  return button.visible && (buttonType === "1次当選者発表" || buttonType === "最終申込状況発表");
 }) || [];
 
 // 特設講座データを取得してボタンが存在するもののみフィルタリング
@@ -23,7 +23,7 @@ const specialCoursesWithButtons = specialCourses.filter((course: any) => {
   if (!course.buttons) return false;
   const filteredButtons = course.buttons.filter((button: any) => {
     const buttonType = Array.isArray(button.type) ? button.type[0] : button.type;
-    return button.visible && buttonType !== "参加意向確認";
+    return button.visible && buttonType === "当選者発表";
   });
   return filteredButtons.length > 0;
 });
@@ -140,7 +140,7 @@ const specialCoursesWithButtons = specialCourses.filter((course: any) => {
             specialCoursesWithButtons.map((course) => {
               const courseButtons = course.buttons.filter((button: any) => {
                 const buttonType = Array.isArray(button.type) ? button.type[0] : button.type;
-                return button.visible && buttonType !== "参加意向確認";
+                return button.visible && buttonType === "当選者発表";
               });
               
               return (
@@ -729,6 +729,19 @@ const specialCoursesWithButtons = specialCourses.filter((course: any) => {
     &__button {
       color: $text-white !important;
       text-decoration: none !important;
+      width: 100%;
+      max-width: rem(320); // 最大幅を320pxに制限
+      min-width: rem(300); // スマホでも最小300px確保
+      box-sizing: border-box; // paddingを含めた幅計算
+      
+      @include breakpoint-up(sm) {
+        min-width: rem(320); // sm以上では明示的にmin-width設定
+      }
+      
+      @include breakpoint-up(lg) {
+        width: auto; // PCでは元の幅
+        max-width: none; // PCでは最大幅制限なし
+      }
       
       &:hover {
         color: $text-white !important;

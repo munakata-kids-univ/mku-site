@@ -8,6 +8,7 @@ import {
   getMainCampusSettings
 } from '@/lib/microcms';
 import { convertYearToPath, convertPathToYear } from '@/utils/yearConverter';
+import { formatDateForCourse } from '@/utils/dateUtils';
 
 // 静的パス生成
 export async function getStaticPaths() {
@@ -69,6 +70,29 @@ const courseYear = Array.isArray(course.year) ? course.year[0] : course.year;
 if (courseYear !== actualYear) {
   return Astro.redirect('/404');
 }
+
+// 申込締切情報を取得（現在年度の講座のみ）
+const deadlines = courseYear === currentYearValue 
+  ? mainCampusSettings.deadlines || []
+  : [];
+
+// デバッグ情報
+console.log('Debug info:');
+console.log('courseYear:', courseYear);
+console.log('currentYearValue:', currentYearValue);
+console.log('mainCampusSettings.deadlines:', mainCampusSettings.deadlines);
+console.log('deadlines assigned:', deadlines);
+
+// 実施日情報を取得
+const executedDates = mainCampusSettings.executedDate?.filter(item => {
+  const itemYear = Array.isArray(item.year) ? item.year[0] : item.year;
+  return itemYear === courseYear;
+});
+
+// 最初の実施日を表示用にフォーマット
+const displayExecutedDate = executedDates && executedDates.length > 0 
+  ? formatDateForCourse(executedDates[0].date) 
+  : null;
 
 // ページ情報
 const pageTitle = `${course.title} | メインキャンパス`;
@@ -312,35 +336,41 @@ function getGradeColorClass(grade: string): string {
                   })()}
                 </div>
               </div>
-              
-              {mainCampusSettings.executedDate && mainCampusSettings.executedDate.find(item => 
-                item.year === actualYear
-              ) && (
-                <>
-                  <div class="detail-item">
-                    <div class="detail-item__label">申込締切：</div>
-                    <div class="detail-item__value">
-                      {(() => {
-                        const executedItem = mainCampusSettings.executedDate.find(item => 
-                          item.year === actualYear
-                        );
-                        return executedItem ? `${executedItem.year} ${executedItem.date}` : '';
-                      })()}
-                    </div>
+
+              {/* 申込締切（現在年度のみ） */}
+              {courseYear === currentYearValue && deadlines.length > 0 && (
+                <div class="detail-item">
+                  <div class="detail-item__label">申込締切：</div>
+                  <div class="detail-item__value">
+                    {deadlines.map((deadline, index) => (
+                      <div key={index} class="deadline-item">
+                        <span class="deadline-key">{deadline.deadlineKey}</span>
+                        <span class="deadline-separator">　</span>
+                        <span class="deadline-date">{formatDateForCourse(deadline.deadlineDate)}</span>
+                      </div>
+                    ))}
                   </div>
-                  
-                  <div class="detail-item">
-                    <div class="detail-item__label">実施日：</div>
-                    <div class="detail-item__value">
-                      {(() => {
-                        const executedItem = mainCampusSettings.executedDate.find(item => 
-                          item.year === actualYear
-                        );
-                        return executedItem ? executedItem.date : '';
-                      })()}
-                    </div>
+                </div>
+              )}
+
+              {/* デバッグ用: 申込締切が表示されない場合の情報 */}
+              {courseYear === currentYearValue && deadlines.length === 0 && (
+                <div class="detail-item">
+                  <div class="detail-item__label">申込締切：</div>
+                  <div class="detail-item__value">
+                    <span style="color: #999;">申込締切情報が設定されていません（デバッグ用表示）</span>
                   </div>
-                </>
+                </div>
+              )}
+
+              {/* 実施日 */}
+              {displayExecutedDate && (
+                <div class="detail-item">
+                  <div class="detail-item__label">実施日：</div>
+                  <div class="detail-item__value">
+                    <span class="executed-date">{displayExecutedDate}</span>
+                  </div>
+                </div>
               )}
               
               {course.capacity && course.capacity > 0 && (
@@ -797,6 +827,38 @@ function getGradeColorClass(grade: string): string {
     padding-left: 0;
   }
   
+}
+
+// 申込締切の項目スタイリング
+.deadline-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: rem(4);
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.deadline-key {
+  @include font-ja-s(semibold);
+  color: $text-primary;
+  min-width: rem(100);
+}
+
+.deadline-separator {
+  margin: 0 rem(4);
+}
+
+.deadline-date {
+  @include font-ja-s(semibold);
+  color: $text-primary;
+}
+
+// 実施日のスタイリング
+.executed-date {
+  @include font-ja-s(semibold);
+  color: $text-primary;
 }
 
 // リッチエディタコンテンツのスタイル（microCMS用）

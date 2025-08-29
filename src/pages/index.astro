@@ -620,6 +620,22 @@ document.addEventListener('DOMContentLoaded', function() {
   margin-top: auto; // 自動的に下部に配置
 }
 
+:global(.news-section__actions .base-button) {
+  width: 100%;
+  max-width: rem(320); // 最大幅を320pxに制限
+  min-width: 0; // スマホのみmin-widthを無効化
+  box-sizing: border-box; // paddingを含めた幅計算
+  
+  @include breakpoint-up(sm) {
+    min-width: rem(320); // sm以上では明示的にmin-width設定
+  }
+  
+  @include breakpoint-up(lg) {
+    width: auto; // PCでは元の幅
+    max-width: none; // PCでは最大幅制限なし
+  }
+}
+
 
 :global(.news-item) {
   padding: rem(15) rem(10) rem(15) 0;

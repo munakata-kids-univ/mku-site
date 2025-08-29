@@ -678,6 +678,19 @@ const intentionButtons = course.buttons?.filter((button: any) => {
     &__button {
       color: $text-white !important;
       text-decoration: none !important;
+      width: 100%;
+      max-width: rem(320); // 最大幅を320pxに制限
+      min-width: rem(300); // スマホでも最小300px確保
+      box-sizing: border-box; // paddingを含めた幅計算
+      
+      @include breakpoint-up(sm) {
+        min-width: rem(320); // sm以上では明示的にmin-width設定
+      }
+      
+      @include breakpoint-up(lg) {
+        width: auto; // PCでは元の幅
+        max-width: none; // PCでは最大幅制限なし
+      }
       
       &:hover {
         color: $text-white !important;

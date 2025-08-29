@@ -1086,3 +1086,35 @@ export async function getSummerCategories(): Promise<SummerCategory[]> {
     ];
   }
 }
+
+// 学校マスター型定義
+export interface SchoolMaster {
+  id: string;
+  name: string;
+  kana: string;
+  slug: string;
+  schoolType: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  revisedAt: string;
+}
+
+// 学校マスター一覧取得
+export async function getSchoolMaster(): Promise<SchoolMaster[]> {
+  try {
+    const data = await client.get({
+      endpoint: 'school-master',
+      queries: {
+        limit: 100
+      },
+    });
+    
+    return data.contents as SchoolMaster[];
+  } catch (error) {
+    console.error('学校マスターの取得に失敗しました:', error);
+    
+    // 開発時のフォールバック
+    return [];
+  }
+}

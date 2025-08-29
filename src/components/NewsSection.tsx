@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import BaseButton from './BaseButton';
+import { formatDateForNews } from '../utils/dateUtils';
 
 // ニュース項目の型定義
 interface NewsItem {
@@ -83,14 +84,9 @@ export default function NewsSection({ newsItems, allItems, categoryData, categor
     };
   }, []);
 
-  // 日付をフォーマット
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    }).replace(/\//g, '.');
+  // UTC日付をJSTに変換してフォーマット
+  const formatDate = (utcDateString: string) => {
+    return formatDateForNews(utcDateString);
   };
 
   return (

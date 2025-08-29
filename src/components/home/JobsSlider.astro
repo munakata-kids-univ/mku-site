@@ -37,40 +37,34 @@ const jobIcons = [
 ---
 
 <section class="jobs-slider-section">
+  <!-- CSS Animationで実装 -->
+  
   <div class="jobs-slider">
-    <div class="jobs-slider__track">
-      <!-- アイコン一覧（1セットのみ） -->
-      {jobIcons.map((job) => (
-        <div class="jobs-icon">
-          <img 
-            src={job.icon.src} 
-            alt={job.label} 
-            class="jobs-icon__image" 
-          />
-        </div>
-      ))}
-      
-      <!-- 無限ループ用の複製（2セット目） -->
-      {jobIcons.map((job) => (
-        <div class="jobs-icon">
-          <img 
-            src={job.icon.src} 
-            alt={job.label} 
-            class="jobs-icon__image" 
-          />
-        </div>
-      ))}
-      
-      <!-- 無限ループ用の複製（3セット目） -->
-      {jobIcons.map((job) => (
-        <div class="jobs-icon">
-          <img 
-            src={job.icon.src} 
-            alt={job.label} 
-            class="jobs-icon__image" 
-          />
-        </div>
-      ))}
+    <div class="jobs-slider__slides" data-duration="20" data-duration-sm="40">
+      <!-- 第1セット -->
+      <div class="jobs-slider__slide">
+        {jobIcons.map((job) => (
+          <div class="jobs-icon">
+            <img 
+              src={job.icon.src} 
+              alt={job.label} 
+              class="jobs-icon__image" 
+            />
+          </div>
+        ))}
+      </div>
+      <!-- 第2セット（シームレスループ用） -->
+      <div class="jobs-slider__slide">
+        {jobIcons.map((job) => (
+          <div class="jobs-icon">
+            <img 
+              src={job.icon.src} 
+              alt={job.label} 
+              class="jobs-icon__image" 
+            />
+          </div>
+        ))}
+      </div>
     </div>
   </div>
 </section>
@@ -87,39 +81,52 @@ const jobIcons = [
   }
 
   .jobs-slider {
-    width: 100%;
-    overflow-x: hidden;
-    overflow-y: visible;
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    overflow: hidden;
     position: relative;
+    padding: rem(40) 0;
+  }
+
+  .jobs-slider__slides {
+    display: flex;
+    width: 200%; // 2セット分の幅
+  }
+  
+  .jobs-slider__slide {
+    flex-basis: 50%; // 各セットが50%の幅
+    display: flex;
+    align-items: center;
+    gap: rem(20); // アイコン間の間隔を統一
+    padding: 0 rem(10); // 左右端の余白
     
+    @include breakpoint-up(sm) {
+      gap: rem(30);
+      padding: 0 rem(15);
+    }
     
-    &__track {
-      display: flex;
-      margin-top: rem(40);
-      margin-bottom: rem(40);
-      width: calc(300%); // 3倍の幅で無限ループ
-      animation: slideJobsRight 45s linear infinite; // 右から左へ
+    @include breakpoint-up(lg) {
+      gap: rem(40);
+      padding: 0 rem(20);
     }
   }
 
   .jobs-icon {
-    flex: 0 0 rem(50);
+    width: rem(50);
     height: rem(50);
-    margin-right: rem(20);
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0; // flexアイテムが縮まないように
     
     @include breakpoint-up(lg) {
-      flex: 0 0 rem(60);
+      width: rem(60);
       height: rem(60);
-      margin-right: rem(30);
     }
     
     @include breakpoint-up(xl) {
-      flex: 0 0 rem(80);
+      width: rem(80);
       height: rem(80);
-      margin-right: rem(40);
     }
     
     // 個別のプカプカアニメーション（遅延を使って自然な動きに）
@@ -155,16 +162,6 @@ const jobIcons = [
     }
   }
 
-  // 右から左へのスライダーアニメーション
-  @keyframes slideJobsRight {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-33.333%); // 1/3移動すると元の位置に戻る（無限ループ効果）
-    }
-  }
-
   // 上下プカプカアニメーション
   @keyframes floatUp {
     0%, 100% {
@@ -175,3 +172,47 @@ const jobIcons = [
     }
   }
 </style>
+
+<script>
+window.addEventListener('DOMContentLoaded', (event) => {
+  const slides = document.getElementsByClassName('jobs-slider__slides');
+  
+  for (let i = 0; i < slides.length; ++i) {
+    const target = slides[i];
+    // sm以降はより遅い速度を使用
+    const isSmUp = window.innerWidth >= 640;
+    const durationAttr = isSmUp ? target.dataset.durationSm : target.dataset.duration;
+    const duration = parseInt(durationAttr || target.dataset.duration) * 1000 || 20000;
+    const childNum = target.firstElementChild.children.length; // 1つ目のスライド内のアイコン数
+    const iconWidth = ((100 / childNum)).toFixed(2);
+    
+    // CSS変数としてアイコン幅を設定
+    target.style.setProperty('--icon-width', `${iconWidth}%`);
+
+    let startTime = 0;
+    let elapsed = 0;
+    let progress = 0;
+
+    const loop = (currentTime) => {
+      if (!startTime) startTime = currentTime;
+      
+      elapsed = currentTime - startTime;
+      progress = elapsed / duration;
+      
+      if (progress >= 1) {
+        // 1周完了、リセット
+        progress = 0;
+        startTime = currentTime;
+      }
+      
+      // シームレスな移動（50%移動すれば元の位置に戻る）
+      const translateX = -(progress * 50);
+      target.style.transform = `translateX(${translateX}%)`;
+      
+      requestAnimationFrame(loop);
+    };
+    
+    requestAnimationFrame(loop);
+  }
+});
+</script>

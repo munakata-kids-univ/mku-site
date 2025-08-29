@@ -10,6 +10,7 @@ import {
   getMainCampusCourses 
 } from '../../../lib/microcms';
 import { convertYearToPath } from '../../../utils/yearConverter';
+import { formatDateForCourse } from '../../../utils/dateUtils';
 
 // データ取得
 const globalSettings = await getGlobalSettings();
@@ -38,7 +39,7 @@ const pageDescription = `${currentYearValue}のメインキャンパス講座一
 // パンくずリスト
 const breadcrumbItems = [
   { label: 'ホーム', href: '/' },
-  { label: '講座', href: '/course' },
+  { label: '講座内容', href: '/course' },
   { label: 'メインキャンパス' }
 ];
 
@@ -86,6 +87,17 @@ const getPhaseMessage = (phase: string) => {
 
 const phase = Array.isArray(mainCampusSettings.phase) ? mainCampusSettings.phase[0] : mainCampusSettings.phase;
 const phaseMessage = getPhaseMessage(phase || '');
+
+// 開催日データを抽出（現在年度に該当するものを取得）
+const executedDates = mainCampusSettings.executedDate?.filter(item => {
+  const itemYear = Array.isArray(item.year) ? item.year[0] : item.year;
+  return itemYear === currentYearValue;
+});
+
+// 最初の開催日を表示用にフォーマット
+const displayExecutedDate = executedDates && executedDates.length > 0 
+  ? formatDateForCourse(executedDates[0].date) 
+  : null;
 
 
 // ステータス別の背景色クラス取得関数
@@ -267,7 +279,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
           <!-- メインキャンパス 3つのポイント -->
           <div class="intro-section__points">
             <h2 class="intro-section__points-title">
-              メインキャンパス <span class="intro-section__points-number">3</span>つのポイント
+              メインキャンパス<br class="u-br-sm"> <span class="intro-section__points-number">3</span>つのポイント
             </h2>
             
             <div class="intro-section__points-grid">
@@ -397,14 +409,20 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
 
         <ContentSectionHeader 
           englishTitle=""
-          title={`${currentYearValue} <br class="u-br-sm">開講コース`}
+          title={`${currentYearValue} コース一覧`}
           customTitleWrapperStyle="courses-title-wrapper"
           customIconStyle="courses-icon"
           class="fade-up"
         />
         
         {courseCards.length > 0 ? (
-          <div class="courses-grid">
+          <>
+            {displayExecutedDate && (
+              <div class="executed-date-display">
+                開催日：{displayExecutedDate}
+              </div>
+            )}
+            <div class="courses-grid">
             {courseCards.map(course => (
               <a href={course.href} class="course-card">
                 <div class="course-card__image">
@@ -454,6 +472,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
               </a>
             ))}
           </div>
+          </>
         ) : (
           <div class="empty-state">
             <div class="empty-state__icon">
@@ -786,7 +805,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     font-size: rem(22);
     font-weight: 600;
     display: inline;
-    background: linear-gradient(to bottom, transparent 15%, $brand-secondary 15%, $brand-secondary 93%, transparent 93%);
+    background: linear-gradient(to bottom, transparent 8%, $brand-secondary 8%, $brand-secondary 98%, transparent 98%);
     color: $text-primary;
     line-height: 1.6;
     padding: rem(4) rem(8) rem(2) rem(4);
@@ -900,13 +919,14 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   
   &__point-image {
     flex-shrink: 0;
-    width: rem(130);
-    aspect-ratio: 4/3;
+    width: rem(150);
+    height: rem(150);
     overflow: hidden;
     
     @include breakpoint-up(lg) {
       width: 100%;
       aspect-ratio: 4/3;
+      height: auto;
       margin: 0 auto;
     }
     
@@ -1068,6 +1088,23 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   }
 }
 
+/* 開催日表示 */
+.executed-date-display {
+  @include font-ja-m(semibold);
+  color: $text-secondary;
+  text-align: center;
+  margin: 0 0 rem(16) 0;
+  
+  @include breakpoint-up(md) {
+    // margin-bottom: rem(40);
+  }
+  
+  @include breakpoint-up(lg) {
+    @include font-ja-l(semibold);
+    // margin-bottom: rem(48);
+  }
+}
+
 /* 講座グリッド */
 .courses-grid {
   display: grid;
@@ -1149,6 +1186,8 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     top: rem(8);
     left: rem(8);
     z-index: 2;
+    display: inline-block;
+    line-height: 1;
     @include breakpoint-up(md) {
       top: rem(10);
       left: rem(10);
@@ -1992,6 +2031,19 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   &__button {
     color: $text-white !important;
     text-decoration: none !important;
+    width: 100%;
+    max-width: rem(320); // 最大幅を320pxに制限
+    min-width: rem(300); // スマホでも最小300px確保
+    box-sizing: border-box; // paddingを含めた幅計算
+    
+    @include breakpoint-up(sm) {
+      min-width: rem(320); // sm以上では明示的にmin-width設定
+    }
+    
+    @include breakpoint-up(lg) {
+      width: auto; // PCでは元の幅
+      max-width: none; // PCでは最大幅制限なし
+    }
     
     &:hover {
       color: $text-white !important;

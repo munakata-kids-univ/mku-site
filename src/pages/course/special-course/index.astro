@@ -9,6 +9,7 @@ import {
   getSpecialCourses 
 } from '../../../lib/microcms';
 import { convertYearToPath } from '../../../utils/yearConverter';
+import { formatDateForCourse } from '../../../utils/dateUtils';
 
 // データ取得
 const globalSettings = await getGlobalSettings();
@@ -31,7 +32,7 @@ const pageDescription = `${currentYearValue}の特設講座一覧。月に1〜2�
 // パンくずリスト
 const breadcrumbItems = [
   { label: 'ホーム', href: '/' },
-  { label: '講座', href: '/course' },
+  { label: '講座内容', href: '/course' },
   { label: '特設講座' }
 ];
 
@@ -46,18 +47,23 @@ const filteredCourses = courses.filter(course => {
 
 // 講座カード用のデータ変換
 const currentYearPath = convertYearToPath(currentYearValue.toString());
-const courseCards = filteredCourses.map(course => ({
-  id: course.id,
-  title: course.title,
-  thumbImg: course.thumbImg,
-  status: course.status,
-  year: course.year,
-  executedDate: course.executedDate,
-  href: `/course/special-course/${currentYearPath}/${course.id}`,
-  providerNames: course.providerItem?.map(item => item.providerName).join('、') || '',
-  targetGrades: Array.isArray(course.targetGrades) ? course.targetGrades : (course.targetGrades ? [course.targetGrades] : []),
-  hasReport: !!(course.afterImages?.length || course.instructor || course.afterReport || course.afterMovieUrl)
-}));
+const courseCards = filteredCourses.map(course => {
+  console.log(`Course: ${course.title}, providerItem:`, course.providerItem);
+  return {
+    id: course.id,
+    title: course.title,
+    thumbImg: course.thumbImg,
+    status: course.status,
+    year: course.year,
+    executedDate: course.executedDate,
+    href: `/course/special-course/${currentYearPath}/${course.id}`,
+    providerNames: course.providerInfo?.map(item => item.providerName).join('、') || '',
+    providerItem: course.providerItem, // デバッグ用
+    providerInfo: course.providerInfo, // デバッグ用
+    targetGrades: Array.isArray(course.targetGrades) ? course.targetGrades : (course.targetGrades ? [course.targetGrades] : []),
+    hasReport: !!(course.afterImages?.length || course.instructor || course.afterReport || course.afterMovieUrl)
+  };
+});
 
 
 // フェーズに応じたメッセージ（後で実装）
@@ -172,19 +178,10 @@ function getGradeColorClass(grade: string): string {
   return 'special';
 }
 
-// 日付フォーマット関数
-function formatExecutedDate(dateString: string): string {
-  if (!dateString) return '';
-  
-  const date = new Date(dateString);
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  
-  const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
-  const weekday = weekdays[date.getDay()];
-  
-  return `${year}年${month}月${day}日(${weekday})`;
+// UTC実施日をJSTに変換してフォーマットする関数
+function formatExecutedDate(utcDateString: string): string {
+  if (!utcDateString) return '';
+  return formatDateForCourse(utcDateString);
 }
 
 // 学年の整列順序関数（scheduleページと同様）
@@ -387,7 +384,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
 
         <ContentSectionHeader 
           englishTitle=""
-          title={`${currentYearValue} <br class="u-br-sm">開講コース`}
+          title={`${currentYearValue} コース一覧`}
           customTitleWrapperStyle="courses-title-wrapper"
           customIconStyle="courses-icon"
           class="fade-up"
@@ -430,9 +427,9 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
                     <h3 class="course-card__title">{course.title}</h3>
                     <div class="course-card__arrow"></div>
                   </div>
-                  {course.providerNames && (
-                    <p class="course-card__provider">{course.providerNames}</p>
-                  )}
+                  <p class="course-card__provider">
+                    {course.providerNames || `Debug: providerInfo = ${JSON.stringify(course.providerInfo)}, providerItem = ${JSON.stringify(course.providerItem)}`}
+                  </p>
                   {course.targetGrades.length > 0 && (
                     <div class="course-card__grades">
                       {(() => {
@@ -700,7 +697,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     font-size: rem(22);
     font-weight: 600;
     display: inline;
-    background: linear-gradient(to bottom, transparent 15%, $brand-turquoise 15%, $brand-turquoise 93%, transparent 93%);
+    background: linear-gradient(to bottom, transparent 8%, $brand-turquoise 8%, $brand-turquoise 98%, transparent 98%);
     color: $text-white;
     line-height: 1.6;
     padding: rem(4) rem(8) rem(2) rem(4);
@@ -802,8 +799,8 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   
   &__point-image {
     flex-shrink: 0;
-    width: rem(130);
-    height: rem(130);
+    width: rem(150);
+    height: rem(150);
     
     @include breakpoint-up(lg) {
       width: 100%;
@@ -1050,6 +1047,8 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     top: rem(8);
     left: rem(8);
     z-index: 2;
+    display: inline-block;
+    line-height: 1;
     @include breakpoint-up(md) {
       top: rem(10);
       left: rem(10);
