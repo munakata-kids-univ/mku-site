@@ -83,7 +83,7 @@ function doPost(e) {
       data.nameKana || '',        // D: お名前(カタカナ)
       data.organization || '',    // E: 学校名または法人名
       data.email || '',           // F: メールアドレス
-      data.phone || '',           // G: 電話番号
+      "'" + (data.phone || ''),   // G: 電話番号（先頭に'を付けて文字列として保存）
       data.message || '',         // H: お問い合わせ内容
       verifyResult.score          // I: reCAPTCHAスコア
     ]]);

@@ -80,7 +80,7 @@ const breadcrumbItems = [
             <dd><a href="tel:0940-36-1169" class="phone-link">0940-36-1169</a></dd>
             
             <dt>FAX番号</dt>
-            <dd><span>0940-37-1525</span></dd>
+            <dd><span class="fax-number">0940-37-1525</span></dd>
           </dl>
         </div>
       </div>
@@ -545,6 +545,11 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       span {
+        @include font-ja-l(semibold);
+        color: $brand-turquoise;
+      }
+
+      .fax-number {
         @include font-ja-l(semibold);
         color: $brand-turquoise;
       }
