@@ -4,6 +4,8 @@ import HeroSection from "../../components/HeroSection.astro";
 import Breadcrumb from "../../components/Breadcrumb.astro";
 import ContentSectionHeader from "../../components/ContentSectionHeader.astro";
 
+const siteKey = import.meta.env.PUBLIC_RECAPTCHA_SITE_KEY;
+
 // パンくずリスト
 const breadcrumbItems = [
   { href: "/", label: "ホーム" },
@@ -102,8 +104,11 @@ const breadcrumbItems = [
           
           <!-- お問い合わせフォーム -->
           <form class="contact-form__form" id="contactForm" method="POST" 
-                action="https://script.google.com/macros/s/AKfycbx4yeVU2bEcsJa17XOA9AzmZvCamrd7-sp4c1891cdf_e5WlreeqaIdW01k_tdsuz0/exec"
+                action="https://script.google.com/macros/s/AKfycbyTiLfUCQZyOZ77L-OHZaKUic3uQTYD-Yd81eheS6u7OD5yq6_cdvC8p5_ItVFdPJ8/exec"
                 target="hidden_iframe">
+            
+            <!-- reCAPTCHA token（隠しフィールド） -->
+            <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response">
             
             <!-- お問い合わせ種別 -->
             <div class="form-field">
@@ -194,6 +199,9 @@ const breadcrumbItems = [
 
   </main>
 
+  <!-- reCAPTCHA v3 スクリプト -->
+  <script src={`https://www.google.com/recaptcha/api.js?render=${import.meta.env.PUBLIC_RECAPTCHA_SITE_KEY}`}></script>
+
   <!-- カスタムモーダル -->
   <div id="modal-overlay" class="modal-overlay">
     <div class="modal-container">
@@ -226,12 +234,12 @@ const breadcrumbItems = [
   </div>
 </BaseLayout>
 
-<script>
+<script define:vars={{ siteKey }} is:inline>
 // チェックボックスの状態に応じて送信ボタンの有効/無効を切り替え
 document.addEventListener('DOMContentLoaded', function() {
-  const privacyCheckbox = document.getElementById('privacy-agreement') as HTMLInputElement;
-  const submitButton = document.getElementById('submit-button') as HTMLButtonElement;
-  const contactForm = document.getElementById('contactForm') as HTMLFormElement;
+  const privacyCheckbox = document.getElementById('privacy-agreement');
+  const submitButton = document.getElementById('submit-button');
+  const contactForm = document.getElementById('contactForm');
 
   if (privacyCheckbox && submitButton) {
     privacyCheckbox.addEventListener('change', function() {
@@ -240,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // モーダル表示関数
-  function showModal(type: 'success' | 'error', title: string, message: string) {
+  function showModal(type, title, message) {
     const modalOverlay = document.getElementById('modal-overlay');
     const modalTitle = document.getElementById('modal-title');
     const modalMessage = document.getElementById('modal-message');
@@ -277,28 +285,53 @@ document.addEventListener('DOMContentLoaded', function() {
   // モーダルオーバーレイクリックで閉じる
   const modalOverlay = document.getElementById('modal-overlay');
   if (modalOverlay) {
-    modalOverlay.addEventListener('click', function(e: Event) {
+    modalOverlay.addEventListener('click', function(e) {
       if (e.target === modalOverlay) {
         closeModal();
       }
     });
   }
 
-  // フォーム送信処理（直接送信でCORS回避）
+  // フォーム送信処理（reCAPTCHA v3対応）
   if (contactForm) {
-    contactForm.addEventListener('submit', function(e: Event) {
+    contactForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
       // 送信ボタンを無効化
       submitButton.disabled = true;
       submitButton.textContent = '送信中...';
       
-      // 送信完了後の処理（1秒後に成功メッセージ）
-      setTimeout(function() {
-        showModal('success', '送信完了', 'お問い合わせありがとうございました。<br>内容を確認後、担当者より折り返しご連絡いたします。');
-        contactForm.reset();
-        privacyCheckbox.checked = false;
-        submitButton.disabled = true;
-        submitButton.textContent = '送信する';
-      }, 1000);
+      // reCAPTCHA v3 トークン取得
+      window.grecaptcha.ready(function() {
+        window.grecaptcha.execute(siteKey, {action: 'contact_form'}).then(function(token) {
+          // 隠しフィールドにトークンを設定
+          const tokenField = document.getElementById('g-recaptcha-response');
+          if (tokenField) {
+            tokenField.value = token;
+          }
+          
+          // フォーム送信
+          const formData = new FormData(contactForm);
+          fetch(contactForm.action, {
+            method: 'POST',
+            body: formData
+          }).then(response => {
+            if (response.ok) {
+              showModal('success', '送信完了', 'お問い合わせありがとうございました。<br>内容を確認後、担当者より折り返しご連絡いたします。');
+              contactForm.reset();
+              privacyCheckbox.checked = false;
+            } else {
+              throw new Error('送信に失敗しました');
+            }
+          }).catch(error => {
+            console.error('送信エラー:', error);
+            showModal('error', '送信エラー', '送信に失敗しました。<br>しばらく時間をおいて再度お試しください。');
+          }).finally(() => {
+            submitButton.disabled = true;
+            submitButton.textContent = '送信する';
+          });
+        });
+      });
     });
   }
 
@@ -306,10 +339,10 @@ document.addEventListener('DOMContentLoaded', function() {
   const navLinks = document.querySelectorAll('.page-nav__link');
   
   navLinks.forEach(link => {
-    link.addEventListener('click', function(e: Event) {
+    link.addEventListener('click', function(e) {
       e.preventDefault();
       
-      const target = e.currentTarget as HTMLAnchorElement;
+      const target = e.currentTarget;
       const href = target.getAttribute('href');
       const targetId = href?.substring(1);
       const targetElement = targetId ? document.getElementById(targetId) : null;
