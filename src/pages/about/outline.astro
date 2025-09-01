@@ -239,6 +239,7 @@ import { partnerLogos } from '../../data/partnerLogos.js';
                   <Image src="/images/content/img_outline_history-04.webp" alt="2024年度 講座数拡大と最優秀賞受賞" width={240} height={180} format="webp" quality={85} loading="lazy" />
                 </div>
               </div>
+              <p class="timeline-note">※写真は福岡県庁への受賞報告時の写真です</p>
             </div>
           </div>
         </div>
@@ -934,6 +935,13 @@ import { partnerLogos } from '../../data/partnerLogos.js';
     color: $text-primary;
     line-height: 1.7;
     margin: 0;
+  }
+
+  .timeline-note {
+    @include font-ja-2s(semibold);
+    color: $text-primary;
+    margin: rem(8) 0 0 0;
+    text-align: right;
   }
 
   .timeline-bubble__image {
