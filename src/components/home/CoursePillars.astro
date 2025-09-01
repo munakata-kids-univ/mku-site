@@ -69,7 +69,8 @@ const pillars = [
   <div class="u-container">
     <div class="pillars__header fade-up">
       <h2 class="pillars__title">
-        むなかた子ども大学<span class="u-space-sm-up"> </span><br class="u-br-sm">4つの取組
+        <span class="pillars__title-sm">むなかた子ども大学<br>4つの取組</span>
+        <span class="pillars__title-md-up">むなかた子ども大学 4つの取組</span>
       </h2>
       <p class="pillars__subtitle">Four Programs</p>
     </div>
@@ -186,6 +187,31 @@ const pillars = [
     
     @include breakpoint-up(lg) {
       @include font-ja-2l(semibold);
+    }
+    
+    &-sm,
+    &-md-up {
+      @include font-ja-l(semibold);
+      
+      @include breakpoint-up(lg) {
+        @include font-ja-2l(semibold);
+      }
+    }
+    
+    &-sm {
+      display: block;
+      
+      @include breakpoint-up(sm) {
+        display: none;
+      }
+    }
+    
+    &-md-up {
+      display: none;
+      
+      @include breakpoint-up(sm) {
+        display: block;
+      }
     }
   }
 
@@ -673,15 +699,6 @@ const pillars = [
 
   &--summer-course &__arrow {
     background-color: $brand-pink;
-  }
-}
-
-/* レスポンシブスペースユーティリティ */
-:global(.u-space-sm-up) {
-  display: none;
-  
-  @include breakpoint-up(sm) {
-    display: inline;
   }
 }
 </style>
