@@ -69,9 +69,9 @@ const pillars = [
   <div class="u-container">
     <div class="pillars__header fade-up">
       <h2 class="pillars__title">
-        むなかた子ども大学<br class="u-br-sm">4つの柱
+        むなかた子ども大学<span class="u-space-sm-up"> </span><br class="u-br-sm">4つの取組
       </h2>
-      <p class="pillars__subtitle">4 Pillars</p>
+      <p class="pillars__subtitle">Four Programs</p>
     </div>
 
     <div class="pillars__grid fade-up fade-up--delay-2">
@@ -673,6 +673,15 @@ const pillars = [
 
   &--summer-course &__arrow {
     background-color: $brand-pink;
+  }
+}
+
+/* レスポンシブスペースユーティリティ */
+:global(.u-space-sm-up) {
+  display: none;
+  
+  @include breakpoint-up(sm) {
+    display: inline;
   }
 }
 </style>
