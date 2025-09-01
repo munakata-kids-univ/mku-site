@@ -4,19 +4,19 @@ import { Image } from "astro:assets";
 import { partnerLogos } from '../../data/partnerLogos.js';
 ---
 
-<BaseLayout title="団体概要" description="むなかた子ども大学の基本情報、沿革、協力パートナーについてご紹介します。2021年の開学以来の歩みと、社会とともに進めるキャリア教育の現在地をご覧ください。">
+<BaseLayout title="事業概要" description="むなかた子ども大学の基本情報、沿革、協力パートナーについてご紹介します。2021年の開学以来の歩みと、社会とともに進めるキャリア教育の現在地をご覧ください。">
   <main>
     <section class="hero">
       <div class="hero__container">
         <div class="hero__content">
           <div class="hero__text fade-up">
-            <h1 class="hero__title">団体概要</h1>
-            <p class="hero__subtitle">Outline</p>
+            <h1 class="hero__title">事業概要</h1>
+            <p class="hero__subtitle">Project Outline</p>
           </div>
           <div class="hero__image">
             <Image
               src="/images/backgrounds/img_bg-hero_outline-01.webp"
-              alt="団体概要"
+              alt="事業概要"
               width={600}
               height={400}
               format="webp"
@@ -39,7 +39,7 @@ import { partnerLogos } from '../../data/partnerLogos.js';
               <a href="/about">むなかた子ども大学について</a>
             </li>
             <li class="breadcrumb__item" aria-current="page">
-              団体概要
+              事業概要
             </li>
           </ol>
         </nav>
@@ -50,7 +50,7 @@ import { partnerLogos } from '../../data/partnerLogos.js';
     <section class="introduction">
       <div class="introduction__container">
         <p class="introduction__text">
-          宗像市独自のキャリア教育 「むなかた子ども大学」 は、 2021年の開学以来、<br>
+          宗像市独自のキャリア教育 「むなかた子ども大学」 は、 2021年の開学以来、
           子どもたちが 「本物から学ぶ」「本物を体験する」 機会を年間を通じて提供し、子どもたちが "夢" や "志"を考えるきっかけづくりに取り組んでいます。<br>
           本ページでは、私たちの基本情報・あゆみ・そして協力パートナーをご紹介します。宗像市が社会とともに進めるキャリア教育の広がりと現在地をぜひご覧ください。
         </p>
@@ -91,17 +91,17 @@ import { partnerLogos } from '../../data/partnerLogos.js';
         <div class="information-box fade-up fade-up--delay-1">
           <dl class="information-list">
             <div class="information-item">
-              <dt class="information-item__term">団体名称</dt>
+              <dt class="information-item__term">事業名</dt>
               <dd class="information-item__description">むなかた子ども大学（Munakata Kids University）</dd>
             </div>
             
             <div class="information-item">
-              <dt class="information-item__term">設立</dt>
+              <dt class="information-item__term">開始</dt>
               <dd class="information-item__description">2021年4月</dd>
             </div>
             
             <div class="information-item">
-              <dt class="information-item__term">運営主体</dt>
+              <dt class="information-item__term">主催</dt>
               <dd class="information-item__description">
                 宗像市教育委員会<br>
                 （教育部 教育総務課 地域教育連携室 グローバル人材育成係）
@@ -124,7 +124,7 @@ import { partnerLogos } from '../../data/partnerLogos.js';
             </div>
             
             <div class="information-item">
-              <dt class="information-item__term">主な活動</dt>
+              <dt class="information-item__term">主な取組</dt>
               <dd class="information-item__description">メインキャンパス／特設講座／子ども大学の日／夏の課外授業</dd>
             </div>
           </dl>
@@ -210,7 +210,7 @@ import { partnerLogos } from '../../data/partnerLogos.js';
                 <div class="timeline-bubble__text">
                   <h3 class="timeline-bubble__year">2023年度(令和5年度)</h3>
                   <p class="timeline-bubble__description">
-                    夏の課外授業スタート（約70講座）。
+                    夏の課外授業をむなかた子ども大学事業としてリニューアル（約70講座）。
                   </p>
                 </div>
                 <div class="timeline-bubble__image">
@@ -467,7 +467,10 @@ import { partnerLogos } from '../../data/partnerLogos.js';
       color: $text-primary;
       line-height: 1.8;
       margin: 0;
-      max-width: rem(1200);
+      
+      @include breakpoint-up(xl) {
+        max-width: rem(1200);
+      }
     }
   }
 
