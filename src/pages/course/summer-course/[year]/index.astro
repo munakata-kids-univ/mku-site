@@ -276,7 +276,7 @@ function getGradeColorClass(grade: string): string {
   
   // 高校生
   if (grade.match(/^高\d+$/)) {
-    return 'junior'; // 高校生は中学生と同じ色
+    return 'high-school'; // 高校生専用の色
   }
   
   // その他
@@ -1343,6 +1343,11 @@ function getGradeColorClass(grade: string): string {
   
   &--junior {
     background-color: $brand-sub-turquoise-low;
+    color: $text-primary;
+  }
+  
+  &--high-school {
+    background-color: #9db7d6;
     color: $text-primary;
   }
   

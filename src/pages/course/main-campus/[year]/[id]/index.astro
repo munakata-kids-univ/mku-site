@@ -222,11 +222,55 @@ function getGradeColorClass(grade: string): string {
   
   // 高校生
   if (grade.match(/^高\d+$/)) {
-    return 'junior'; // 高校生は中学生と同じ色
+    return 'high-school'; // 高校生専用の色
   }
   
   // その他
   return 'special';
+}
+
+// 学年の整列順序関数（scheduleページと同様）
+function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: string[]; htmlString: string } {
+  const grades = Array.isArray(targetGrades) ? targetGrades : [targetGrades];
+  
+  // 学年の表示順を決める関数
+  function getGradeOrder(grade: string): number {
+    // 未就学児は最初
+    if (grade === '未就学児') {
+      return 0;
+    }
+    
+    // 1年～9年（小中学校）
+    const elementaryJuniorMatch = grade.match(/^(\d+)年$/);
+    if (elementaryJuniorMatch && elementaryJuniorMatch[1]) {
+      const num = parseInt(elementaryJuniorMatch[1]);
+      if (num >= 1 && num <= 9) {
+        return num; // 1～9の順序
+      }
+    }
+    
+    // 高1～高3（高校）
+    const highSchoolMatch = grade.match(/^高(\d+)$/);
+    if (highSchoolMatch && highSchoolMatch[1]) {
+      const num = parseInt(highSchoolMatch[1]);
+      if (num >= 1 && num <= 3) {
+        return 10 + num; // 11～13の順序（10 + 1～3）
+      }
+    }
+    
+    // その他は最後
+    return 999;
+  }
+  
+  // 学年を指定された順序でソート
+  const sortedGrades = grades.sort((a, b) => {
+    return getGradeOrder(a) - getGradeOrder(b);
+  });
+  
+  return {
+    sortedGrades,
+    htmlString: sortedGrades.join('・') // 後方互換性のため
+  };
 }
 ---
 
@@ -415,8 +459,8 @@ function getGradeColorClass(grade: string): string {
                   <div class="detail-item__value">
                     <div class="target-grades">
                       {(() => {
-                        const grades = Array.isArray(course.targetGrades) ? course.targetGrades : [course.targetGrades];
-                        return grades.map((grade, index) => (
+                        const { sortedGrades } = formatTargetGrades(course.targetGrades);
+                        return sortedGrades.map((grade, index) => (
                           <span key={index} class={`target-grade target-grade--${getGradeColorClass(grade)}`}>{grade}</span>
                         ));
                       })()}
@@ -1235,6 +1279,10 @@ function getGradeColorClass(grade: string): string {
 
   &--junior {
     background-color: $brand-sub-turquoise-low;
+  }
+
+  &--high-school {
+    background-color: #9db7d6;
   }
 
   &--special {
