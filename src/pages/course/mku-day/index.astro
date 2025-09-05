@@ -211,6 +211,20 @@ const breadcrumbItems = [
                     </tbody>
                   </table>
                 </div>
+                
+                {/* 実施後画像 */}
+                {event.afterImages && event.afterImages.length > 0 && (
+                  <div class="after-images">
+                    {event.afterImages.map(image => (
+                      <div class="after-images__item">
+                        <img 
+                          src={image.url} 
+                          alt={image.alt || `${event.schoolName?.name || event.schoolName}の活動の様子`} 
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               );
             })}
@@ -884,6 +898,47 @@ const breadcrumbItems = [
     }
   }
   
+}
+
+/* 実施後画像 */
+.after-images {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: rem(12);
+  margin-top: rem(16);
+  
+  @include breakpoint-up(sm) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: rem(16);
+    margin-top: rem(20);
+  }
+  
+  @include breakpoint-up(md) {
+    gap: rem(20);
+    margin-top: rem(24);
+  }
+  
+  &__item {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: $radius-m;
+    background: $background-secondary;
+    
+    @include breakpoint-up(md) {
+      border-radius: $radius-l;
+    }
+    
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+      
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+  }
 }
 
 /* 空状態 */
