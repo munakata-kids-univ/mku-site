@@ -294,6 +294,9 @@ function getParentJoinText(parentJoin: any): string {
   
   return '';
 }
+
+// 実施レポートの存在判定
+const hasAfterReport = (course.afterImages && course.afterImages.length > 0) || course.instructor || course.afterReport || course.participantCount;
 ---
 
 <BaseLayout title={pageTitle} description={pageDescription}>
@@ -324,7 +327,7 @@ function getParentJoinText(parentJoin: any): string {
           </div>
           
           <!-- 実施レポートセクション -->
-          {((course.afterImages && course.afterImages.length > 0) || course.instructor || course.afterReport || course.participantCount) && (
+          {hasAfterReport && (
             <div class="course-info__after-report">
               <div class="after-report-content">
                 <div class="after-report-inner">
@@ -552,6 +555,7 @@ function getParentJoinText(parentJoin: any): string {
           </div>
           
           <!-- 連絡事項セクション -->
+          {!hasAfterReport && (
           <div class="course-info__notices">
             <h2 class="course-info__section-title">連絡事項</h2>
             <div class="notices-content">
@@ -564,6 +568,7 @@ function getParentJoinText(parentJoin: any): string {
               </div>
             </div>
           </div>
+          )}
           
           
           <!-- 注意事項セクション -->

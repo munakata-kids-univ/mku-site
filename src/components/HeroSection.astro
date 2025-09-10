@@ -3,7 +3,7 @@ import { Image } from "astro:assets";
 
 interface Props {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   imageSrc?: string;
   imageAlt?: string;
   showImage?: boolean;
@@ -25,7 +25,7 @@ const {
     <div class="hero__content">
       <div class="hero__text fade-up">
         <h1 class="hero__title" set:html={title}></h1>
-        <p class="hero__subtitle">{subtitle}</p>
+        {subtitle && <p class="hero__subtitle">{subtitle}</p>}
       </div>
       {showImage && imageSrc && (
         <div class="hero__image">

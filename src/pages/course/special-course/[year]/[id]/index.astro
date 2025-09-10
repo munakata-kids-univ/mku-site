@@ -239,6 +239,9 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     htmlString: sortedGrades.join('・') // 後方互換性のため
   };
 }
+
+// 実施レポートの存在判定
+const hasAfterReport = (course.afterImages && course.afterImages.length > 0) || course.instructor || course.afterReport || course.afterMovieUrl;
 ---
 
 <BaseLayout title={pageTitle} description={pageDescription}>
@@ -269,7 +272,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
           </div>
           
           <!-- 実施レポートセクション -->
-          {((course.afterImages && course.afterImages.length > 0) || course.instructor || course.afterReport || course.afterMovieUrl) && (
+          {hasAfterReport && (
             <div class="course-info__after-report">
               <div class="after-report-content">
                 <div class="after-report-inner">
@@ -509,6 +512,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
           )}
           
           <!-- 連絡事項セクション -->
+          {!hasAfterReport && (
           <div class="course-info__notices">
             <h2 class="course-info__section-title">連絡事項</h2>
             <div class="notices-content">
@@ -521,8 +525,10 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
               </div>
             </div>
           </div>
+          )}
           
           <!-- 準備物セクション -->
+          {!hasAfterReport && (
           <div class="course-info__preparation">
             <h2 class="course-info__section-title">準備物</h2>
             <div class="preparation-content">
@@ -535,20 +541,33 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
               </div>
             </div>
           </div>
+          )}
           
           <!-- 受付・解散セクション -->
+          {!hasAfterReport && (
           <div class="course-info__reception">
             <h2 class="course-info__section-title">受付・解散</h2>
             <div class="reception-content">
-              <div class="rich-content">
-                {course.recpAndDism && typeof course.recpAndDism === 'string' ? (
-                  <div set:html={course.recpAndDism}></div>
-                ) : (
-                  <p>まだ連絡事項はありません。<br>開催日前日までにこまめに確認してください。</p>
-                )}
-              </div>
+              {course.recpAndDism && course.recpAndDism.reception ? (
+                <div class="reception-section">
+                  <h3 class="reception-section__title reception-section__title--reception">受付</h3>
+                  <div class="reception-section__content rich-content" set:html={course.recpAndDism.reception}></div>
+                </div>
+              ) : null}
+              
+              {course.recpAndDism && course.recpAndDism.dismissal ? (
+                <div class="reception-section">
+                  <h3 class="reception-section__title reception-section__title--dismissal">解散</h3>
+                  <div class="reception-section__content rich-content" set:html={course.recpAndDism.dismissal}></div>
+                </div>
+              ) : null}
+              
+              {(!course.recpAndDism || (!course.recpAndDism.reception && !course.recpAndDism.dismissal)) && (
+                <p class="empty-notice">まだ連絡事項はありません。<br>開催日前日までにこまめに確認してください。</p>
+              )}
             </div>
           </div>
+          )}
         </div>
       </div>
     </section>
@@ -1666,6 +1685,34 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
   border: 1px solid $border-secondary;
 }
 
+.reception-section {
+  &:not(:last-child) {
+    margin-bottom: rem(24);
+  }
+}
+
+.reception-section__title {
+  @include font-ja-s(semibold);
+  color: $text-primary;
+  margin-bottom: rem(8);
+  padding: rem(2) 0;
+  display: inline-block;
+  
+  &--reception {
+    background: linear-gradient(transparent 60%, $brand-sub-turquoise 60%);
+  }
+  
+  &--dismissal {
+    background: linear-gradient(transparent 60%, $brand-sub-turquoise 60%);
+  }
+}
+
+.reception-section__content {
+  @include font-ja-s;
+  color: $text-primary;
+  line-height: 1.6;
+}
+
 // reception-content内のリッチコンテンツのスタイル
 .reception-content .rich-content {
   // 基本テキストはregular
@@ -1772,6 +1819,133 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     &:hover {
       color: $text-link-hover;
     }
+  }
+}
+
+// reception-section__content内のリッチコンテンツのスタイル（notices-contentと同様）
+.reception-section__content.rich-content {
+  // 基本テキストはregular
+  max-width: 100%;
+  overflow: hidden;
+  word-wrap: break-word;
+  
+  :global(h3), :global(h4), :global(h5) {
+    font-size: var(--font-size-ja-s) !important;
+    font-weight: 600 !important;
+    color: $text-primary;
+    margin: rem(16) 0 rem(8) 0;
+  }
+  
+  :global(p) {
+    font-size: var(--font-size-ja-s) !important;
+    color: $text-primary !important;
+    margin: rem(8) 0 !important;
+    font-weight: 400 !important;
+    line-height: 1.6 !important;
+    
+    &:first-child {
+      margin-top: 0 !important;
+    }
+    
+    &:last-child {
+      margin-bottom: 0 !important;
+    }
+  }
+  
+  :global(strong), :global(b) {
+    font-weight: 600 !important;
+  }
+  
+  :global(*:first-child) {
+    margin-top: 0 !important;
+  }
+  
+  :global(*:last-child) {
+    margin-bottom: 0 !important;
+  }
+  
+  :global(ul), :global(ol) {
+    margin: rem(8) 0;
+    padding-left: rem(20);
+  }
+  
+  :global(ul) {
+    list-style-type: disc;
+  }
+  
+  :global(ol) {
+    list-style-type: decimal;
+  }
+  
+  :global(li) {
+    font-size: var(--font-size-ja-s) !important;
+    color: $text-primary;
+    margin-bottom: rem(4);
+    font-weight: 400 !important;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  :global(iframe) {
+    max-width: 100%;
+    height: auto;
+    border: none;
+    border-radius: rem(8);
+  }
+  
+  :global(img) {
+    width: 100% !important;
+    height: auto !important;
+    border-radius: rem(4);
+    margin: rem(8) 0;
+    display: block;
+  }
+  
+  :global(figure) {
+    display: block;
+    margin: rem(8) 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    padding: 0;
+    
+    img {
+      margin: 0;
+      width: 100% !important;
+      height: auto !important;
+      display: block;
+    }
+  }
+  
+  :global(a) {
+    font-size: var(--font-size-ja-s) !important;
+    font-weight: 600 !important;
+    color: $text-link;
+    text-decoration: underline;
+    word-break: break-all;
+    
+    &:hover {
+      color: $text-link-hover;
+    }
+  }
+}
+
+// 空の状態メッセージのスタイル
+.reception-content .empty-notice {
+  color: $text-primary !important;
+  font-weight: 400 !important;
+  margin: rem(8) 0 !important;
+  font-size: var(--font-size-ja-s) !important;
+  line-height: 1.6 !important;
+  
+  &:first-child {
+    margin-top: 0 !important;
+  }
+  
+  &:last-child {
+    margin-bottom: 0 !important;
   }
 }
 
