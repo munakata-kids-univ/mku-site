@@ -420,31 +420,75 @@ export async function getSpecialCourses(yearValue?: string): Promise<SpecialCour
 
 export async function getSummerCourses(yearValue?: string): Promise<SummerCourse[]> {
   try {
-    const queries: Record<string, any> = {};
+    console.log('=== getSummerCourses: API呼び出し開始 ===');
     
-    // フィルターは使わず、全件取得してクライアント側でフィルタリング
-    // microCMSの配列フィルターが複雑なため
+    // 全データを取得するため、offsetを使って複数回APIを呼び出す
+    let allContents: SummerCourse[] = [];
+    let offset = 0;
+    const limit = 100; // microCMSのlimit上限
+    let totalCount = 0;
     
-    const data = await client.get({
+    // 初回のAPIコール
+    const firstData = await client.get({
       endpoint: 'summer-course',
       queries: {
-        limit: 100 // 取得件数を100件に増加
+        limit,
+        offset: 0
       },
     });
     
-    let contents = data.contents as SummerCourse[];
+    totalCount = firstData.totalCount;
+    allContents = [...(firstData.contents || [])];
+    console.log(`=== getSummerCourses: 初回API応答受信 ===`);
+    console.log(`Total count: ${totalCount}`);
+    console.log(`Retrieved courses (first batch): ${firstData.contents?.length || 0}`);
+    
+    // 残りのデータがある場合は追加でAPIコール
+    while (allContents.length < totalCount) {
+      offset += limit;
+      console.log(`=== getSummerCourses: 追加API呼び出し offset=${offset} ===`);
+      
+      const additionalData = await client.get({
+        endpoint: 'summer-course',
+        queries: {
+          limit,
+          offset
+        },
+      });
+      
+      if (additionalData.contents && additionalData.contents.length > 0) {
+        allContents = [...allContents, ...additionalData.contents];
+        console.log(`Retrieved courses (additional batch): ${additionalData.contents.length}`);
+        console.log(`Total courses so far: ${allContents.length}`);
+      } else {
+        console.log('No more courses to fetch');
+        break;
+      }
+    }
+    
+    console.log(`=== getSummerCourses: 全データ取得完了 ===`);
+    console.log(`Final total: ${allContents.length}/${totalCount} courses`);
+    
+    let contents = allContents;
     
     // クライアント側で年度フィルタリング
     if (yearValue) {
+      console.log(`=== getSummerCourses Filter Debug ===`);
+      console.log(`Filtering for year: ${yearValue}`);
+      console.log(`Total courses before filter: ${contents.length}`);
+      
       contents = contents.filter(course => {
         const courseYear = Array.isArray(course.year) ? course.year[0] : course.year;
         return courseYear === yearValue;
       });
+      
+      console.log(`Total courses after filter: ${contents.length}`);
     }
     
+    console.log(`=== getSummerCourses: 最終的に返却するコース数: ${contents.length} ===`);
     return contents;
   } catch (error) {
-    console.error('夏の課外授業講座の取得に失敗しました:', error);
+    console.error('=== getSummerCourses: エラー発生 ===', error);
     return []; // エラー時は空配列を返す
   }
 }
