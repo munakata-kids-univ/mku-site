@@ -17,9 +17,12 @@ import { formatDateForCourse, convertUTCToJST, extractJSTDateParts } from '@/uti
 export async function getStaticPaths() {
   try {
     // 全ての講座データを取得
+    console.log('=== getStaticPaths: Starting getSummerCourses ===');
     const allCourses = await getSummerCourses();
+    console.log(`=== getStaticPaths: Retrieved ${allCourses?.length || 0} courses ===`);
     
     if (!allCourses || allCourses.length === 0) {
+      console.log('=== getStaticPaths: No courses found, returning empty array ===');
       return [];
     }
 
@@ -35,6 +38,9 @@ export async function getStaticPaths() {
         props: { originalYear, pathYear }
       };
     });
+    
+    console.log(`=== getStaticPaths: Generated ${paths.length} paths ===`);
+    console.log('=== getStaticPaths: Paths:', paths.map(p => p.params.year));
 
     return paths;
   } catch (error) {
@@ -65,7 +71,13 @@ if (year === currentYearPath) {
 }
 
 // 過去年度の講座一覧を取得
+console.log(`Fetching courses for actualYear: ${actualYear}`);
 const courses = await getSummerCourses(actualYear);
+
+// デバッグ用：全年度のデータも取得して比較
+const allCoursesDebug = await getSummerCourses();
+console.log(`All available courses: ${allCoursesDebug.length}`);
+console.log('Available years:', [...new Set(allCoursesDebug.map(c => Array.isArray(c.year) ? c.year[0] : c.year))]);
 
 // 夏課外カテゴリーデータを取得
 const summerCategories = await getSummerCategories();
@@ -91,86 +103,95 @@ const breadcrumbItems = [
 ];
 
 // 講座カード用のデータ変換（開催日ごとに分割対応）
-const courseCards = [];
-let cardIndex = 0;
-
 // デバッグ: 実際のcoursesデータ構造を確認
+console.log(`=== Summer Course Year Page Debug ===`);
+console.log(`URL year parameter: ${year}`);
+console.log(`Actual year for filtering: ${actualYear}`);
+console.log(`Total courses retrieved: ${courses.length}`);
 console.log('Raw courses data:', JSON.stringify(courses.slice(0, 2), null, 2));
-console.log('CourseCards data:', JSON.stringify(courseCards.slice(0, 3), null, 2));
 
-courses.forEach(course => {
-  console.log(`Course ${course.id} schedule:`, course.schedule);
-  console.log(`Course ${course.id} full data:`, {
-    executedDate: course.executedDate,
-    startTime: course.startTime,
-    endTime: course.endTime,
-    atAnyTime: course.atAnyTime,
-    atAnyTimeType: typeof course.atAnyTime,
-    date: course.date,
-    scheduleLength: course.schedule?.length
-  });
-  
-  const courseYearPath = convertYearToPath(Array.isArray(course.year) ? course.year[0] : course.year);
-  
-  // scheduleが存在し、複数の開催日がある場合は分割
-  if (course.schedule && course.schedule.length > 0) {
-    course.schedule.forEach((scheduleItem, index) => {
-      const urlSuffix = course.schedule.length > 1 ? `-${index + 1}` : '';
-      const scheduleTitle = course.schedule.length > 1 ? 
-        `${course.title} (${index + 1}回目)` : course.title;
-      
-      console.log(`Schedule item ${index}:`, scheduleItem);
-      
-      courseCards.push({
-        id: `${course.id}${urlSuffix}`,
-        title: scheduleTitle,
-        subtitle: course.subtitle,
-        thumbImg: course.thumbImg,
-        status: '募集終了', // 過去年度は全て募集終了
-        year: course.year,
-        href: `/course/summer-course/${courseYearPath}/${course.id}${urlSuffix}`,
-        providerNames: course.providerInfo?.map(item => item.providerName).join('、') || '',
-        targetGrades: Array.isArray(course.targetGrades) ? course.targetGrades : (course.targetGrades ? [course.targetGrades] : []),
-        category: (typeof course.category === 'object' && course.category?.category) ? course.category.category : (course.category || 'その他'),
-        courseType: (Array.isArray(course.courseType) ? course.courseType[0] : course.courseType)?.toString().trim() || 'undefined',
-        hasReport: !!(course.afterImages?.length || course.instructor || course.afterReport || course.afterMovieUrl),
-        scheduleDate: scheduleItem.date || course.date,
-        executedDate: scheduleItem.executedDate || course.executedDate,
-        startTime: scheduleItem.startTime || course.startTime,
-        endTime: scheduleItem.endTime || course.endTime,
-        atAnyTime: scheduleItem.atAnyTime || course.atAnyTime,
-        residencyText: course.cityOutsideOk ? '市内・市外在住の' : '市内在住の',
-        parentJoinText: course.parentJoin ? '保護者の参加が必要です' : ''
-      });
-    });
-  } else {
-    // scheduleが存在しない場合はcourseレベルのデータを使用
-    courseCards.push({
-      id: course.id,
-      title: course.title,
-      subtitle: course.subtitle,
-      thumbImg: course.thumbImg,
-      status: '募集終了', // 過去年度は全て募集終了
-      year: course.year,
-      href: `/course/summer-course/${courseYearPath}/${course.id}`,
-      providerNames: course.providerInfo?.map(item => item.providerName).join('、') || '',
-      targetGrades: Array.isArray(course.targetGrades) ? course.targetGrades : (course.targetGrades ? [course.targetGrades] : []),
-      category: (typeof course.category === 'object' && course.category?.category) ? course.category.category : (course.category || 'その他'),
-      courseType: (Array.isArray(course.courseType) ? course.courseType[0] : course.courseType)?.toString().trim() || 'undefined',
-      hasReport: !!(course.afterImages?.length || course.instructor || course.afterReport || course.afterMovieUrl),
-      scheduleDate: course.date,
+const courseYearPath = convertYearToPath(actualYear);
+// 講座カード作成を安全に実行
+let courseCards = [];
+try {
+  courseCards = courses.flatMap(course => {
+    console.log(`Course ${course.id} schedule:`, course.schedule);
+    console.log(`Course ${course.id} full data:`, {
       executedDate: course.executedDate,
       startTime: course.startTime,
       endTime: course.endTime,
       atAnyTime: course.atAnyTime,
-      residencyText: course.cityOutsideOk ? '市内・市外在住の' : '市内在住の',
-      parentJoinText: course.parentJoin ? '保護者の参加が必要です' : ''
+      atAnyTimeType: typeof course.atAnyTime,
+      date: course.date,
+      scheduleLength: course.schedule?.length
     });
-  }
-});
+    
+    // scheduleが存在し、複数の開催日がある場合は分割
+    if (course.schedule && course.schedule.length > 0) {
+      return course.schedule.map((scheduleItem, index) => {
+        const urlSuffix = course.schedule.length > 1 ? `-${index + 1}` : '';
+        const scheduleTitle = course.schedule.length > 1 ? 
+          `${course.title} (${index + 1}回目)` : course.title;
+        
+        console.log(`Schedule item ${index}:`, scheduleItem);
+        
+        return {
+          id: `${course.id}${urlSuffix}`,
+          title: scheduleTitle,
+          subtitle: course.subtitle,
+          thumbImg: course.thumbImg,
+          status: '募集終了', // 過去年度は全て募集終了
+          year: course.year,
+          href: `/course/summer-course/${courseYearPath}/${course.id}${urlSuffix}`,
+          providerNames: course.providerInfo?.map(item => item.providerName).join('、') || '',
+          targetGrades: Array.isArray(course.targetGrades) ? course.targetGrades : (course.targetGrades ? [course.targetGrades] : []),
+          category: (typeof course.category === 'object' && course.category?.category) ? course.category.category : (course.category || 'その他'),
+          courseType: (Array.isArray(course.courseType) ? course.courseType[0] : course.courseType)?.toString().trim() || 'undefined',
+          hasReport: !!(course.afterImages?.length || course.instructor || course.afterReport || course.participantCount),
+          scheduleDate: scheduleItem.date || course.date,
+          executedDate: scheduleItem.executedDate || course.executedDate,
+          startTime: scheduleItem.startTime || course.startTime,
+          endTime: scheduleItem.endTime || course.endTime,
+          atAnyTime: scheduleItem.atAnyTime || course.atAnyTime,
+          residencyText: course.cityOutsideOk ? '市内・市外在住の' : '市内在住の',
+          parentJoinText: '' // getParentJoinText(course.parentJoin)
+        };
+      });
+    } else {
+      // scheduleが存在しない場合はcourseレベルのデータを使用
+      return [{
+        id: course.id,
+        title: course.title,
+        subtitle: course.subtitle,
+        thumbImg: course.thumbImg,
+        status: '募集終了', // 過去年度は全て募集終了
+        year: course.year,
+        href: `/course/summer-course/${courseYearPath}/${course.id}`,
+        providerNames: course.providerInfo?.map(item => item.providerName).join('、') || '',
+        targetGrades: Array.isArray(course.targetGrades) ? course.targetGrades : (course.targetGrades ? [course.targetGrades] : []),
+        category: (typeof course.category === 'object' && course.category?.category) ? course.category.category : (course.category || 'その他'),
+        courseType: (Array.isArray(course.courseType) ? course.courseType[0] : course.courseType)?.toString().trim() || 'undefined',
+        hasReport: !!(course.afterImages?.length || course.instructor || course.afterReport || course.participantCount),
+        scheduleDate: course.date,
+        executedDate: course.executedDate,
+        startTime: course.startTime,
+        endTime: course.endTime,
+        atAnyTime: course.atAnyTime,
+        residencyText: course.cityOutsideOk ? '市内・市外在住の' : '市内在住の',
+        parentJoinText: '' // getParentJoinText(course.parentJoin)
+      }];
+    }
+  });
+} catch (error) {
+  console.error('Error creating courseCards:', error);
+  courseCards = [];
+}
 
 // デバッグ: courseCards作成後の確認
 console.log('Final courseCards count:', courseCards.length);
+console.log('CourseCards type:', typeof courseCards);
+console.log('CourseCards is array?', Array.isArray(courseCards));
+console.log('CourseCards length for template:', courseCards.length);
 console.log('CourseCards schedule info:');
 courseCards.forEach((card, index) => {
   if (index < 5) {
@@ -282,6 +303,26 @@ function getGradeColorClass(grade: string): string {
   // その他
   return 'special';
 }
+
+function getParentJoinText(parentJoin: any): string {
+  // parentJoin値の表示用変換マッピング
+  const parentJoinMapping: Record<string, string> = {
+    'r0A1BukTIs': '保護者の方も参加できます',
+    '87MGdHzdV4': '保護者の方は参加できません',
+    'FEytb3Ezyt': '保護者の方の参加が必須です'
+  };
+
+  if (!parentJoin) return '';
+  
+  const parentJoinStr = typeof parentJoin === 'string' ? parentJoin : (Array.isArray(parentJoin) ? parentJoin[0] : '');
+  
+  if (parentJoinStr && parentJoinStr !== '選択してください' && parentJoinStr.trim() !== '') {
+    const displayText = parentJoinMapping[parentJoinStr] || parentJoinStr;
+    return displayText;
+  }
+  
+  return '';
+}
 ---
 
 <BaseLayout 
@@ -323,7 +364,8 @@ function getGradeColorClass(grade: string): string {
           class="fade-up"
         />
         
-        {courseCards.length > 0 ? (
+        <!-- DEBUG: courseCards.length = {courseCards?.length || 0} -->
+        {courseCards && courseCards.length > 0 ? (
           <div class="courses-section">
             <div class="filter-tabs">
               <button class="filter-tab filter-tab--active" data-sort="date">日付から探す</button>
