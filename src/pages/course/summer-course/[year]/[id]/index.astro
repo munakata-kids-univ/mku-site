@@ -510,21 +510,21 @@ const hasAfterReport = (course.afterImages && course.afterImages.length > 0) || 
                 </div>
               )}
               
-              {course.applyMethod && (
+              {course.applyMethod && !hasAfterReport && (
                 <div class="detail-item detail-item--highlighted">
                   <div class="detail-item__label">申込方法：</div>
                   <div class="detail-item__value" set:html={course.applyMethod.replace(/\n/g, '<br>')}></div>
                 </div>
               )}
               
-              {displayScheduleItem && displayScheduleItem.entryDeadline && (
+              {displayScheduleItem && displayScheduleItem.entryDeadline && !hasAfterReport && (
                 <div class="detail-item detail-item--highlighted">
                   <div class="detail-item__label">申込締切：</div>
                   <div class="detail-item__value" set:html={displayScheduleItem.entryDeadline.replace(/\n/g, '<br>')}></div>
                 </div>
               )}
               
-              {course.courseContact && (
+              {course.courseContact && !hasAfterReport && (
                 <div class="detail-item detail-item--highlighted">
                   <div class="detail-item__label">講座連絡先：</div>
                   <div class="detail-item__value rich-content course-contact" set:html={course.courseContact}></div>
@@ -545,7 +545,7 @@ const hasAfterReport = (course.afterImages && course.afterImages.length > 0) || 
                 </div>
               )}
               
-              {course.note && (
+              {course.note && !hasAfterReport && (
                 <div class="detail-item">
                   <div class="detail-item__label">備考：</div>
                   <div class="detail-item__value rich-content" set:html={course.note}></div>
