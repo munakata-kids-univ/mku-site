@@ -121,7 +121,7 @@ const breadcrumbItems = [
   { label: 'ホーム', href: '/' },
   { label: '講座内容', href: '/course' },
   { label: '夏の課外授業', href: '/course/summer-course' },
-  { label: actualYear, href: '/course/summer-course' },
+  { label: actualYear, href: `/course/summer-course/${year}` },
   { label: `${course.title}${scheduleText}`, current: true }
 ];
 
@@ -355,7 +355,7 @@ const hasAfterReport = (course.afterImages && course.afterImages.length > 0) || 
                   
                   {course.afterReport && (
                     <div class="after-report-section">
-                      <h4 class="after-report-section-title">参加者の感想</h4>
+                      <h4 class="after-report-section-title">参加事業者の感想</h4>
                       <div class="after-report-feedback rich-content" set:html={course.afterReport}></div>
                     </div>
                   )}
@@ -538,7 +538,7 @@ const hasAfterReport = (course.afterImages && course.afterImages.length > 0) || 
                 </div>
               )}
               
-              {course.remarks && (
+              {course.remarks && !hasAfterReport && (
                 <div class="detail-item">
                   <div class="detail-item__label">特記事項：</div>
                   <div class="detail-item__value rich-content" set:html={course.remarks}></div>
@@ -1669,7 +1669,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 }
 
-// 参加者の感想のリッチエディタスタイル
+// 参加事業者の感想のリッチエディタスタイル
 .after-report-feedback.rich-content {
   max-width: 100%;
   overflow: hidden;

@@ -6,16 +6,17 @@ interface Props {
   href: string;
   date?: string;
   venue?: string;
+  hasReportRibbon?: boolean;
 }
 
-const { title, subtitle, thumbnail, href, date, venue } = Astro.props;
+const { title, subtitle, thumbnail, href, date, venue, hasReportRibbon } = Astro.props;
 
 // デフォルト画像
 const defaultThumbnail = '/images/course-default.png';
 const imageSrc = thumbnail || defaultThumbnail;
 ---
 
-<article class="course-card">
+<article class={`course-card ${hasReportRibbon ? 'course-card--has-report-ribbon' : ''}`}>
   <a href={href} class="course-card__link">
     {/* サムネイル */}
     <div class="course-card__thumbnail">
@@ -109,6 +110,19 @@ const imageSrc = thumbnail || defaultThumbnail;
     height: 100%;
     object-fit: cover;
     transition: transform 0.3s ease;
+    
+    // 実施レポートリボンが表示されている場合のフィルター
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: transparent;
+      transition: background 0.3s ease;
+      pointer-events: none;
+    }
   }
   
   &__content {
@@ -205,6 +219,13 @@ const imageSrc = thumbnail || defaultThumbnail;
     
     .course-card__title {
       color: $color-primary;
+    }
+  }
+  
+  // 実施レポートリボンが表示されている場合のスタイル
+  &.course-card--has-report-ribbon {
+    .course-card__image::after {
+      background: rgba(255, 255, 255, 0.7);
     }
   }
 }

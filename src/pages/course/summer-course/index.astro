@@ -525,7 +525,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
             
             <div class="courses-grid" id="courses-grid">
               {courseCards.map(course => (
-              <a href={course.href} class={`course-card ${course.courseType ? 'course-card--' + course.courseType : ''}`} data-schedule-date={course.scheduleDate || ''} data-category={course.category || ''} data-at-any-time={course.atAnyTime ? 'true' : 'false'}>
+              <a href={course.href} class={`course-card ${course.courseType ? 'course-card--' + course.courseType : ''} ${course.hasReport ? 'course-card--has-report-ribbon' : ''}`} data-schedule-date={course.scheduleDate || ''} data-category={course.category || ''} data-at-any-time={course.atAnyTime ? 'true' : 'false'}>
                 <div class="course-card__image">
                   <img 
                     src={course.thumbImg?.url || '/images/ui/img_course-no-image-01.webp'} 
@@ -1463,6 +1463,7 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
       right: 0;
       bottom: 0;
       background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 5%, transparent 100%);
+      transition: background 0.3s ease;
       pointer-events: none;
       z-index: 1;
     }
@@ -1695,6 +1696,13 @@ function formatTargetGrades(targetGrades: string | string[]): { sortedGrades: st
     line-height: 1.4;
     @include breakpoint-up(md) {
       margin: rem(2) 0 0 0;
+    }
+  }
+  
+  // 実施レポートリボンが表示されている場合のスタイル
+  &.course-card--has-report-ribbon {
+    .course-card__image::after {
+      background: rgba(255, 255, 255, 0.7);
     }
   }
 }

@@ -104,7 +104,7 @@ const breadcrumbItems = [
   { label: 'ホーム', href: '/' },
   { label: '講座内容', href: '/course' },
   { label: 'メインキャンパス', href: '/course/main-campus' },
-  { label: actualYear, href: '/course/main-campus' },
+  { label: actualYear, href: `/course/main-campus/${year}` },
   { label: course.title, current: true }
 ];
 
@@ -493,7 +493,7 @@ const hasAfterReport = (course.afterImages && course.afterImages.length > 0) || 
                 </div>
               )}
               
-              {course.remarks && (
+              {course.remarks && !hasAfterReport && (
                 <div class="detail-item">
                   <div class="detail-item__label">特記事項：</div>
                   <div class="detail-item__value rich-content" set:html={course.remarks}></div>
