@@ -355,7 +355,7 @@ const hasAfterReport = (course.afterImages && course.afterImages.length > 0) || 
                   
                   {course.afterReport && (
                     <div class="after-report-section">
-                      <h4 class="after-report-section-title">参加事業者の感想</h4>
+                      <h4 class="after-report-section-title">講師の感想</h4>
                       <div class="after-report-feedback rich-content" set:html={course.afterReport}></div>
                     </div>
                   )}
@@ -1669,7 +1669,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 }
 
-// 参加事業者の感想のリッチエディタスタイル
+// 講師の感想のリッチエディタスタイル
 .after-report-feedback.rich-content {
   max-width: 100%;
   overflow: hidden;

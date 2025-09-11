@@ -86,6 +86,11 @@ export const partnerLogos = [
     name: "社会医療法人水光会", 
     logoSrc: "/logos/slider-logos/logo_suikoukai.webp",
     alt: "社会医療法人水光会"
+  },
+  { 
+    name: "シャボン玉石けん株式会社", 
+    logoSrc: "/logos/slider-logos/logo_syabondama-sekken.webp",
+    alt: "シャボン玉石けん株式会社"
   }
 ];
 
